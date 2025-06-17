@@ -1,5 +1,7 @@
 const express = require('express');
 const { VertexAI } = require('@google-cloud/vertexai');
+const path = require('path');
+require('dotenv').config();
 
 const router = express.Router();
 
@@ -7,11 +9,13 @@ const router = express.Router();
 const vertex_ai = new VertexAI({
   project: process.env.PROJECT_ID,
   location: 'us-central1', 
-  keyFilename: '../config/serviceAccount.json'
 });
 
+console.log("PROJ_ID=", vertex_ai.project);
+console.log("SERVICEACC=", vertex_ai.keyFilename);
+
 // Initialize the model
-const model = 'gemini-1.5-flash';
+const model = 'gemini-2.5-flash-preview-05-20';
 const generativeModel = vertex_ai.preview.getGenerativeModel({
   model: model,
 });
