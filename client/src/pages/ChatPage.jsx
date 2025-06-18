@@ -10,9 +10,12 @@ const ChatPage = () => {
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email');
 
+  const api = 'http://localhost:3001/api'
+
   const fetchMessages = async () => {
-    const response = await fetch(`/api/chat/${chatId}`);
+    const response = await fetch(`${api}/chat/${chatId}`);
     const messages = await response.json();
+    console.log("MESSAGES:", messages)
     setMessages(messages);
   }
 
@@ -24,7 +27,7 @@ const ChatPage = () => {
     setInput('');
 
     try {
-      await fetch('api/chat', {
+      await fetch(`${api}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -56,7 +59,10 @@ const ChatPage = () => {
       <div style={{ height: '400px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
         {messages.map((msg, idx) => (
           <div key={idx} style={{ marginBottom: '10px' }}>
-            <strong>{msg.role}:</strong> {msg.content}
+            <strong>{msg.email}:</strong> {msg.message}
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {new Date(msg.timestamp).toLocaleTimeString()}
+            </div>
           </div>
         ))}
       </div>

@@ -11,41 +11,49 @@ const vertex_ai = new VertexAI({
   location: 'us-central1', 
 });
 
-console.log("PROJ_ID=", vertex_ai.project);
-console.log("SERVICEACC=", vertex_ai.keyFilename);
-
 // Initialize the model
 const model = 'gemini-2.5-flash-preview-05-20';
 const generativeModel = vertex_ai.preview.getGenerativeModel({
   model: model,
 });
 
+let conversations = {};
+
 router.post('/chat', async (req, res) => {
+  console.log('posting...')
   try {
-    const { message, history = [] } = req.body;
+    const { chatId, email, message } = req.body;
 
-    // Build conversation context
-    const contents = [
-      ...history.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      })),
-      {
-        role: 'user',
-        parts: [{ text: message }]
-      }
-    ];
+    // If chatId doesn't exist yet then create
+    if(!conversations[chatId]) {
+      conversations[chatId] = [];
+    }
 
-    const result = await generativeModel.generateContent({
-      contents: contents
-    });
+    conversations[chatId].push({
+      email,
+      message,
+      timestamp: new Date().toISOString()
+    })
 
-    const response = result.response.candidates[0].content.parts[0].text;
-
-    res.json({ response });
+    res.json({ success: true });
   } catch (error) {
-    console.error('Vertex AI error:', error);
-    res.status(500).json({ error: 'Failed to generate response' });
+    console.error('Error saving chat:', error);
+    res.status(500).json({ error: 'Failed to save chat' });
+  }
+});
+
+router.get('/chat/:chatId', async (req,res) => {
+  console.log('fetching...')
+  const { chatId } = req.params;
+  console.log('messages:', conversations[chatId])
+  try {
+
+    // Return empty array if conversation doesnt exist
+    const messages = conversations[chatId] || [];
+    res.json(messages);
+  } catch (error) {
+    console.error("Error fetching chat:", error);
+    res.status(500).json({ error: "Failed to fetch chat" });
   }
 });
 
