@@ -1,60 +1,64 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom'
 
-const ChatApp = () => {
+const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const { chatId } = useParams();
+  const [searchParams] = useSearchParams()
+  const email = searchParams.get('email');
+
+  const fetchMessages = async () => {
+    const response = await fetch(`/api/chat/${chatId}`);
+    const messages = await response.json();
+    setMessages(messages);
+  }
 
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
-    // Add user message
-    const userMessage = { role: 'user', content: input };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInput('');
     setLoading(true);
+    setInput('');
 
     try {
-      // Call backend API
-      const response = await fetch('http://localhost:3001/api/chat', {
+      await fetch('api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          message: input,
-          history: messages.slice(-5)
-        }),
-      });
+        body: JSON.stringify({ chatId, email, message: input})
+      })
 
-      const data = await response.json();
-      
-      // Add AI response
-      const aiMessage = { role: 'assistant', content: data.response };
-      setMessages([...updatedMessages, aiMessage]);
-
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = { role: 'assistant', content: 'Sorry, there was an error.' };
-      setMessages([...updatedMessages, errorMessage]);
-    } finally {
+      // Fetch after sending
+      await fetchMessages();
+     } catch (error) {
+        console.error('Error sending message:', error);
+        setInput(input)
+      }
+    finally {
       setLoading(false);
     }
   };
 
+  // Poll for updates
+  useEffect(() => {
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>Vertex AI Chat</h1>
+      <h1>ChatID: {chatId}</h1>
       
       <div style={{ height: '400px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
         {messages.map((msg, idx) => (
           <div key={idx} style={{ marginBottom: '10px' }}>
-            <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong> {msg.content}
+            <strong>{msg.role}:</strong> {msg.content}
           </div>
         ))}
-        {loading && <div><strong>AI:</strong> Thinking...</div>}
       </div>
       
       <form onSubmit={sendMessage}>
@@ -74,4 +78,4 @@ const ChatApp = () => {
   );
 };
 
-export default ChatApp;
+export default ChatPage;

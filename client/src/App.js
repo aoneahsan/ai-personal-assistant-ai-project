@@ -1,11 +1,17 @@
 import './App.css';
-import ChatTest from './components/ChatTest';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import ChatPage from './pages/ChatPage';
+import LandingPage from './pages/LandingPage';
 
 function App() {
   return (
-    <div className="App">
-      <ChatTest />
-    </div>
+    <BrowserRouter>
+      <Routes> 
+        <Route path='/' element={<LandingPage />}></Route>
+        <Route path='/chat/:chatId' element={<ChatPage />}></Route>
+      </Routes>
+
+    </BrowserRouter>
   );
 }
 
