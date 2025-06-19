@@ -52,9 +52,36 @@ const ChatPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const summarize = async () => {
+    if(messages.length <= 2 ) {
+      window.alert("Must have more than 2 messages to summarize");
+    }
+
+    await fetchMessages();
+
+    try {
+      const response = await fetch(`${api}/chat/summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({chatId})
+      })
+
+      const data = response.json()
+      console.log("SUMMARY", data.summary)
+      
+    } catch (error) {
+      console.error("Error summarizing conversation:", error)
+    }
+
+  }
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1>ChatID: {chatId}</h1>
+
+      <button onClick={summarize}>Summarize Conversation</button>
       
       <div style={{ height: '400px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
         {messages.map((msg, idx) => (
