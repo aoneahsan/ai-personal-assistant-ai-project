@@ -6,6 +6,8 @@ const ChatPage = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [summary, setSummary] = useState('');
+
   const { chatId } = useParams();
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email');
@@ -70,6 +72,8 @@ const ChatPage = () => {
 
       const data = await response.json()
       console.log("SUMMARY", data.summary)
+      setSummary(data.summary)
+      console.log("Meeting Summary", summary);
       
     } catch (error) {
       console.error("Error summarizing conversation:", error)
@@ -78,36 +82,45 @@ const ChatPage = () => {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>ChatID: {chatId}</h1>
+    <>
+      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        <h1>ChatID: {chatId}</h1>
 
-      <button onClick={summarize}>Summarize Conversation</button>
-      
-      <div style={{ height: '400px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
-        {messages.map((msg, idx) => (
-          <div key={idx} style={{ marginBottom: '10px' }}>
-            <strong>{msg.email}:</strong> {msg.message}
-            <div style={{ fontSize: '12px', color: '#666' }}>
-              {new Date(msg.timestamp).toLocaleTimeString()}
+        <button onClick={summarize}>Summarize Conversation</button>
+        
+        <div style={{ height: '400px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
+          {messages.map((msg, idx) => (
+            <div key={idx} style={{ marginBottom: '10px' }}>
+              <strong>{msg.email}:</strong> {msg.message}
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        
+        <form onSubmit={sendMessage}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            style={{ width: '80%', padding: '10px' }}
+            disabled={loading}
+            />
+          <button type="submit" disabled={loading || !input.trim()} style={{ padding: '10px' }}>
+            Send
+          </button>
+        </form>
       </div>
-      
-      <form onSubmit={sendMessage}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          style={{ width: '80%', padding: '10px' }}
-          disabled={loading}
-        />
-        <button type="submit" disabled={loading || !input.trim()} style={{ padding: '10px' }}>
-          Send
-        </button>
-      </form>
-    </div>
+
+      {summary && (      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        <h2>Summary:</h2>
+        <div style={{ height: '400px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
+              {summary}
+        </div>
+      </div>)}
+    </>
   );
 };
 
