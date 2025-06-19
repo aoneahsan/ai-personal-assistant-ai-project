@@ -18,6 +18,7 @@ const generativeModel = vertex_ai.preview.getGenerativeModel({
 });
 
 let conversations = {};
+let AIConversations = {};
 
 // Route to add messages to history
 router.post('/chat', async (req, res) => {
@@ -55,41 +56,52 @@ router.get('/chat/:chatId', async (req,res) => {
   }
 });
 
-router.post('/chat/summary', async (req,res) => {
-  console.log("summarizing...")
+router.post('/chat/AI', async (req,res) => {
   try{
-    const { chatId } = req.body;
+    const { chatId, email, question } = req.body;
+    console.log("req.body:", req.body)
+    console.log('Extracted values:');
+    console.log('chatId:', chatId);
+    console.log('question:', question);
 
-    if(!conversations[chatId]) {
-      return res.json({ summary: 'No conversation to summarize yet.' });
+    if(!conversations[chatId] || conversations[chatId].length === 0) {
+      return res.json({ message: 'No conversation found to analyse.'});
     }
     
     const messages = conversations[chatId];
 
-    const conversationText = messages.map(msg => `${msg.email}: ${msg.message}`).join('\n')
+    const conversationText = messages
+    .map(msg => `${msg.email}: ${msg.message} 
+      (send at ${new Date(msg.timestamp).toLocaleString()})`)
+      .join('\n')
 
-    const prompt = `
-    Analyze this conversation between two users and provide a summary of what they've discussed:
-    
+    const prompt = `You are an AI assistant helping ${email} analyze their chat conversation.
+
+    Conversation:
     ${conversationText}
-    
-    Please summarize:
-    1. Main topics discussed
-    2. Key decisions or agreements
-    3. Any action items or next steps
-    4. Overall tone/mood of the conversation
-    `;
+
+    User's question: ${question}
+
+    Instructions:
+    - Answer based ONLY on the conversation above
+    - If they ask about promises/commitments, look for "I will", "I'll", "I promise", etc.
+    - If they ask for summaries, provide main topics and key points
+    - If they ask about specific people or messages, reference the exact content
+    - Be helpful and specific in your responses
+    - If you can't find the answer in the conversation, say so clearly
+
+    Answer the user's question:`;
     
     const result = await generativeModel.generateContent(prompt);
 
     // Extract text response
-    const summary = result.response.candidates[0].content.parts[0].text;
+    const response = result.response.candidates[0].content.parts[0].text;
     
-    res.json({ summary });
+    res.json({ response });
 
   } catch (error) {
-    console.error("Error summarizing messages:", error);
-    res.status(500).json({ error: "Failed to summarize messages" })
+    console.error("Error with AI assistant:", error);
+    res.status(500).json({ error: "Failed to return AI request" })
   }
 })
 
