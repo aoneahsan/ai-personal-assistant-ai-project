@@ -68,7 +68,7 @@ const ChatPage = () => {
         body: JSON.stringify({chatId})
       })
 
-      const data = response.json()
+      const data = await response.json()
       console.log("SUMMARY", data.summary)
       
     } catch (error) {

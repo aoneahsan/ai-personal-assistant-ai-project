@@ -87,8 +87,6 @@ router.post('/chat/summary', async (req,res) => {
     
     res.json({ summary });
 
-    console.log("SUMMARY:", result.response.text())
-
   } catch (error) {
     console.error("Error summarizing messages:", error);
     res.status(500).json({ error: "Failed to summarize messages" })
