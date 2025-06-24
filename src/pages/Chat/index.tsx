@@ -109,31 +109,31 @@ const Chat: React.FC = () => {
         type: 'audio/wav',
         url: 'data:audio/wav;base64,sample',
       },
-      audioDuration: 15,
+      audioDuration: 12,
       quickTranscript: 'This is a sample audio message with transcription...',
       transcript: [
         {
           text: 'This is a sample audio message',
-          startTime: 0,
-          endTime: 3.2,
+          startTime: 0.0,
+          endTime: 2.4,
           confidence: 0.95,
         },
         {
           text: 'with transcription support that works perfectly',
-          startTime: 3.5,
-          endTime: 7.1,
+          startTime: 2.6,
+          endTime: 5.8,
           confidence: 0.92,
         },
         {
           text: 'and includes timestamps for each segment',
-          startTime: 7.4,
-          endTime: 11.8,
+          startTime: 6.0,
+          endTime: 9.2,
           confidence: 0.89,
         },
         {
           text: 'making it accessible for everyone!',
-          startTime: 12.1,
-          endTime: 15.0,
+          startTime: 9.4,
+          endTime: 12.0,
           confidence: 0.94,
         },
       ],
@@ -177,6 +177,8 @@ const Chat: React.FC = () => {
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioMenuRefs = useRef<{ [key: string]: Menu }>({});
   const currentRecognitionText = useRef<string>('');
+  const recordingStartTime = useRef<number>(0);
+  const lastSegmentEndTime = useRef<number>(0);
 
   const chatUser: ChatUser = {
     id: '1',
@@ -208,6 +210,8 @@ const Chat: React.FC = () => {
         let finalTranscript = '';
         let interimTranscript = '';
 
+        const currentTime = (Date.now() - recordingStartTime.current) / 1000; // Convert to seconds
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           const confidence = event.results[i][0].confidence;
@@ -219,20 +223,32 @@ const Chat: React.FC = () => {
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
 
-            // Add to final transcript segments with better timing
+            // Calculate segment timing based on speech duration
+            const words = transcript.trim().split(' ');
+            const estimatedDuration = Math.max(1, words.length * 0.6); // Estimate 0.6 seconds per word
+            const segmentStartTime = lastSegmentEndTime.current;
+            const segmentEndTime = Math.min(
+              currentTime,
+              segmentStartTime + estimatedDuration
+            );
+
+            // Add to final transcript segments with accurate timing
             const segment: TranscriptSegment = {
               text: transcript.trim(),
-              startTime: Math.max(0, recordingTime - 3),
-              endTime: recordingTime,
+              startTime: Math.round(segmentStartTime * 10) / 10, // Round to 1 decimal place
+              endTime: Math.round(segmentEndTime * 10) / 10,
               confidence: confidence || 0.8,
             };
 
-            console.log('Adding segment:', segment);
+            console.log('Adding segment with timing:', segment);
             setFinalTranscriptSegments((prev) => {
               const newSegments = [...prev, segment];
               console.log('Updated segments:', newSegments);
               return newSegments;
             });
+
+            // Update last segment end time for next segment (add small gap)
+            lastSegmentEndTime.current = segmentEndTime + 0.2;
           } else {
             interimTranscript += transcript;
           }
@@ -338,6 +354,10 @@ const Chat: React.FC = () => {
       setRecordingTime(0);
       setFinalTranscriptSegments([]);
       currentRecognitionText.current = '';
+
+      // Initialize timing references
+      recordingStartTime.current = Date.now();
+      lastSegmentEndTime.current = 0;
 
       console.log('MediaRecorder started');
 
@@ -453,6 +473,10 @@ const Chat: React.FC = () => {
     setFinalTranscriptSegments([]);
     currentRecognitionText.current = '';
 
+    // Reset timing references
+    recordingStartTime.current = 0;
+    lastSegmentEndTime.current = 0;
+
     // Stop speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -503,11 +527,19 @@ const Chat: React.FC = () => {
       if (remainingText) {
         allTranscriptText += (allTranscriptText ? ' ' : '') + remainingText;
 
-        // Add remaining text as a segment
+        // Add remaining text as a segment with better timing
+        const words = remainingText.split(' ');
+        const estimatedDuration = Math.max(1, words.length * 0.6);
+        const segmentStartTime = lastSegmentEndTime.current;
+        const segmentEndTime = Math.min(
+          recordingTime,
+          segmentStartTime + estimatedDuration
+        );
+
         combinedSegments.push({
           text: remainingText,
-          startTime: recordingTime - 2,
-          endTime: recordingTime,
+          startTime: Math.round(segmentStartTime * 10) / 10,
+          endTime: Math.round(segmentEndTime * 10) / 10,
           confidence: 0.7,
         });
       }
@@ -566,6 +598,8 @@ const Chat: React.FC = () => {
     // Reset states
     setFinalTranscriptSegments([]);
     currentRecognitionText.current = '';
+    recordingStartTime.current = 0;
+    lastSegmentEndTime.current = 0;
     setIsProcessingAudio(false); // Re-enable UI
     console.log('Reset transcript states');
 
