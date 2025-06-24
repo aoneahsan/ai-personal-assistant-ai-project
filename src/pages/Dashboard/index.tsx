@@ -105,6 +105,7 @@ const Dashboard: React.FC = () => {
     { label: 'Dashboard', icon: 'pi pi-home', badge: null },
     { label: 'Modern Dashboard', icon: 'pi pi-desktop', badge: 'New' },
     { label: 'Profile', icon: 'pi pi-user', badge: null },
+    { label: 'Chats', icon: 'pi pi-comments', badge: '5' },
     { label: 'Projects', icon: 'pi pi-folder', badge: '3' },
     { label: 'Tasks', icon: 'pi pi-check-square', badge: '12' },
     { label: 'Messages', icon: 'pi pi-envelope', badge: '5' },
@@ -223,6 +224,11 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate({ to: '/modern-dashboard' })}
             />
             <Button
+              label='Chats'
+              className='p-button-text'
+              onClick={() => navigate({ to: '/chats' })}
+            />
+            <Button
               label='Analytics'
               className='p-button-text'
             />
@@ -325,6 +331,9 @@ const Dashboard: React.FC = () => {
                 } else if (item.label === 'Profile') {
                   navigate({ to: '/edit-profile' });
                   setSidebarVisible(false);
+                } else if (item.label === 'Chats') {
+                  navigate({ to: '/chats' });
+                  setSidebarVisible(false);
                 }
               }}
             >
@@ -390,6 +399,12 @@ const Dashboard: React.FC = () => {
                   icon='pi pi-compress'
                   className='p-button-outlined p-button-warning p-button-sm'
                   onClick={() => navigate({ to: '/compact-dashboard' })}
+                />
+                <Button
+                  label='Chats'
+                  icon='pi pi-comments'
+                  className='p-button-outlined p-button-info p-button-sm'
+                  onClick={() => navigate({ to: '/chats' })}
                 />
                 <Button
                   label='Edit'

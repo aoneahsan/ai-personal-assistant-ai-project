@@ -36,6 +36,7 @@ const CompactDashboard: React.FC = () => {
     { label: 'Dashboard', icon: 'pi pi-home', badge: null },
     { label: 'Modern', icon: 'pi pi-desktop', badge: 'New' },
     { label: 'Profile', icon: 'pi pi-user', badge: null },
+    { label: 'Chats', icon: 'pi pi-comments', badge: '5' },
     { label: 'Tasks', icon: 'pi pi-check-square', badge: '12' },
     { label: 'Messages', icon: 'pi pi-envelope', badge: '5' },
     { label: 'Settings', icon: 'pi pi-cog', badge: null },
@@ -221,6 +222,11 @@ const CompactDashboard: React.FC = () => {
               className='p-button-text p-button-sm'
               onClick={() => navigate({ to: '/dashboard' })}
             />
+            <Button
+              label='Chats'
+              className='p-button-text p-button-sm'
+              onClick={() => navigate({ to: '/chats' })}
+            />
           </nav>
 
           {/* Right side - User profile */}
@@ -308,6 +314,9 @@ const CompactDashboard: React.FC = () => {
                 } else if (item.label === 'Profile') {
                   navigate({ to: '/edit-profile' });
                   setSidebarVisible(false);
+                } else if (item.label === 'Chats') {
+                  navigate({ to: '/chats' });
+                  setSidebarVisible(false);
                 }
               }}
             >
@@ -347,6 +356,12 @@ const CompactDashboard: React.FC = () => {
                 icon='pi pi-pencil'
                 className='p-button-outlined p-button-sm'
                 onClick={() => navigate({ to: '/compact-edit-profile' })}
+              />
+              <Button
+                label='Chats'
+                icon='pi pi-comments'
+                className='p-button-outlined p-button-info p-button-sm'
+                onClick={() => navigate({ to: '/chats' })}
               />
               <Button
                 label='Modern'

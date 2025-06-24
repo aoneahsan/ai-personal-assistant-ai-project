@@ -113,6 +113,7 @@ const ModernDashboard: React.FC = () => {
   const sidebarMenuItems = [
     { label: 'Overview', icon: 'pi pi-home', badge: null, key: 'overview' },
     { label: 'Profile', icon: 'pi pi-user', badge: null, key: 'profile' },
+    { label: 'Chats', icon: 'pi pi-comments', badge: '5', key: 'chats' },
     { label: 'Projects', icon: 'pi pi-folder', badge: '3', key: 'projects' },
     { label: 'Tasks', icon: 'pi pi-check-square', badge: '12', key: 'tasks' },
     { label: 'Messages', icon: 'pi pi-envelope', badge: '5', key: 'messages' },
@@ -421,7 +422,14 @@ const ModernDashboard: React.FC = () => {
                   ? 'bg-white text-primary shadow-2'
                   : 'text-white hover:bg-black hover:bg-opacity-20 hover:shadow-4'
               }`}
-              onClick={() => setActiveSection(item.key)}
+              onClick={() => {
+                if (item.key === 'chats') {
+                  navigate({ to: '/chats' });
+                  setSidebarVisible(false);
+                } else {
+                  setActiveSection(item.key);
+                }
+              }}
             >
               <div className='flex align-items-center gap-2 sm:gap-3'>
                 <i className={`${item.icon} text-lg sm:text-xl`}></i>
@@ -498,6 +506,12 @@ const ModernDashboard: React.FC = () => {
                         icon='pi pi-pencil'
                         className='p-button-rounded bg-white text-primary border-none hover:shadow-3 p-button-sm sm:p-button-md'
                         onClick={() => navigate({ to: '/edit-profile' })}
+                      />
+                      <Button
+                        label='Chats'
+                        icon='pi pi-comments'
+                        className='p-button-rounded bg-white text-primary border-none hover:shadow-3 p-button-sm sm:p-button-md'
+                        onClick={() => navigate({ to: '/chats' })}
                       />
                       <Button
                         label='Compact'
