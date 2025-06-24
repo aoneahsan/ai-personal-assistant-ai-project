@@ -1,3 +1,5 @@
+import Chat from '@/pages/Chat';
+import ChatList from '@/pages/ChatList';
 import CompactDashboard from '@/pages/CompactDashboard';
 import CompactEditProfile from '@/pages/CompactEditProfile';
 import Dashboard from '@/pages/Dashboard';
@@ -43,6 +45,18 @@ const compactEditProfileRoute = createRoute({
   component: CompactEditProfile,
 });
 
+const chatListRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/chats',
+  component: ChatList,
+});
+
+const chatRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/chat',
+  component: Chat,
+});
+
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '*',
@@ -56,5 +70,7 @@ export const appRouteTree = rootRoute.addChildren([
   compactDashboardRoute,
   editProfileRoute,
   compactEditProfileRoute,
+  chatListRoute,
+  chatRoute,
   notFoundRoute,
 ]);
