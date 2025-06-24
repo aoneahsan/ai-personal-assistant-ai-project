@@ -864,9 +864,22 @@ const Chat: React.FC = () => {
 
           {/* Quick transcript preview */}
           {message.quickTranscript && (
-            <div className='audio-transcript-preview'>
+            <div
+              className='audio-transcript-preview'
+              onClick={() => showTranscript(message.id)}
+              role='button'
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  showTranscript(message.id);
+                }
+              }}
+            >
               <span className='transcript-preview-text'>
                 "{message.quickTranscript}"
+              </span>
+              <span className='transcript-preview-hint'>
+                Click to read full transcript
               </span>
             </div>
           )}
@@ -1154,9 +1167,23 @@ const Chat: React.FC = () => {
                   const fullText = selectedMessage
                     .transcript!.map((seg) => seg.text)
                     .join(' ');
-                  navigator.clipboard.writeText(fullText);
+                  navigator.clipboard.writeText(fullText).then(() => {
+                    // Show success feedback
+                    const button = document.querySelector(
+                      '.copy-transcript-btn'
+                    ) as HTMLElement;
+                    if (button) {
+                      const originalText = button.textContent;
+                      button.textContent = '✓ Copied!';
+                      button.style.background = '#28a745';
+                      setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = '';
+                      }, 2000);
+                    }
+                  });
                 }}
-                className='p-button-outlined'
+                className='copy-transcript-btn'
               />
             </div>
           </div>
