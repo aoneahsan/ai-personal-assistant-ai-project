@@ -9,12 +9,14 @@ import { Dialog } from 'primereact/dialog';
 import { Divider } from 'primereact/divider';
 import { FileUpload } from 'primereact/fileupload';
 import { InputText } from 'primereact/inputtext';
+import { Menu } from 'primereact/menu';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import React, { useEffect, useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import {
   FaArrowLeft,
   FaDownload,
+  FaEllipsisV,
   FaFile,
   FaMicrophone,
   FaPaperPlane,
@@ -22,9 +24,17 @@ import {
   FaPause,
   FaPlay,
   FaSmile,
+  FaStop,
   FaVideo,
 } from 'react-icons/fa';
 import './index.scss';
+
+interface TranscriptSegment {
+  text: string;
+  startTime: number;
+  endTime: number;
+  confidence?: number;
+}
 
 interface Message {
   id: string;
@@ -40,7 +50,8 @@ interface Message {
     url: string;
   };
   audioDuration?: number;
-  transcript?: string; // For audio message transcripts
+  transcript?: TranscriptSegment[]; // Full transcript with timestamps
+  quickTranscript?: string; // Quick preview transcript
 }
 
 interface ChatUser {
@@ -98,8 +109,33 @@ const Chat: React.FC = () => {
         url: 'data:audio/wav;base64,sample',
       },
       audioDuration: 15,
-      transcript:
-        'This is a sample audio message with transcription. The audio recording works perfectly with transcription support!',
+      quickTranscript: 'This is a sample audio message with transcription...',
+      transcript: [
+        {
+          text: 'This is a sample audio message',
+          startTime: 0,
+          endTime: 3.2,
+          confidence: 0.95,
+        },
+        {
+          text: 'with transcription support that works perfectly',
+          startTime: 3.5,
+          endTime: 7.1,
+          confidence: 0.92,
+        },
+        {
+          text: 'and includes timestamps for each segment',
+          startTime: 7.4,
+          endTime: 11.8,
+          confidence: 0.89,
+        },
+        {
+          text: 'making it accessible for everyone!',
+          startTime: 12.1,
+          endTime: 15.0,
+          confidence: 0.94,
+        },
+      ],
     },
   ]);
 
@@ -108,20 +144,25 @@ const Chat: React.FC = () => {
   const [showAttachmentDialog, setShowAttachmentDialog] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-  const [showTranscript, setShowTranscript] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [showTranscriptDialog, setShowTranscriptDialog] = useState<
+    string | null
+  >(null);
 
   // Audio recording states
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
   // Speech recognition states
-  const [transcript, setTranscript] = useState('');
+  const [currentTranscript, setCurrentTranscript] = useState('');
+  const [transcriptSegments, setTranscriptSegments] = useState<
+    TranscriptSegment[]
+  >([]);
   const [listening, setListening] = useState(false);
   const [
     browserSupportsSpeechRecognition,
@@ -134,6 +175,7 @@ const Chat: React.FC = () => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const recognitionRef = useRef<any>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioMenuRefs = useRef<{ [key: string]: Menu }>({});
 
   const chatUser: ChatUser = {
     id: '1',
@@ -158,15 +200,31 @@ const Chat: React.FC = () => {
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: any) => {
+        let interimTranscript = '';
         let finalTranscript = '';
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          const confidence = event.results[i][0].confidence;
+
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+            finalTranscript += transcript;
+
+            // Add to transcript segments with timing
+            const segment: TranscriptSegment = {
+              text: transcript.trim(),
+              startTime: recordingTime - 3, // Approximate start time
+              endTime: recordingTime,
+              confidence: confidence || 0.8,
+            };
+
+            setTranscriptSegments((prev) => [...prev, segment]);
+          } else {
+            interimTranscript += transcript;
           }
         }
-        if (finalTranscript) {
-          setTranscript(finalTranscript);
-        }
+
+        setCurrentTranscript(finalTranscript + interimTranscript);
       };
 
       recognition.onstart = () => {
@@ -175,6 +233,14 @@ const Chat: React.FC = () => {
 
       recognition.onend = () => {
         setListening(false);
+        // Restart if still recording and not paused
+        if (isRecording && !isPaused && browserSupportsSpeechRecognition) {
+          try {
+            recognition.start();
+          } catch (error) {
+            console.log('Recognition restart failed:', error);
+          }
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -184,7 +250,7 @@ const Chat: React.FC = () => {
 
       recognitionRef.current = recognition;
     }
-  }, []);
+  }, [isRecording, isPaused, recordingTime, browserSupportsSpeechRecognition]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -197,18 +263,30 @@ const Chat: React.FC = () => {
   // Start recording
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus',
+      });
 
       const chunks: Blob[] = [];
+      setAudioChunks(chunks);
+
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunks.push(event.data);
+          setAudioChunks([...chunks]);
         }
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
         setAudioBlob(blob);
         stream.getTracks().forEach((track) => track.stop());
 
@@ -216,15 +294,21 @@ const Chat: React.FC = () => {
         handleAudioRecordingComplete(blob);
       };
 
-      recorder.start();
+      recorder.start(1000); // Collect data every second
       setMediaRecorder(recorder);
       setIsRecording(true);
+      setIsPaused(false);
       setRecordingTime(0);
+      setTranscriptSegments([]);
+      setCurrentTranscript('');
 
       // Start speech recognition
       if (recognitionRef.current && browserSupportsSpeechRecognition) {
-        setTranscript('');
-        recognitionRef.current.start();
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          console.log('Speech recognition start failed:', error);
+        }
       }
 
       // Start timer
@@ -237,11 +321,53 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Pause recording
+  const pauseRecording = () => {
+    if (mediaRecorder && isRecording && !isPaused) {
+      mediaRecorder.pause();
+      setIsPaused(true);
+
+      // Pause speech recognition
+      if (recognitionRef.current && listening) {
+        recognitionRef.current.stop();
+      }
+
+      // Pause timer
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
+
+  // Resume recording
+  const resumeRecording = () => {
+    if (mediaRecorder && isRecording && isPaused) {
+      mediaRecorder.resume();
+      setIsPaused(false);
+
+      // Resume speech recognition
+      if (recognitionRef.current && browserSupportsSpeechRecognition) {
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          console.log('Speech recognition resume failed:', error);
+        }
+      }
+
+      // Resume timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    }
+  };
+
   // Stop recording
   const stopRecording = () => {
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
       setIsRecording(false);
+      setIsPaused(false);
       setMediaRecorder(null);
 
       // Stop speech recognition
@@ -257,12 +383,42 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Cancel recording
+  const cancelRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+    }
+
+    setIsRecording(false);
+    setIsPaused(false);
+    setMediaRecorder(null);
+    setAudioBlob(null);
+    setAudioChunks([]);
+    setRecordingTime(0);
+    setTranscriptSegments([]);
+    setCurrentTranscript('');
+
+    // Stop speech recognition
+    if (recognitionRef.current && listening) {
+      recognitionRef.current.stop();
+    }
+
+    // Clear timer
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+  };
+
   // Handle audio recording completion
   const handleAudioRecordingComplete = (blob: Blob) => {
     const audioUrl = URL.createObjectURL(blob);
 
-    // Get transcript from speech recognition
-    const audioTranscript = transcript || 'Audio message recorded';
+    // Create quick transcript preview
+    const quickTranscript =
+      transcriptSegments.length > 0
+        ? transcriptSegments.map((seg) => seg.text).join(' ')
+        : currentTranscript || 'Audio message recorded';
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -271,17 +427,33 @@ const Chat: React.FC = () => {
       status: 'sent',
       type: 'audio',
       fileData: {
-        name: 'voice-message.wav',
+        name: 'voice-message.webm',
         size: blob.size,
         type: blob.type,
         url: audioUrl,
       },
       audioDuration: recordingTime,
-      transcript: audioTranscript,
+      quickTranscript:
+        quickTranscript.substring(0, 50) +
+        (quickTranscript.length > 50 ? '...' : ''),
+      transcript:
+        transcriptSegments.length > 0
+          ? transcriptSegments
+          : [
+              {
+                text: currentTranscript || 'Audio message recorded',
+                startTime: 0,
+                endTime: recordingTime,
+                confidence: 0.8,
+              },
+            ],
     };
 
     setMessages((prev) => [...prev, newMessage]);
-    setTranscript(''); // Clear the transcript after use
+
+    // Reset states
+    setCurrentTranscript('');
+    setTranscriptSegments([]);
 
     // Simulate message status updates
     setTimeout(() => {
@@ -326,12 +498,39 @@ const Chat: React.FC = () => {
     }
   };
 
-  const toggleTranscript = (messageId: string) => {
-    setShowTranscript((prev) => ({
-      ...prev,
-      [messageId]: !prev[messageId],
-    }));
+  const showTranscript = (messageId: string) => {
+    setShowTranscriptDialog(messageId);
   };
+
+  const getAudioMenuItems = (message: Message) => [
+    {
+      label: 'Read Transcript',
+      icon: 'pi pi-file-word',
+      command: () => showTranscript(message.id),
+    },
+    {
+      label: 'Download Audio',
+      icon: 'pi pi-download',
+      command: () => {
+        if (message.fileData?.url) {
+          const link = document.createElement('a');
+          link.href = message.fileData.url;
+          link.download = message.fileData.name || 'audio-message.webm';
+          link.click();
+        }
+      },
+    },
+    {
+      label: 'Copy Transcript',
+      icon: 'pi pi-copy',
+      command: () => {
+        if (message.transcript) {
+          const fullText = message.transcript.map((seg) => seg.text).join(' ');
+          navigator.clipboard.writeText(fullText);
+        }
+      },
+    },
+  ];
 
   const handleSendMessage = () => {
     if (currentMessage.trim()) {
@@ -451,6 +650,13 @@ const Chat: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const formatTimestamp = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 100);
+    return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+  };
+
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'sent':
@@ -527,28 +733,27 @@ const Chat: React.FC = () => {
             <span className='audio-duration'>
               {formatDuration(message.audioDuration || 0)}
             </span>
-            {message.transcript && (
-              <Button
-                icon='💬'
-                className='transcript-toggle-btn'
-                size='small'
-                onClick={() => toggleTranscript(message.id)}
-                tooltip={
-                  showTranscript[message.id]
-                    ? 'Hide transcript'
-                    : 'Show transcript'
-                }
-              />
-            )}
+            <Button
+              icon={<FaEllipsisV />}
+              className='audio-menu-btn'
+              size='small'
+              onClick={(e) => audioMenuRefs.current[message.id]?.toggle(e)}
+            />
+            <Menu
+              ref={(el) => {
+                if (el) audioMenuRefs.current[message.id] = el;
+              }}
+              model={getAudioMenuItems(message)}
+              popup
+            />
           </div>
 
-          {/* Transcript Display */}
-          {message.transcript && showTranscript[message.id] && (
-            <div className='audio-transcript'>
-              <div className='transcript-header'>
-                <span className='transcript-label'>Transcript:</span>
-              </div>
-              <p className='transcript-text'>{message.transcript}</p>
+          {/* Quick transcript preview */}
+          {message.quickTranscript && (
+            <div className='audio-transcript-preview'>
+              <span className='transcript-preview-text'>
+                "{message.quickTranscript}"
+              </span>
             </div>
           )}
 
@@ -609,6 +814,10 @@ const Chat: React.FC = () => {
 
     return null;
   };
+
+  const selectedMessage = showTranscriptDialog
+    ? messages.find((m) => m.id === showTranscriptDialog)
+    : null;
 
   return (
     <div className='chat-container'>
@@ -680,7 +889,9 @@ const Chat: React.FC = () => {
         <div className='speech-recognition-status'>
           <div className='recording-indicator'>
             <div className='recording-dot'></div>
-            <span>Listening... {transcript && `"${transcript}"`}</span>
+            <span>
+              Listening... {currentTranscript && `"${currentTranscript}"`}
+            </span>
           </div>
         </div>
       )}
@@ -714,12 +925,40 @@ const Chat: React.FC = () => {
               onClick={handleSendMessage}
             />
           ) : (
-            <Button
-              icon={<FaMicrophone />}
-              className={isRecording ? 'voice-btn recording' : 'voice-btn'}
-              onClick={isRecording ? stopRecording : startRecording}
-              tooltip={isRecording ? 'Stop recording' : 'Start voice recording'}
-            />
+            <div className='voice-controls'>
+              {!isRecording ? (
+                <Button
+                  icon={<FaMicrophone />}
+                  className='voice-btn'
+                  onClick={startRecording}
+                  tooltip='Start voice recording'
+                />
+              ) : (
+                <div className='recording-controls'>
+                  <Button
+                    icon={isPaused ? <FaPlay /> : <FaPause />}
+                    className={isPaused ? 'resume-btn' : 'pause-btn'}
+                    onClick={isPaused ? resumeRecording : pauseRecording}
+                    tooltip={isPaused ? 'Resume recording' : 'Pause recording'}
+                    size='small'
+                  />
+                  <Button
+                    icon={<FaStop />}
+                    className='stop-btn'
+                    onClick={stopRecording}
+                    tooltip='Stop and send'
+                    size='small'
+                  />
+                  <Button
+                    icon='✕'
+                    className='cancel-btn'
+                    onClick={cancelRecording}
+                    tooltip='Cancel recording'
+                    size='small'
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -728,9 +967,12 @@ const Chat: React.FC = () => {
       {isRecording && (
         <div className='recording-status'>
           <div className='recording-info'>
-            <span>🔴 Recording... {formatDuration(recordingTime)}</span>
-            {transcript && (
-              <span className='live-transcript'>"{transcript}"</span>
+            <span>
+              🔴 {isPaused ? 'Paused' : 'Recording'}...{' '}
+              {formatDuration(recordingTime)}
+            </span>
+            {currentTranscript && (
+              <span className='live-transcript'>"{currentTranscript}"</span>
             )}
           </div>
         </div>
@@ -745,6 +987,66 @@ const Chat: React.FC = () => {
           </p>
         </div>
       )}
+
+      {/* Transcript Dialog */}
+      <Dialog
+        header='Audio Transcript'
+        visible={!!showTranscriptDialog}
+        style={{ width: '90vw', maxWidth: '600px' }}
+        onHide={() => setShowTranscriptDialog(null)}
+        className='transcript-dialog'
+      >
+        {selectedMessage && selectedMessage.transcript && (
+          <div className='transcript-content'>
+            <div className='transcript-header-info'>
+              <p>
+                <strong>Duration:</strong>{' '}
+                {formatDuration(selectedMessage.audioDuration || 0)}
+              </p>
+              <p>
+                <strong>Segments:</strong> {selectedMessage.transcript.length}
+              </p>
+            </div>
+            <div className='transcript-segments'>
+              {selectedMessage.transcript.map((segment, index) => (
+                <div
+                  key={index}
+                  className='transcript-segment'
+                >
+                  <div className='segment-timing'>
+                    <span className='start-time'>
+                      {formatTimestamp(segment.startTime)}
+                    </span>
+                    <span className='separator'>→</span>
+                    <span className='end-time'>
+                      {formatTimestamp(segment.endTime)}
+                    </span>
+                    {segment.confidence && (
+                      <span className='confidence'>
+                        ({Math.round(segment.confidence * 100)}%)
+                      </span>
+                    )}
+                  </div>
+                  <div className='segment-text'>{segment.text}</div>
+                </div>
+              ))}
+            </div>
+            <div className='transcript-actions'>
+              <Button
+                label='Copy Full Transcript'
+                icon='pi pi-copy'
+                onClick={() => {
+                  const fullText = selectedMessage
+                    .transcript!.map((seg) => seg.text)
+                    .join(' ');
+                  navigator.clipboard.writeText(fullText);
+                }}
+                className='p-button-outlined'
+              />
+            </div>
+          </div>
+        )}
+      </Dialog>
 
       {/* Emoji Picker Overlay */}
       <OverlayPanel
