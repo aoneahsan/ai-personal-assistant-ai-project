@@ -464,6 +464,178 @@
     }
   }
 
+  // WhatsApp-style Recording Controls
+  .recording-controls-overlay {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+
+    .recording-controls {
+      background: white;
+      border-radius: 25px;
+      padding: 15px 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border: 1px solid #e0e0e0;
+
+      .recording-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+
+        .recording-indicator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .recording-dot {
+            width: 12px;
+            height: 12px;
+            background: #dc3545;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+          }
+
+          span {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+          }
+        }
+
+        .recording-waveform {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          height: 30px;
+
+          .wave-bar {
+            width: 4px;
+            background: #075e54;
+            border-radius: 2px;
+            animation: wave 1s infinite ease-in-out;
+
+            &:nth-child(1) {
+              height: 10px;
+              animation-delay: 0s;
+            }
+            &:nth-child(2) {
+              height: 20px;
+              animation-delay: 0.1s;
+            }
+            &:nth-child(3) {
+              height: 25px;
+              animation-delay: 0.2s;
+            }
+            &:nth-child(4) {
+              height: 15px;
+              animation-delay: 0.3s;
+            }
+            &:nth-child(5) {
+              height: 18px;
+              animation-delay: 0.4s;
+            }
+          }
+        }
+      }
+
+      .recording-actions,
+      .preview-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+
+        .p-button {
+          border-radius: 50% !important;
+          width: 45px !important;
+          height: 45px !important;
+          min-width: 45px !important;
+
+          &.recording-cancel-btn,
+          &.preview-cancel-btn {
+            background: #dc3545 !important;
+            border: none !important;
+            color: white !important;
+
+            &:hover {
+              background: #c82333 !important;
+            }
+          }
+
+          &.recording-pause-btn {
+            background: #ffc107 !important;
+            border: none !important;
+            color: white !important;
+
+            &:hover {
+              background: #e0a800 !important;
+            }
+          }
+
+          &.recording-resume-btn {
+            background: #28a745 !important;
+            border: none !important;
+            color: white !important;
+
+            &:hover {
+              background: #218838 !important;
+            }
+          }
+
+          &.recording-stop-btn {
+            background: #075e54 !important;
+            border: none !important;
+            color: white !important;
+
+            &:hover {
+              background: #128c7e !important;
+            }
+          }
+
+          &.preview-play-btn {
+            background: #075e54 !important;
+            border: none !important;
+            color: white !important;
+
+            &:hover {
+              background: #128c7e !important;
+            }
+          }
+
+          &.preview-send-btn {
+            background: #25d366 !important;
+            border: none !important;
+            color: white !important;
+
+            &:hover {
+              background: #20b358 !important;
+            }
+          }
+        }
+      }
+
+      .preview-info {
+        text-align: center;
+        margin-bottom: 15px;
+
+        span {
+          font-size: 14px;
+          color: #666;
+          font-weight: 500;
+        }
+
+        audio {
+          display: none;
+        }
+      }
+    }
+  }
+
   // Emoji Picker
   .emoji-panel {
     // Remove custom padding and borders for better integration
@@ -579,6 +751,17 @@
   100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+// Wave animation for recording waveform
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(2);
   }
 }
 
