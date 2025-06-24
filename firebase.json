@@ -12,5 +12,45 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "eur3",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 8780
+    },
+    "firestore": {
+      "port": 8781
+    },
+    "database": {
+      "port": 8782
+    },
+    "hosting": {
+      "port": 8783
+    },
+    "pubsub": {
+      "port": 8784
+    },
+    "storage": {
+      "port": 8785
+    },
+    "ui": {
+      "enabled": true,
+      "port": 8786
+    },
+    "singleProjectMode": true
+  },
+  "remoteconfig": {
+    "template": "remoteconfig.template.json"
+  },
+  "database": {
+    "rules": "database.rules.json"
   }
 }
