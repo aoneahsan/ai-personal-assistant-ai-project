@@ -190,6 +190,8 @@ const Chat: React.FC = () => {
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       setBrowserSupportsSpeechRecognition(true);
+      console.log('Speech recognition is supported');
+
       const SpeechRecognition =
         (window as any).SpeechRecognition ||
         (window as any).webkitSpeechRecognition;
@@ -198,32 +200,50 @@ const Chat: React.FC = () => {
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
 
       recognition.onresult = (event: any) => {
+        console.log('Speech recognition result event:', event);
         let finalTranscript = '';
+        let interimTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           const confidence = event.results[i][0].confidence;
 
+          console.log(
+            `Result ${i}: "${transcript}", Final: ${event.results[i].isFinal}, Confidence: ${confidence}`
+          );
+
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
 
-            // Add to final transcript segments
+            // Add to final transcript segments with better timing
             const segment: TranscriptSegment = {
               text: transcript.trim(),
-              startTime: Math.max(0, recordingTime - 5), // Better timing estimation
+              startTime: Math.max(0, recordingTime - 3),
               endTime: recordingTime,
               confidence: confidence || 0.8,
             };
 
-            setFinalTranscriptSegments((prev) => [...prev, segment]);
+            console.log('Adding segment:', segment);
+            setFinalTranscriptSegments((prev) => {
+              const newSegments = [...prev, segment];
+              console.log('Updated segments:', newSegments);
+              return newSegments;
+            });
+          } else {
+            interimTranscript += transcript;
           }
         }
 
         // Store current recognition text for final processing
         if (finalTranscript) {
           currentRecognitionText.current += finalTranscript;
+          console.log(
+            'Updated current recognition text:',
+            currentRecognitionText.current
+          );
         }
       };
 
@@ -236,6 +256,7 @@ const Chat: React.FC = () => {
         // Restart if still recording and not paused
         if (isRecording && !isPaused && browserSupportsSpeechRecognition) {
           try {
+            console.log('Restarting speech recognition...');
             recognition.start();
           } catch (error) {
             console.log('Recognition restart failed:', error);
@@ -245,9 +266,19 @@ const Chat: React.FC = () => {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
+        // Don't restart on certain errors
+        if (
+          event.error === 'not-allowed' ||
+          event.error === 'service-not-allowed'
+        ) {
+          console.error('Speech recognition permission denied');
+        }
       };
 
       recognitionRef.current = recognition;
+    } else {
+      console.log('Speech recognition not supported');
+      setBrowserSupportsSpeechRecognition(false);
     }
   }, [isRecording, isPaused, recordingTime, browserSupportsSpeechRecognition]);
 
@@ -262,6 +293,8 @@ const Chat: React.FC = () => {
   // Start recording
   const startRecording = async () => {
     try {
+      console.log('Starting recording...');
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -269,6 +302,8 @@ const Chat: React.FC = () => {
           autoGainControl: true,
         },
       });
+
+      console.log('Got media stream, creating MediaRecorder...');
 
       const recorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
@@ -281,10 +316,12 @@ const Chat: React.FC = () => {
         if (event.data.size > 0) {
           chunks.push(event.data);
           setAudioChunks([...chunks]);
+          console.log('Audio chunk received, size:', event.data.size);
         }
       };
 
       recorder.onstop = () => {
+        console.log('MediaRecorder stopped, processing audio...');
         const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
         setAudioBlob(blob);
         stream.getTracks().forEach((track) => track.stop());
@@ -301,18 +338,27 @@ const Chat: React.FC = () => {
       setFinalTranscriptSegments([]);
       currentRecognitionText.current = '';
 
+      console.log('MediaRecorder started');
+
       // Start speech recognition
       if (recognitionRef.current && browserSupportsSpeechRecognition) {
         try {
+          console.log('Starting speech recognition...');
           recognitionRef.current.start();
         } catch (error) {
           console.log('Speech recognition start failed:', error);
         }
+      } else {
+        console.log('Speech recognition not available');
       }
 
       // Start timer
       recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
+        setRecordingTime((prev) => {
+          const newTime = prev + 1;
+          console.log('Recording time:', newTime);
+          return newTime;
+        });
       }, 1000);
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -363,22 +409,31 @@ const Chat: React.FC = () => {
 
   // Stop recording
   const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      setIsPaused(false);
-      setMediaRecorder(null);
+    console.log('Stopping recording...');
 
-      // Stop speech recognition
+    if (mediaRecorder && isRecording) {
+      // Stop speech recognition first to capture any final results
       if (recognitionRef.current) {
+        console.log('Stopping speech recognition...');
         recognitionRef.current.stop();
       }
 
-      // Clear timer
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-        recordingIntervalRef.current = null;
-      }
+      // Wait a moment for final recognition results
+      setTimeout(() => {
+        console.log('Stopping MediaRecorder...');
+        mediaRecorder.stop();
+        setIsRecording(false);
+        setIsPaused(false);
+        setMediaRecorder(null);
+
+        // Clear timer
+        if (recordingIntervalRef.current) {
+          clearInterval(recordingIntervalRef.current);
+          recordingIntervalRef.current = null;
+        }
+
+        console.log('Recording stopped successfully');
+      }, 500);
     }
   };
 
@@ -411,39 +466,65 @@ const Chat: React.FC = () => {
 
   // Process complete audio for transcript
   const processCompleteAudioTranscript = async (blob: Blob) => {
+    console.log('Processing complete audio transcript...');
+    console.log('Final transcript segments:', finalTranscriptSegments);
+    console.log('Current recognition text:', currentRecognitionText.current);
+
     // Wait a moment for any final recognition results
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const audioUrl = URL.createObjectURL(blob);
 
     // Combine all transcript segments and current recognition text
     let allTranscriptText = '';
+    let combinedSegments: TranscriptSegment[] = [];
 
     // Add segments from recognition
     if (finalTranscriptSegments.length > 0) {
       allTranscriptText = finalTranscriptSegments
         .map((seg) => seg.text)
         .join(' ');
+      combinedSegments = [...finalTranscriptSegments];
+      console.log('Using final transcript segments:', combinedSegments);
     }
 
-    // Add any remaining recognition text
-    if (currentRecognitionText.current) {
-      allTranscriptText +=
-        (allTranscriptText ? ' ' : '') + currentRecognitionText.current;
+    // Add any remaining recognition text that wasn't captured in segments
+    if (
+      currentRecognitionText.current &&
+      !allTranscriptText.includes(currentRecognitionText.current)
+    ) {
+      const remainingText = currentRecognitionText.current
+        .replace(allTranscriptText, '')
+        .trim();
+      if (remainingText) {
+        allTranscriptText += (allTranscriptText ? ' ' : '') + remainingText;
+
+        // Add remaining text as a segment
+        combinedSegments.push({
+          text: remainingText,
+          startTime: recordingTime - 2,
+          endTime: recordingTime,
+          confidence: 0.7,
+        });
+      }
     }
 
-    // If we have browser support but no transcript, try one more recognition
+    // If we still don't have any transcript but browser supports it
     if (!allTranscriptText && browserSupportsSpeechRecognition) {
+      allTranscriptText = 'Audio message recorded (no speech detected)';
+      console.log('No speech detected, using fallback message');
+    } else if (!allTranscriptText) {
       allTranscriptText = 'Audio message recorded';
+      console.log('Browser does not support speech recognition');
     }
 
     // Create final transcript segments
     const finalTranscript: TranscriptSegment[] =
-      finalTranscriptSegments.length > 0
-        ? finalTranscriptSegments
+      combinedSegments.length > 0
+        ? combinedSegments
         : [
             {
-              text: allTranscriptText || 'Audio message recorded',
+              text: allTranscriptText,
               startTime: 0,
               endTime: recordingTime,
               confidence: 0.8,
@@ -451,7 +532,10 @@ const Chat: React.FC = () => {
           ];
 
     // Create quick transcript preview
-    const quickTranscript = allTranscriptText || 'Audio message recorded';
+    const quickTranscript = allTranscriptText;
+
+    console.log('Final transcript for message:', finalTranscript);
+    console.log('Quick transcript:', quickTranscript);
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -472,11 +556,13 @@ const Chat: React.FC = () => {
       transcript: finalTranscript,
     };
 
+    console.log('Creating audio message:', newMessage);
     setMessages((prev) => [...prev, newMessage]);
 
     // Reset states
     setFinalTranscriptSegments([]);
     currentRecognitionText.current = '';
+    console.log('Reset transcript states');
 
     // Simulate message status updates
     setTimeout(() => {
