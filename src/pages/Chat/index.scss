@@ -395,6 +395,20 @@
         }
       }
 
+      .voice-btn-disabled {
+        background: #ccc !important;
+        border: none !important;
+        padding: 10px !important;
+        min-width: auto !important;
+        border-radius: 50% !important;
+        color: #999 !important;
+        cursor: not-allowed !important;
+
+        &:hover {
+          background: #ccc !important;
+        }
+      }
+
       .stop-recording-btn {
         background: #dc3545 !important;
         border: none !important;

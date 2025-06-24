@@ -599,8 +599,8 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      {/* Recording Overlay */}
-      {isRecording && (
+      {/* Recording Overlay - DISABLED */}
+      {false && isRecording && (
         <div className='recording-overlay'>
           <div className='recording-content'>
             <div className='recording-animation'>
@@ -724,9 +724,10 @@ const Chat: React.FC = () => {
             />
           ) : (
             <Button
-              icon={isRecording ? <FaStop /> : <FaMicrophone />}
-              className={isRecording ? 'stop-recording-btn' : 'voice-btn'}
-              onClick={isRecording ? stopRecording : startRecording}
+              icon={<FaMicrophone />}
+              className={isRecording ? 'voice-btn-disabled' : 'voice-btn'}
+              onClick={isRecording ? undefined : startRecording}
+              disabled={isRecording}
             />
           )}
         </div>
