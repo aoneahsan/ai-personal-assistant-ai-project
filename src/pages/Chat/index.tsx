@@ -158,6 +158,7 @@ const Chat: React.FC = () => {
     null
   );
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
 
   // Speech recognition states
   const [finalTranscriptSegments, setFinalTranscriptSegments] = useState<
@@ -470,6 +471,9 @@ const Chat: React.FC = () => {
     console.log('Final transcript segments:', finalTranscriptSegments);
     console.log('Current recognition text:', currentRecognitionText.current);
 
+    // Set processing state to disable UI
+    setIsProcessingAudio(true);
+
     // Wait a moment for any final recognition results
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -562,6 +566,7 @@ const Chat: React.FC = () => {
     // Reset states
     setFinalTranscriptSegments([]);
     currentRecognitionText.current = '';
+    setIsProcessingAudio(false); // Re-enable UI
     console.log('Reset transcript states');
 
     // Simulate message status updates
@@ -1006,13 +1011,17 @@ const Chat: React.FC = () => {
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder='Type a message...'
+              placeholder={
+                isProcessingAudio ? 'Processing audio...' : 'Type a message...'
+              }
               className='message-input'
+              disabled={isProcessingAudio}
             />
             <Button
               icon={<FaSmile />}
               className='p-button-text emoji-btn'
               onClick={(e) => emojiPanelRef.current?.toggle(e)}
+              disabled={isProcessingAudio}
             />
           </div>
           {currentMessage.trim() ? (
@@ -1020,6 +1029,7 @@ const Chat: React.FC = () => {
               icon={<FaPaperPlane />}
               className='send-btn'
               onClick={handleSendMessage}
+              disabled={isProcessingAudio}
             />
           ) : (
             <div className='voice-controls'>
@@ -1029,6 +1039,7 @@ const Chat: React.FC = () => {
                   className='voice-btn'
                   onClick={startRecording}
                   tooltip='Start voice recording'
+                  disabled={isProcessingAudio}
                 />
               ) : (
                 <div className='recording-controls'>
@@ -1068,6 +1079,16 @@ const Chat: React.FC = () => {
               🔴 {isPaused ? 'Paused' : 'Recording'}...{' '}
               {formatDuration(recordingTime)}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Processing Audio Indicator */}
+      {isProcessingAudio && (
+        <div className='processing-audio-status'>
+          <div className='processing-info'>
+            <div className='processing-spinner'></div>
+            <span>Processing audio and generating transcript...</span>
           </div>
         </div>
       )}

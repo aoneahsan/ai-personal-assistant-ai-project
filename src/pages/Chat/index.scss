@@ -183,12 +183,17 @@
                 border: none !important;
                 border-radius: 50% !important;
                 color: white !important;
-                width: 32px !important;
-                height: 32px !important;
-                min-width: 32px !important;
+                width: 36px !important;
+                height: 36px !important;
+                min-width: 36px !important;
+                font-size: 18px !important;
 
                 &:hover {
                   background: #128c7e !important;
+                }
+
+                .p-button-icon {
+                  font-size: 18px !important;
                 }
               }
 
@@ -221,7 +226,9 @@
                 padding: 4px !important;
                 min-width: auto !important;
                 border-radius: 50% !important;
-                font-size: 14px !important;
+                font-size: 16px !important;
+                width: 28px !important;
+                height: 28px !important;
 
                 &:hover {
                   background: rgba(0, 0, 0, 0.1) !important;
@@ -229,7 +236,7 @@
                 }
 
                 .p-button-icon {
-                  font-size: 14px !important;
+                  font-size: 16px !important;
                 }
               }
             }
@@ -458,11 +465,13 @@
         .voice-btn {
           background: #075e54 !important;
           border: none !important;
-          padding: 10px !important;
+          padding: 8px !important;
           min-width: auto !important;
           border-radius: 50% !important;
           color: white !important;
           font-size: 18px !important;
+          width: 40px !important;
+          height: 40px !important;
 
           &:hover {
             background: #128c7e !important;
@@ -484,17 +493,17 @@
             border: none !important;
             color: #333 !important;
             border-radius: 50% !important;
-            width: 32px !important;
-            height: 32px !important;
-            min-width: 32px !important;
-            font-size: 16px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            font-size: 18px !important;
 
             &:hover {
               background: #e0a800 !important;
             }
 
             .p-button-icon {
-              font-size: 16px !important;
+              font-size: 18px !important;
             }
           }
 
@@ -503,17 +512,17 @@
             border: none !important;
             color: white !important;
             border-radius: 50% !important;
-            width: 32px !important;
-            height: 32px !important;
-            min-width: 32px !important;
-            font-size: 16px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            font-size: 18px !important;
 
             &:hover {
               background: #218838 !important;
             }
 
             .p-button-icon {
-              font-size: 16px !important;
+              font-size: 18px !important;
             }
           }
 
@@ -522,20 +531,55 @@
             border: none !important;
             color: white !important;
             border-radius: 50% !important;
-            width: 32px !important;
-            height: 32px !important;
-            min-width: 32px !important;
-            font-size: 18px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            font-size: 20px !important;
 
             &:hover {
               background: #c82333 !important;
             }
 
             .p-button-icon {
-              font-size: 18px !important;
+              font-size: 20px !important;
             }
           }
         }
+      }
+    }
+  }
+
+  // Processing Audio Status
+  .processing-audio-status {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(7, 94, 84, 0.95);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    max-width: 90%;
+
+    .processing-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .processing-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      span {
+        font-size: 14px;
+        font-weight: 500;
       }
     }
   }
@@ -673,6 +717,16 @@
         line-height: 1.4;
       }
     }
+  }
+}
+
+// Spinner animation for processing
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
