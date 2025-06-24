@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+and do not run app each time you finish a prompt, do not run app, i will do that myself when needed

@@ -11,12 +11,12 @@ import { FileUpload } from 'primereact/fileupload';
 import { InputText } from 'primereact/inputtext';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import React, { useEffect, useRef, useState } from 'react';
-import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import {
   FaArrowLeft,
   FaDownload,
   FaFile,
+  FaMicrophone,
   FaPaperPlane,
   FaPaperclip,
   FaPause,
@@ -24,9 +24,6 @@ import {
   FaSmile,
   FaVideo,
 } from 'react-icons/fa';
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from 'react-speech-recognition';
 import './index.scss';
 
 interface Message {
@@ -115,27 +112,28 @@ const Chat: React.FC = () => {
     [key: string]: boolean;
   }>({});
 
+  // Audio recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+
+  // Speech recognition states
+  const [transcript, setTranscript] = useState('');
+  const [listening, setListening] = useState(false);
+  const [
+    browserSupportsSpeechRecognition,
+    setBrowserSupportsSpeechRecognition,
+  ] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const emojiPanelRef = useRef<OverlayPanel>(null);
   const fileUploadRef = useRef<FileUpload>(null);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-
-  // Speech Recognition Hook
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
-
-  // Audio Recorder Hook
-  const recorderControls = useAudioRecorder(
-    {
-      noiseSuppression: true,
-      echoCancellation: true,
-    },
-    (err) => console.log('Microphone error:', err)
-  );
+  const recognitionRef = useRef<any>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const chatUser: ChatUser = {
     id: '1',
@@ -146,6 +144,48 @@ const Chat: React.FC = () => {
     lastSeen: new Date(),
   };
 
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setBrowserSupportsSpeechRecognition(true);
+      const SpeechRecognition =
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setTranscript(finalTranscript);
+        }
+      };
+
+      recognition.onstart = () => {
+        setListening(true);
+      };
+
+      recognition.onend = () => {
+        setListening(false);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -153,6 +193,69 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Start recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        setAudioBlob(blob);
+        stream.getTracks().forEach((track) => track.stop());
+
+        // Send audio message
+        handleAudioRecordingComplete(blob);
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start speech recognition
+      if (recognitionRef.current && browserSupportsSpeechRecognition) {
+        setTranscript('');
+        recognitionRef.current.start();
+      }
+
+      // Start timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Unable to access microphone. Please check your permissions.');
+    }
+  };
+
+  // Stop recording
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+
+      // Stop speech recognition
+      if (recognitionRef.current && listening) {
+        recognitionRef.current.stop();
+      }
+
+      // Clear timer
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
 
   // Handle audio recording completion
   const handleAudioRecordingComplete = (blob: Blob) => {
@@ -173,12 +276,12 @@ const Chat: React.FC = () => {
         type: blob.type,
         url: audioUrl,
       },
-      audioDuration: recorderControls.recordingTime,
+      audioDuration: recordingTime,
       transcript: audioTranscript,
     };
 
     setMessages((prev) => [...prev, newMessage]);
-    resetTranscript(); // Clear the transcript after use
+    setTranscript(''); // Clear the transcript after use
 
     // Simulate message status updates
     setTimeout(() => {
@@ -196,23 +299,6 @@ const Chat: React.FC = () => {
         )
       );
     }, 2000);
-  };
-
-  // Start recording with speech recognition
-  const startRecording = () => {
-    resetTranscript();
-    if (browserSupportsSpeechRecognition) {
-      SpeechRecognition.startListening({ continuous: true });
-    }
-    recorderControls.startRecording();
-  };
-
-  // Stop recording and speech recognition
-  const stopRecording = () => {
-    recorderControls.stopRecording();
-    if (browserSupportsSpeechRecognition) {
-      SpeechRecognition.stopListening();
-    }
   };
 
   const toggleAudioPlayback = (messageId: string, audioUrl: string) => {
@@ -628,27 +714,27 @@ const Chat: React.FC = () => {
               onClick={handleSendMessage}
             />
           ) : (
-            <div className='audio-recorder-container'>
-              <AudioRecorder
-                onRecordingComplete={handleAudioRecordingComplete}
-                recorderControls={recorderControls}
-                audioTrackConstraints={{
-                  noiseSuppression: true,
-                  echoCancellation: true,
-                }}
-                showVisualizer={true}
-                downloadOnSavePress={false}
-                classes={{
-                  AudioRecorderClass: 'custom-audio-recorder',
-                  AudioRecorderStartSaveClass: 'custom-start-save-btn',
-                  AudioRecorderPauseResumeClass: 'custom-pause-resume-btn',
-                  AudioRecorderDiscardClass: 'custom-discard-btn',
-                }}
-              />
-            </div>
+            <Button
+              icon={<FaMicrophone />}
+              className={isRecording ? 'voice-btn recording' : 'voice-btn'}
+              onClick={isRecording ? stopRecording : startRecording}
+              tooltip={isRecording ? 'Stop recording' : 'Start voice recording'}
+            />
           )}
         </div>
       </div>
+
+      {/* Recording Status */}
+      {isRecording && (
+        <div className='recording-status'>
+          <div className='recording-info'>
+            <span>🔴 Recording... {formatDuration(recordingTime)}</span>
+            {transcript && (
+              <span className='live-transcript'>"{transcript}"</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Browser Support Warning */}
       {!browserSupportsSpeechRecognition && (
