@@ -176,7 +176,7 @@
               display: flex;
               align-items: center;
               gap: 12px;
-              min-width: 200px;
+              min-width: 250px;
 
               .audio-play-btn {
                 background: #075e54 !important;
@@ -212,6 +212,48 @@
                 font-size: 12px;
                 color: #667781;
                 min-width: 35px;
+              }
+
+              .transcript-toggle-btn {
+                background: transparent !important;
+                border: none !important;
+                color: #075e54 !important;
+                padding: 4px !important;
+                min-width: auto !important;
+                font-size: 16px !important;
+
+                &:hover {
+                  background: rgba(7, 94, 84, 0.1) !important;
+                }
+              }
+            }
+
+            // Audio transcript styles
+            .audio-transcript {
+              margin-top: 12px;
+              padding: 10px;
+              background: rgba(7, 94, 84, 0.05);
+              border-radius: 8px;
+              border-left: 3px solid #075e54;
+
+              .transcript-header {
+                margin-bottom: 6px;
+
+                .transcript-label {
+                  font-size: 11px;
+                  font-weight: 600;
+                  color: #075e54;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                }
+              }
+
+              .transcript-text {
+                margin: 0;
+                font-size: 13px;
+                line-height: 1.4;
+                color: #303030;
+                font-style: italic;
               }
             }
           }
@@ -304,6 +346,39 @@
     }
   }
 
+  // Speech Recognition Status
+  .speech-recognition-status {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(7, 94, 84, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+
+    .recording-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .recording-dot {
+        width: 8px;
+        height: 8px;
+        background: #ff4444;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+      }
+
+      span {
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+  }
+
   // Message Input Area
   .message-input-container {
     padding: 8px 16px 12px 16px;
@@ -382,271 +457,88 @@
         }
       }
 
-      .voice-btn {
-        background: #075e54 !important;
-        border: none !important;
-        padding: 10px !important;
-        min-width: auto !important;
-        border-radius: 50% !important;
-        color: white !important;
+      // Professional Audio Recorder Styles
+      .audio-recorder-container {
+        .custom-audio-recorder {
+          background: transparent !important;
+          border: none !important;
+          padding: 0 !important;
 
-        &:hover {
-          background: #128c7e !important;
-        }
-      }
-
-      .voice-btn-disabled {
-        background: #ccc !important;
-        border: none !important;
-        padding: 10px !important;
-        min-width: auto !important;
-        border-radius: 50% !important;
-        color: #999 !important;
-        cursor: not-allowed !important;
-
-        &:hover {
-          background: #ccc !important;
-        }
-      }
-
-      .stop-recording-btn {
-        background: #dc3545 !important;
-        border: none !important;
-        padding: 10px !important;
-        min-width: auto !important;
-        border-radius: 50% !important;
-        color: white !important;
-        animation: pulse 1.5s infinite;
-
-        &:hover {
-          background: #c82333 !important;
-        }
-      }
-    }
-  }
-
-  // Recording Overlay
-  .recording-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-
-    .recording-content {
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-
-      .recording-animation {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: #dc3545;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px auto;
-        animation: pulse 1.5s infinite;
-
-        svg {
-          font-size: 30px;
-          color: white;
-        }
-      }
-
-      .recording-time {
-        font-size: 24px;
-        font-weight: bold;
-        color: #dc3545;
-        display: block;
-        margin-bottom: 10px;
-      }
-
-      p {
-        margin: 0;
-        color: #666;
-        font-size: 16px;
-      }
-    }
-  }
-
-  // WhatsApp-style Recording Controls
-  .recording-controls-overlay {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    width: 90%;
-    max-width: 500px;
-
-    .recording-controls {
-      background: white;
-      border-radius: 25px;
-      padding: 15px 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      border: 1px solid #e0e0e0;
-
-      .recording-info {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 15px;
-
-        .recording-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-
-          .recording-dot {
-            width: 12px;
-            height: 12px;
-            background: #dc3545;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-          }
-
-          span {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-          }
-        }
-
-        .recording-waveform {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          height: 30px;
-
-          .wave-bar {
-            width: 4px;
-            background: #075e54;
-            border-radius: 2px;
-            animation: wave 1s infinite ease-in-out;
-
-            &:nth-child(1) {
-              height: 10px;
-              animation-delay: 0s;
-            }
-            &:nth-child(2) {
-              height: 20px;
-              animation-delay: 0.1s;
-            }
-            &:nth-child(3) {
-              height: 25px;
-              animation-delay: 0.2s;
-            }
-            &:nth-child(4) {
-              height: 15px;
-              animation-delay: 0.3s;
-            }
-            &:nth-child(5) {
-              height: 18px;
-              animation-delay: 0.4s;
-            }
-          }
-        }
-      }
-
-      .recording-actions,
-      .preview-actions {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-
-        .p-button {
-          border-radius: 50% !important;
-          width: 45px !important;
-          height: 45px !important;
-          min-width: 45px !important;
-
-          &.recording-cancel-btn,
-          &.preview-cancel-btn {
-            background: #dc3545 !important;
+          // Start/Save button
+          .custom-start-save-btn {
+            background: #075e54 !important;
             border: none !important;
             color: white !important;
+            border-radius: 50% !important;
+            width: 40px !important;
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
 
             &:hover {
-              background: #c82333 !important;
+              background: #128c7e !important;
             }
           }
 
-          &.recording-pause-btn {
+          // Pause/Resume button
+          .custom-pause-resume-btn {
             background: #ffc107 !important;
             border: none !important;
             color: white !important;
+            border-radius: 50% !important;
+            width: 35px !important;
+            height: 35px !important;
+            margin: 0 5px !important;
 
             &:hover {
               background: #e0a800 !important;
             }
           }
 
-          &.recording-resume-btn {
-            background: #28a745 !important;
+          // Discard button
+          .custom-discard-btn {
+            background: #dc3545 !important;
             border: none !important;
             color: white !important;
+            border-radius: 50% !important;
+            width: 35px !important;
+            height: 35px !important;
+            margin: 0 5px !important;
 
             &:hover {
-              background: #218838 !important;
+              background: #c82333 !important;
             }
           }
 
-          &.recording-stop-btn {
-            background: #075e54 !important;
-            border: none !important;
-            color: white !important;
-
-            &:hover {
-              background: #128c7e !important;
-            }
-          }
-
-          &.preview-play-btn {
-            background: #075e54 !important;
-            border: none !important;
-            color: white !important;
-
-            &:hover {
-              background: #128c7e !important;
-            }
-          }
-
-          &.preview-send-btn {
-            background: #25d366 !important;
-            border: none !important;
-            color: white !important;
-
-            &:hover {
-              background: #20b358 !important;
-            }
+          // Audio visualizer
+          .audio-visualizer {
+            margin: 0 10px !important;
+            height: 30px !important;
           }
         }
       }
+    }
+  }
 
-      .preview-info {
-        text-align: center;
-        margin-bottom: 15px;
+  // Browser Support Warning
+  .speech-support-warning {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 193, 7, 0.9);
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    max-width: 90%;
+    text-align: center;
 
-        span {
-          font-size: 14px;
-          color: #666;
-          font-weight: 500;
-        }
-
-        audio {
-          display: none;
-        }
-      }
+    p {
+      margin: 0;
     }
   }
 
@@ -756,26 +648,15 @@
 @keyframes pulse {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
   }
   70% {
     transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
-  }
-}
-
-// Wave animation for recording waveform
-@keyframes wave {
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
-  50% {
-    transform: scaleY(2);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
   }
 }
 
@@ -815,6 +696,16 @@
     .message-input-container {
       padding: 8px 12px;
     }
+
+    .speech-recognition-status {
+      top: 60px;
+      max-width: 90%;
+    }
+
+    .speech-support-warning {
+      bottom: 80px;
+      max-width: 95%;
+    }
   }
 }
 
@@ -833,6 +724,16 @@
               .message-text {
                 color: #e0e0e0;
               }
+
+              &.message-audio {
+                .audio-transcript {
+                  background: rgba(7, 94, 84, 0.15);
+
+                  .transcript-text {
+                    color: #e0e0e0;
+                  }
+                }
+              }
             }
           }
 
@@ -842,6 +743,16 @@
 
               .message-text {
                 color: white;
+              }
+
+              &.message-audio {
+                .audio-transcript {
+                  background: rgba(255, 255, 255, 0.1);
+
+                  .transcript-text {
+                    color: white;
+                  }
+                }
               }
             }
           }

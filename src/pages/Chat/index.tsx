@@ -11,21 +11,22 @@ import { FileUpload } from 'primereact/fileupload';
 import { InputText } from 'primereact/inputtext';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import React, { useEffect, useRef, useState } from 'react';
+import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import {
   FaArrowLeft,
   FaDownload,
   FaFile,
-  FaMicrophone,
   FaPaperPlane,
   FaPaperclip,
   FaPause,
   FaPlay,
   FaSmile,
-  FaStop,
-  FaTrash,
   FaVideo,
 } from 'react-icons/fa';
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from 'react-speech-recognition';
 import './index.scss';
 
 interface Message {
@@ -42,6 +43,7 @@ interface Message {
     url: string;
   };
   audioDuration?: number;
+  transcript?: string; // For audio message transcripts
 }
 
 interface ChatUser {
@@ -86,30 +88,54 @@ const Chat: React.FC = () => {
       status: 'read',
       type: 'text',
     },
+    {
+      id: '5',
+      sender: 'me',
+      timestamp: new Date(Date.now() - 1800000),
+      status: 'read',
+      type: 'audio',
+      fileData: {
+        name: 'voice-message.wav',
+        size: 45000,
+        type: 'audio/wav',
+        url: 'data:audio/wav;base64,sample',
+      },
+      audioDuration: 15,
+      transcript:
+        'This is a sample audio message with transcription. The audio recording works perfectly with transcription support!',
+    },
   ]);
 
   const [currentMessage, setCurrentMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
   const [showAttachmentDialog, setShowAttachmentDialog] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const [isPaused, setIsPaused] = useState(false);
-  const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
-  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-  const [showRecordingControls, setShowRecordingControls] = useState(false);
+  const [showTranscript, setShowTranscript] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const emojiPanelRef = useRef<OverlayPanel>(null);
   const fileUploadRef = useRef<FileUpload>(null);
-  const recordingInterval = useRef<NodeJS.Timeout | null>(null);
-  const audioPreviewRef = useRef<HTMLAudioElement>(null);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+
+  // Speech Recognition Hook
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  // Audio Recorder Hook
+  const recorderControls = useAudioRecorder(
+    {
+      noiseSuppression: true,
+      echoCancellation: true,
+    },
+    (err) => console.log('Microphone error:', err)
+  );
 
   const chatUser: ChatUser = {
     id: '1',
@@ -128,134 +154,64 @@ const Chat: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Audio recording functions
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      setAudioChunks([]);
+  // Handle audio recording completion
+  const handleAudioRecordingComplete = (blob: Blob) => {
+    const audioUrl = URL.createObjectURL(blob);
 
-      recorder.ondataavailable = (event) => {
-        setAudioChunks((prev) => [...prev, event.data]);
-      };
+    // Get transcript from speech recognition
+    const audioTranscript = transcript || 'Audio message recorded';
 
-      recorder.onstop = () => {
-        // Create preview audio when recording stops
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        setRecordedAudio(audioUrl);
-        setShowRecordingControls(true);
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'me',
+      timestamp: new Date(),
+      status: 'sent',
+      type: 'audio',
+      fileData: {
+        name: 'voice-message.wav',
+        size: blob.size,
+        type: blob.type,
+        url: audioUrl,
+      },
+      audioDuration: recorderControls.recordingTime,
+      transcript: audioTranscript,
+    };
 
-        // Stop all tracks
-        stream.getTracks().forEach((track) => track.stop());
-      };
+    setMessages((prev) => [...prev, newMessage]);
+    resetTranscript(); // Clear the transcript after use
 
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setIsPaused(false);
+    // Simulate message status updates
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
+        )
+      );
+    }, 1000);
 
-      // Start recording timer
-      recordingInterval.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      alert('Unable to access microphone. Please check your permissions.');
-    }
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
+        )
+      );
+    }, 2000);
   };
 
+  // Start recording with speech recognition
+  const startRecording = () => {
+    resetTranscript();
+    if (browserSupportsSpeechRecognition) {
+      SpeechRecognition.startListening({ continuous: true });
+    }
+    recorderControls.startRecording();
+  };
+
+  // Stop recording and speech recognition
   const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      setMediaRecorder(null);
-
-      if (recordingInterval.current) {
-        clearInterval(recordingInterval.current);
-        recordingInterval.current = null;
-      }
-    }
-  };
-
-  const pauseRecording = () => {
-    if (mediaRecorder && isRecording && !isPaused) {
-      mediaRecorder.pause();
-      setIsPaused(true);
-      if (recordingInterval.current) {
-        clearInterval(recordingInterval.current);
-        recordingInterval.current = null;
-      }
-    }
-  };
-
-  const resumeRecording = () => {
-    if (mediaRecorder && isRecording && isPaused) {
-      mediaRecorder.resume();
-      setIsPaused(false);
-      recordingInterval.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    }
-  };
-
-  const cancelRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-    }
-    setIsRecording(false);
-    setIsPaused(false);
-    setMediaRecorder(null);
-    setRecordedAudio(null);
-    setShowRecordingControls(false);
-    setRecordingTime(0);
-    setAudioChunks([]);
-
-    if (recordingInterval.current) {
-      clearInterval(recordingInterval.current);
-      recordingInterval.current = null;
-    }
-  };
-
-  const sendAudioMessage = () => {
-    if (recordedAudio && audioChunks.length > 0) {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        sender: 'me',
-        timestamp: new Date(),
-        status: 'sent',
-        type: 'audio',
-        fileData: {
-          name: 'voice-message.wav',
-          size: audioBlob.size,
-          type: 'audio/wav',
-          url: recordedAudio,
-        },
-        audioDuration: recordingTime,
-      };
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      // Reset recording state
-      setRecordedAudio(null);
-      setShowRecordingControls(false);
-      setRecordingTime(0);
-      setAudioChunks([]);
-      setIsPlayingPreview(false);
-    }
-  };
-
-  const togglePreviewPlayback = () => {
-    if (audioPreviewRef.current && recordedAudio) {
-      if (isPlayingPreview) {
-        audioPreviewRef.current.pause();
-        setIsPlayingPreview(false);
-      } else {
-        audioPreviewRef.current.play();
-        setIsPlayingPreview(true);
-      }
+    recorderControls.stopRecording();
+    if (browserSupportsSpeechRecognition) {
+      SpeechRecognition.stopListening();
     }
   };
 
@@ -282,6 +238,13 @@ const Chat: React.FC = () => {
         setPlayingAudioId(messageId);
       }
     }
+  };
+
+  const toggleTranscript = (messageId: string) => {
+    setShowTranscript((prev) => ({
+      ...prev,
+      [messageId]: !prev[messageId],
+    }));
   };
 
   const handleSendMessage = () => {
@@ -465,9 +428,12 @@ const Chat: React.FC = () => {
         <div className='message-bubble message-audio'>
           <div className='audio-message'>
             <Button
-              icon={<FaPlay />}
+              icon={playingAudioId === message.id ? <FaPause /> : <FaPlay />}
               className='audio-play-btn'
               size='small'
+              onClick={() =>
+                toggleAudioPlayback(message.id, message.fileData?.url || '')
+              }
             />
             <div className='audio-waveform'>
               <div className='audio-progress'></div>
@@ -475,7 +441,31 @@ const Chat: React.FC = () => {
             <span className='audio-duration'>
               {formatDuration(message.audioDuration || 0)}
             </span>
+            {message.transcript && (
+              <Button
+                icon='💬'
+                className='transcript-toggle-btn'
+                size='small'
+                onClick={() => toggleTranscript(message.id)}
+                tooltip={
+                  showTranscript[message.id]
+                    ? 'Hide transcript'
+                    : 'Show transcript'
+                }
+              />
+            )}
           </div>
+
+          {/* Transcript Display */}
+          {message.transcript && showTranscript[message.id] && (
+            <div className='audio-transcript'>
+              <div className='transcript-header'>
+                <span className='transcript-label'>Transcript:</span>
+              </div>
+              <p className='transcript-text'>{message.transcript}</p>
+            </div>
+          )}
+
           <div className='message-meta'>
             <span className='message-time'>
               {formatTime(message.timestamp)}
@@ -599,97 +589,12 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      {/* Recording Overlay - DISABLED */}
-      {false && isRecording && (
-        <div className='recording-overlay'>
-          <div className='recording-content'>
-            <div className='recording-animation'>
-              <FaMicrophone />
-            </div>
-            <span className='recording-time'>
-              {formatDuration(recordingTime)}
-            </span>
-            <p>Recording voice message...</p>
-          </div>
-        </div>
-      )}
-
-      {/* WhatsApp-style Recording Controls */}
-      {(isRecording || showRecordingControls) && (
-        <div className='recording-controls-overlay'>
-          <div className='recording-controls'>
-            {isRecording ? (
-              <>
-                <div className='recording-info'>
-                  <div className='recording-indicator'>
-                    <div className='recording-dot'></div>
-                    <span>Recording... {formatDuration(recordingTime)}</span>
-                  </div>
-                  <div className='recording-waveform'>
-                    <div className='wave-bar'></div>
-                    <div className='wave-bar'></div>
-                    <div className='wave-bar'></div>
-                    <div className='wave-bar'></div>
-                    <div className='wave-bar'></div>
-                  </div>
-                </div>
-                <div className='recording-actions'>
-                  <Button
-                    icon={<FaTrash />}
-                    className='p-button-text recording-cancel-btn'
-                    onClick={cancelRecording}
-                    tooltip='Cancel'
-                  />
-                  <Button
-                    icon={isPaused ? <FaMicrophone /> : <FaPause />}
-                    className={
-                      isPaused ? 'recording-resume-btn' : 'recording-pause-btn'
-                    }
-                    onClick={isPaused ? resumeRecording : pauseRecording}
-                    tooltip={isPaused ? 'Resume' : 'Pause'}
-                  />
-                  <Button
-                    icon={<FaStop />}
-                    className='recording-stop-btn'
-                    onClick={stopRecording}
-                    tooltip='Stop & Preview'
-                  />
-                </div>
-              </>
-            ) : showRecordingControls && recordedAudio ? (
-              <>
-                <div className='preview-info'>
-                  <span>
-                    Voice message recorded ({formatDuration(recordingTime)})
-                  </span>
-                  <audio
-                    ref={audioPreviewRef}
-                    src={recordedAudio}
-                    onEnded={() => setIsPlayingPreview(false)}
-                  />
-                </div>
-                <div className='preview-actions'>
-                  <Button
-                    icon={<FaTrash />}
-                    className='p-button-text preview-cancel-btn'
-                    onClick={cancelRecording}
-                    tooltip='Delete'
-                  />
-                  <Button
-                    icon={isPlayingPreview ? <FaPause /> : <FaPlay />}
-                    className='preview-play-btn'
-                    onClick={togglePreviewPlayback}
-                    tooltip={isPlayingPreview ? 'Pause' : 'Play'}
-                  />
-                  <Button
-                    icon={<FaPaperPlane />}
-                    className='preview-send-btn'
-                    onClick={sendAudioMessage}
-                    tooltip='Send'
-                  />
-                </div>
-              </>
-            ) : null}
+      {/* Speech Recognition Status */}
+      {listening && (
+        <div className='speech-recognition-status'>
+          <div className='recording-indicator'>
+            <div className='recording-dot'></div>
+            <span>Listening... {transcript && `"${transcript}"`}</span>
           </div>
         </div>
       )}
@@ -723,15 +628,37 @@ const Chat: React.FC = () => {
               onClick={handleSendMessage}
             />
           ) : (
-            <Button
-              icon={<FaMicrophone />}
-              className={isRecording ? 'voice-btn-disabled' : 'voice-btn'}
-              onClick={isRecording ? undefined : startRecording}
-              disabled={isRecording}
-            />
+            <div className='audio-recorder-container'>
+              <AudioRecorder
+                onRecordingComplete={handleAudioRecordingComplete}
+                recorderControls={recorderControls}
+                audioTrackConstraints={{
+                  noiseSuppression: true,
+                  echoCancellation: true,
+                }}
+                showVisualizer={true}
+                downloadOnSavePress={false}
+                classes={{
+                  AudioRecorderClass: 'custom-audio-recorder',
+                  AudioRecorderStartSaveClass: 'custom-start-save-btn',
+                  AudioRecorderPauseResumeClass: 'custom-pause-resume-btn',
+                  AudioRecorderDiscardClass: 'custom-discard-btn',
+                }}
+              />
+            </div>
           )}
         </div>
       </div>
+
+      {/* Browser Support Warning */}
+      {!browserSupportsSpeechRecognition && (
+        <div className='speech-support-warning'>
+          <p>
+            ⚠️ Speech recognition not supported in this browser. Audio will be
+            recorded without transcription.
+          </p>
+        </div>
+      )}
 
       {/* Emoji Picker Overlay */}
       <OverlayPanel
