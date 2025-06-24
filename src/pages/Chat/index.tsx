@@ -1,24 +1,45 @@
+import EmojiPicker, {
+  EmojiClickData,
+  EmojiStyle,
+  Theme,
+} from 'emoji-picker-react';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 import { Divider } from 'primereact/divider';
+import { FileUpload } from 'primereact/fileupload';
 import { InputText } from 'primereact/inputtext';
+import { OverlayPanel } from 'primereact/overlaypanel';
 import React, { useEffect, useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import {
   FaArrowLeft,
+  FaDownload,
+  FaFile,
   FaMicrophone,
   FaPaperPlane,
   FaPaperclip,
+  FaPlay,
   FaSmile,
+  FaStop,
+  FaVideo,
 } from 'react-icons/fa';
 import './index.scss';
 
 interface Message {
   id: string;
-  text: string;
+  text?: string;
   sender: 'me' | 'other';
   timestamp: Date;
   status?: 'sent' | 'delivered' | 'read';
+  type: 'text' | 'file' | 'audio' | 'image' | 'video';
+  fileData?: {
+    name: string;
+    size: number;
+    type: string;
+    url: string;
+  };
+  audioDuration?: number;
 }
 
 interface ChatUser {
@@ -37,6 +58,7 @@ const Chat: React.FC = () => {
       sender: 'other',
       timestamp: new Date(Date.now() - 3600000),
       status: 'read',
+      type: 'text',
     },
     {
       id: '2',
@@ -44,6 +66,7 @@ const Chat: React.FC = () => {
       sender: 'me',
       timestamp: new Date(Date.now() - 3500000),
       status: 'read',
+      type: 'text',
     },
     {
       id: '3',
@@ -51,6 +74,7 @@ const Chat: React.FC = () => {
       sender: 'other',
       timestamp: new Date(Date.now() - 3400000),
       status: 'read',
+      type: 'text',
     },
     {
       id: '4',
@@ -58,12 +82,25 @@ const Chat: React.FC = () => {
       sender: 'me',
       timestamp: new Date(Date.now() - 3300000),
       status: 'read',
+      type: 'text',
     },
   ]);
 
   const [currentMessage, setCurrentMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [showAttachmentDialog, setShowAttachmentDialog] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const emojiPanelRef = useRef<OverlayPanel>(null);
+  const fileUploadRef = useRef<FileUpload>(null);
+  const recordingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const chatUser: ChatUser = {
     id: '1',
@@ -82,6 +119,70 @@ const Chat: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (event) => {
+        chunks.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          sender: 'me',
+          timestamp: new Date(),
+          status: 'sent',
+          type: 'audio',
+          fileData: {
+            name: 'voice-message.wav',
+            size: audioBlob.size,
+            type: 'audio/wav',
+            url: audioUrl,
+          },
+          audioDuration: recordingTime,
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+        setAudioChunks([]);
+        setRecordingTime(0);
+
+        // Stop all tracks
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+
+      // Start recording timer
+      recordingInterval.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+
+      if (recordingInterval.current) {
+        clearInterval(recordingInterval.current);
+        recordingInterval.current = null;
+      }
+    }
+  };
+
   const handleSendMessage = () => {
     if (currentMessage.trim()) {
       const newMessage: Message = {
@@ -90,6 +191,7 @@ const Chat: React.FC = () => {
         sender: 'me',
         timestamp: new Date(),
         status: 'sent',
+        type: 'text',
       };
 
       setMessages((prev) => [...prev, newMessage]);
@@ -125,10 +227,49 @@ const Chat: React.FC = () => {
           sender: 'other',
           timestamp: new Date(),
           status: 'read',
+          type: 'text',
         };
         setMessages((prev) => [...prev, responseMessage]);
       }, 4000);
     }
+  };
+
+  const handleFileUpload = (event: any) => {
+    const files = event.files;
+
+    for (let file of files) {
+      const fileUrl = URL.createObjectURL(file);
+      let messageType: Message['type'] = 'file';
+
+      if (file.type.startsWith('image/')) {
+        messageType = 'image';
+      } else if (file.type.startsWith('video/')) {
+        messageType = 'video';
+      }
+
+      const newMessage: Message = {
+        id: Date.now().toString() + Math.random(),
+        sender: 'me',
+        timestamp: new Date(),
+        status: 'sent',
+        type: messageType,
+        fileData: {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: fileUrl,
+        },
+      };
+
+      setMessages((prev) => [...prev, newMessage]);
+    }
+
+    setShowAttachmentDialog(false);
+  };
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    setCurrentMessage((prev) => prev + emojiData.emoji);
+    emojiPanelRef.current?.hide();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -146,6 +287,20 @@ const Chat: React.FC = () => {
     });
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'sent':
@@ -157,6 +312,125 @@ const Chat: React.FC = () => {
       default:
         return '';
     }
+  };
+
+  const renderMessage = (message: Message) => {
+    if (message.type === 'text') {
+      return (
+        <div className='message-bubble'>
+          <p className='message-text'>{message.text}</p>
+          <div className='message-meta'>
+            <span className='message-time'>
+              {formatTime(message.timestamp)}
+            </span>
+            {message.sender === 'me' && (
+              <span
+                className={`message-status ${message.status === 'read' ? 'read' : ''}`}
+              >
+                {getStatusIcon(message.status)}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (message.type === 'image') {
+      return (
+        <div className='message-bubble message-media'>
+          <img
+            src={message.fileData?.url}
+            alt={message.fileData?.name}
+            className='message-image'
+          />
+          <div className='message-meta'>
+            <span className='message-time'>
+              {formatTime(message.timestamp)}
+            </span>
+            {message.sender === 'me' && (
+              <span
+                className={`message-status ${message.status === 'read' ? 'read' : ''}`}
+              >
+                {getStatusIcon(message.status)}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (message.type === 'audio') {
+      return (
+        <div className='message-bubble message-audio'>
+          <div className='audio-message'>
+            <Button
+              icon={<FaPlay />}
+              className='audio-play-btn'
+              size='small'
+            />
+            <div className='audio-waveform'>
+              <div className='audio-progress'></div>
+            </div>
+            <span className='audio-duration'>
+              {formatDuration(message.audioDuration || 0)}
+            </span>
+          </div>
+          <div className='message-meta'>
+            <span className='message-time'>
+              {formatTime(message.timestamp)}
+            </span>
+            {message.sender === 'me' && (
+              <span
+                className={`message-status ${message.status === 'read' ? 'read' : ''}`}
+              >
+                {getStatusIcon(message.status)}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (message.type === 'file' || message.type === 'video') {
+      const getFileIcon = () => {
+        if (message.type === 'video') return <FaVideo />;
+        if (message.fileData?.type.includes('pdf')) return <FaFile />;
+        return <FaFile />;
+      };
+
+      return (
+        <div className='message-bubble message-file'>
+          <div className='file-message'>
+            <div className='file-icon'>{getFileIcon()}</div>
+            <div className='file-info'>
+              <span className='file-name'>{message.fileData?.name}</span>
+              <span className='file-size'>
+                {formatFileSize(message.fileData?.size || 0)}
+              </span>
+            </div>
+            <Button
+              icon={<FaDownload />}
+              className='p-button-text file-download-btn'
+              size='small'
+            />
+          </div>
+          <div className='message-meta'>
+            <span className='message-time'>
+              {formatTime(message.timestamp)}
+            </span>
+            {message.sender === 'me' && (
+              <span
+                className={`message-status ${message.status === 'read' ? 'read' : ''}`}
+              >
+                {getStatusIcon(message.status)}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -203,21 +477,7 @@ const Chat: React.FC = () => {
               key={message.id}
               className={`message-wrapper ${message.sender === 'me' ? 'message-sent' : 'message-received'}`}
             >
-              <div className='message-bubble'>
-                <p className='message-text'>{message.text}</p>
-                <div className='message-meta'>
-                  <span className='message-time'>
-                    {formatTime(message.timestamp)}
-                  </span>
-                  {message.sender === 'me' && (
-                    <span
-                      className={`message-status ${message.status === 'read' ? 'read' : ''}`}
-                    >
-                      {getStatusIcon(message.status)}
-                    </span>
-                  )}
-                </div>
-              </div>
+              {renderMessage(message)}
             </div>
           ))}
 
@@ -238,12 +498,28 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
+      {/* Recording Overlay */}
+      {isRecording && (
+        <div className='recording-overlay'>
+          <div className='recording-content'>
+            <div className='recording-animation'>
+              <FaMicrophone />
+            </div>
+            <span className='recording-time'>
+              {formatDuration(recordingTime)}
+            </span>
+            <p>Recording voice message...</p>
+          </div>
+        </div>
+      )}
+
       {/* Message Input Area */}
       <div className='message-input-container'>
         <div className='message-input-wrapper'>
           <Button
             icon={<FaPaperclip />}
             className='p-button-text attachment-btn'
+            onClick={() => setShowAttachmentDialog(true)}
           />
           <div className='message-input-field'>
             <InputText
@@ -256,6 +532,7 @@ const Chat: React.FC = () => {
             <Button
               icon={<FaSmile />}
               className='p-button-text emoji-btn'
+              onClick={(e) => emojiPanelRef.current?.toggle(e)}
             />
           </div>
           {currentMessage.trim() ? (
@@ -266,12 +543,58 @@ const Chat: React.FC = () => {
             />
           ) : (
             <Button
-              icon={<FaMicrophone />}
-              className='voice-btn'
+              icon={isRecording ? <FaStop /> : <FaMicrophone />}
+              className={isRecording ? 'stop-recording-btn' : 'voice-btn'}
+              onClick={isRecording ? stopRecording : startRecording}
             />
           )}
         </div>
       </div>
+
+      {/* Emoji Picker Overlay */}
+      <OverlayPanel
+        ref={emojiPanelRef}
+        className='emoji-panel'
+        dismissable
+      >
+        <EmojiPicker
+          onEmojiClick={handleEmojiClick}
+          theme={Theme.LIGHT}
+          emojiStyle={EmojiStyle.APPLE}
+          width={320}
+          height={400}
+          searchDisabled={false}
+          skinTonesDisabled={false}
+          previewConfig={{ showPreview: false }}
+          lazyLoadEmojis={true}
+        />
+      </OverlayPanel>
+
+      {/* File Attachment Dialog */}
+      <Dialog
+        header='Send Attachment'
+        visible={showAttachmentDialog}
+        style={{ width: '90vw', maxWidth: '500px' }}
+        onHide={() => setShowAttachmentDialog(false)}
+        className='attachment-dialog'
+      >
+        <div className='attachment-options'>
+          <FileUpload
+            ref={fileUploadRef}
+            mode='basic'
+            multiple
+            accept='image/*,video/*,.pdf,.doc,.docx,.txt'
+            maxFileSize={50000000} // 50MB
+            onSelect={handleFileUpload}
+            chooseLabel='Choose Files'
+            className='file-upload-btn'
+            auto
+          />
+          <p className='attachment-help'>
+            You can send images, videos, documents and other files up to 50MB
+          </p>
+        </div>
+      </Dialog>
     </div>
   );
 };

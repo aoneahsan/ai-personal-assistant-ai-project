@@ -138,6 +138,137 @@
             }
           }
 
+          // Media message styles (images)
+          &.message-media {
+            padding: 4px;
+            overflow: hidden;
+
+            .message-image {
+              width: 100%;
+              max-width: 250px;
+              height: auto;
+              border-radius: 12px;
+              display: block;
+            }
+
+            .message-meta {
+              position: absolute;
+              bottom: 8px;
+              right: 12px;
+              background: rgba(0, 0, 0, 0.6);
+              padding: 2px 6px;
+              border-radius: 8px;
+              color: white;
+
+              .message-time {
+                color: white;
+              }
+
+              .message-status {
+                color: white;
+              }
+            }
+          }
+
+          // Audio message styles
+          &.message-audio {
+            .audio-message {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              min-width: 200px;
+
+              .audio-play-btn {
+                background: #075e54 !important;
+                border: none !important;
+                border-radius: 50% !important;
+                color: white !important;
+                width: 32px !important;
+                height: 32px !important;
+                min-width: 32px !important;
+
+                &:hover {
+                  background: #128c7e !important;
+                }
+              }
+
+              .audio-waveform {
+                flex: 1;
+                height: 20px;
+                background: #e0e0e0;
+                border-radius: 10px;
+                position: relative;
+                overflow: hidden;
+
+                .audio-progress {
+                  height: 100%;
+                  background: #075e54;
+                  border-radius: 10px;
+                  width: 30%; // Sample progress
+                }
+              }
+
+              .audio-duration {
+                font-size: 12px;
+                color: #667781;
+                min-width: 35px;
+              }
+            }
+          }
+
+          // File message styles
+          &.message-file {
+            .file-message {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              min-width: 200px;
+
+              .file-icon {
+                width: 40px;
+                height: 40px;
+                background: #075e54;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 18px;
+              }
+
+              .file-info {
+                flex: 1;
+
+                .file-name {
+                  display: block;
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: #303030;
+                  margin-bottom: 2px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                }
+
+                .file-size {
+                  font-size: 12px;
+                  color: #667781;
+                }
+              }
+
+              .file-download-btn {
+                color: #075e54 !important;
+                padding: 8px !important;
+                min-width: auto !important;
+                border-radius: 50% !important;
+
+                &:hover {
+                  background: rgba(7, 94, 84, 0.1) !important;
+                }
+              }
+            }
+          }
+
           .message-text {
             margin: 0 0 4px 0;
             font-size: 14px;
@@ -263,6 +394,160 @@
           background: #128c7e !important;
         }
       }
+
+      .stop-recording-btn {
+        background: #dc3545 !important;
+        border: none !important;
+        padding: 10px !important;
+        min-width: auto !important;
+        border-radius: 50% !important;
+        color: white !important;
+        animation: pulse 1.5s infinite;
+
+        &:hover {
+          background: #c82333 !important;
+        }
+      }
+    }
+  }
+
+  // Recording Overlay
+  .recording-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+
+    .recording-content {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+
+      .recording-animation {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #dc3545;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px auto;
+        animation: pulse 1.5s infinite;
+
+        svg {
+          font-size: 30px;
+          color: white;
+        }
+      }
+
+      .recording-time {
+        font-size: 24px;
+        font-weight: bold;
+        color: #dc3545;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      p {
+        margin: 0;
+        color: #666;
+        font-size: 16px;
+      }
+    }
+  }
+
+  // Emoji Picker
+  .emoji-panel {
+    // Remove custom padding and borders for better integration
+    .p-overlaypanel-content {
+      padding: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    // Style the emoji picker component
+    .EmojiPickerReact {
+      border: none !important;
+      box-shadow: none !important;
+
+      // Customize the search input to match WhatsApp style
+      .epr-search-container input {
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 20px !important;
+        padding: 8px 16px !important;
+        font-size: 14px !important;
+
+        &:focus {
+          border-color: #075e54 !important;
+          box-shadow: 0 0 0 2px rgba(7, 94, 84, 0.1) !important;
+        }
+      }
+
+      // Style emoji categories
+      .epr-category-nav {
+        border-bottom: 1px solid #e0e0e0 !important;
+
+        button {
+          color: #667781 !important;
+
+          &:hover {
+            background: rgba(7, 94, 84, 0.1) !important;
+          }
+
+          &.epr-cat-btn-active {
+            color: #075e54 !important;
+            border-bottom-color: #075e54 !important;
+          }
+        }
+      }
+
+      // Style emoji hover effects
+      .epr-emoji-category .epr-emoji {
+        &:hover {
+          background: rgba(7, 94, 84, 0.1) !important;
+        }
+      }
+    }
+  }
+
+  // Attachment Dialog
+  .attachment-dialog {
+    .attachment-options {
+      text-align: center;
+      padding: 20px;
+
+      .file-upload-btn {
+        width: 100%;
+        margin-bottom: 15px;
+
+        .p-button {
+          width: 100%;
+          padding: 15px !important;
+          background: #075e54 !important;
+          border: none !important;
+          border-radius: 10px !important;
+          font-size: 16px !important;
+
+          &:hover {
+            background: #128c7e !important;
+          }
+        }
+      }
+
+      .attachment-help {
+        color: #666;
+        font-size: 14px;
+        margin: 0;
+        line-height: 1.4;
+      }
     }
   }
 }
@@ -278,6 +563,22 @@
   30% {
     transform: translateY(-10px);
     opacity: 1;
+  }
+}
+
+// Pulse animation for recording
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
   }
 }
 
