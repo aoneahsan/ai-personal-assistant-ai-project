@@ -24,7 +24,8 @@ import {
   FaPause,
   FaPlay,
   FaSmile,
-  FaStop,
+  FaSquare,
+  FaTimes,
   FaVideo,
 } from 'react-icons/fa';
 import './index.scss';
@@ -159,11 +160,9 @@ const Chat: React.FC = () => {
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
   // Speech recognition states
-  const [currentTranscript, setCurrentTranscript] = useState('');
-  const [transcriptSegments, setTranscriptSegments] = useState<
+  const [finalTranscriptSegments, setFinalTranscriptSegments] = useState<
     TranscriptSegment[]
   >([]);
-  const [listening, setListening] = useState(false);
   const [
     browserSupportsSpeechRecognition,
     setBrowserSupportsSpeechRecognition,
@@ -176,6 +175,7 @@ const Chat: React.FC = () => {
   const recognitionRef = useRef<any>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioMenuRefs = useRef<{ [key: string]: Menu }>({});
+  const currentRecognitionText = useRef<string>('');
 
   const chatUser: ChatUser = {
     id: '1',
@@ -200,7 +200,6 @@ const Chat: React.FC = () => {
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: any) => {
-        let interimTranscript = '';
         let finalTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -210,29 +209,30 @@ const Chat: React.FC = () => {
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
 
-            // Add to transcript segments with timing
+            // Add to final transcript segments
             const segment: TranscriptSegment = {
               text: transcript.trim(),
-              startTime: recordingTime - 3, // Approximate start time
+              startTime: Math.max(0, recordingTime - 5), // Better timing estimation
               endTime: recordingTime,
               confidence: confidence || 0.8,
             };
 
-            setTranscriptSegments((prev) => [...prev, segment]);
-          } else {
-            interimTranscript += transcript;
+            setFinalTranscriptSegments((prev) => [...prev, segment]);
           }
         }
 
-        setCurrentTranscript(finalTranscript + interimTranscript);
+        // Store current recognition text for final processing
+        if (finalTranscript) {
+          currentRecognitionText.current += finalTranscript;
+        }
       };
 
       recognition.onstart = () => {
-        setListening(true);
+        console.log('Speech recognition started');
       };
 
       recognition.onend = () => {
-        setListening(false);
+        console.log('Speech recognition ended');
         // Restart if still recording and not paused
         if (isRecording && !isPaused && browserSupportsSpeechRecognition) {
           try {
@@ -245,7 +245,6 @@ const Chat: React.FC = () => {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        setListening(false);
       };
 
       recognitionRef.current = recognition;
@@ -290,8 +289,8 @@ const Chat: React.FC = () => {
         setAudioBlob(blob);
         stream.getTracks().forEach((track) => track.stop());
 
-        // Send audio message
-        handleAudioRecordingComplete(blob);
+        // Process complete audio for transcript
+        processCompleteAudioTranscript(blob);
       };
 
       recorder.start(1000); // Collect data every second
@@ -299,8 +298,8 @@ const Chat: React.FC = () => {
       setIsRecording(true);
       setIsPaused(false);
       setRecordingTime(0);
-      setTranscriptSegments([]);
-      setCurrentTranscript('');
+      setFinalTranscriptSegments([]);
+      currentRecognitionText.current = '';
 
       // Start speech recognition
       if (recognitionRef.current && browserSupportsSpeechRecognition) {
@@ -328,7 +327,7 @@ const Chat: React.FC = () => {
       setIsPaused(true);
 
       // Pause speech recognition
-      if (recognitionRef.current && listening) {
+      if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
 
@@ -371,7 +370,7 @@ const Chat: React.FC = () => {
       setMediaRecorder(null);
 
       // Stop speech recognition
-      if (recognitionRef.current && listening) {
+      if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
 
@@ -395,11 +394,11 @@ const Chat: React.FC = () => {
     setAudioBlob(null);
     setAudioChunks([]);
     setRecordingTime(0);
-    setTranscriptSegments([]);
-    setCurrentTranscript('');
+    setFinalTranscriptSegments([]);
+    currentRecognitionText.current = '';
 
     // Stop speech recognition
-    if (recognitionRef.current && listening) {
+    if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
 
@@ -410,15 +409,49 @@ const Chat: React.FC = () => {
     }
   };
 
-  // Handle audio recording completion
-  const handleAudioRecordingComplete = (blob: Blob) => {
+  // Process complete audio for transcript
+  const processCompleteAudioTranscript = async (blob: Blob) => {
+    // Wait a moment for any final recognition results
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const audioUrl = URL.createObjectURL(blob);
 
+    // Combine all transcript segments and current recognition text
+    let allTranscriptText = '';
+
+    // Add segments from recognition
+    if (finalTranscriptSegments.length > 0) {
+      allTranscriptText = finalTranscriptSegments
+        .map((seg) => seg.text)
+        .join(' ');
+    }
+
+    // Add any remaining recognition text
+    if (currentRecognitionText.current) {
+      allTranscriptText +=
+        (allTranscriptText ? ' ' : '') + currentRecognitionText.current;
+    }
+
+    // If we have browser support but no transcript, try one more recognition
+    if (!allTranscriptText && browserSupportsSpeechRecognition) {
+      allTranscriptText = 'Audio message recorded';
+    }
+
+    // Create final transcript segments
+    const finalTranscript: TranscriptSegment[] =
+      finalTranscriptSegments.length > 0
+        ? finalTranscriptSegments
+        : [
+            {
+              text: allTranscriptText || 'Audio message recorded',
+              startTime: 0,
+              endTime: recordingTime,
+              confidence: 0.8,
+            },
+          ];
+
     // Create quick transcript preview
-    const quickTranscript =
-      transcriptSegments.length > 0
-        ? transcriptSegments.map((seg) => seg.text).join(' ')
-        : currentTranscript || 'Audio message recorded';
+    const quickTranscript = allTranscriptText || 'Audio message recorded';
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -436,24 +469,14 @@ const Chat: React.FC = () => {
       quickTranscript:
         quickTranscript.substring(0, 50) +
         (quickTranscript.length > 50 ? '...' : ''),
-      transcript:
-        transcriptSegments.length > 0
-          ? transcriptSegments
-          : [
-              {
-                text: currentTranscript || 'Audio message recorded',
-                startTime: 0,
-                endTime: recordingTime,
-                confidence: 0.8,
-              },
-            ],
+      transcript: finalTranscript,
     };
 
     setMessages((prev) => [...prev, newMessage]);
 
     // Reset states
-    setCurrentTranscript('');
-    setTranscriptSegments([]);
+    setFinalTranscriptSegments([]);
+    currentRecognitionText.current = '';
 
     // Simulate message status updates
     setTimeout(() => {
@@ -884,18 +907,6 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      {/* Speech Recognition Status */}
-      {listening && (
-        <div className='speech-recognition-status'>
-          <div className='recording-indicator'>
-            <div className='recording-dot'></div>
-            <span>
-              Listening... {currentTranscript && `"${currentTranscript}"`}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Message Input Area */}
       <div className='message-input-container'>
         <div className='message-input-wrapper'>
@@ -943,14 +954,14 @@ const Chat: React.FC = () => {
                     size='small'
                   />
                   <Button
-                    icon={<FaStop />}
+                    icon={<FaSquare />}
                     className='stop-btn'
                     onClick={stopRecording}
                     tooltip='Stop and send'
                     size='small'
                   />
                   <Button
-                    icon='✕'
+                    icon={<FaTimes />}
                     className='cancel-btn'
                     onClick={cancelRecording}
                     tooltip='Cancel recording'
@@ -971,9 +982,6 @@ const Chat: React.FC = () => {
               🔴 {isPaused ? 'Paused' : 'Recording'}...{' '}
               {formatDuration(recordingTime)}
             </span>
-            {currentTranscript && (
-              <span className='live-transcript'>"{currentTranscript}"</span>
-            )}
           </div>
         </div>
       )}
