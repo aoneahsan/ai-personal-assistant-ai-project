@@ -765,6 +765,32 @@
             font-size: 18px !important;
           }
         }
+
+        .camera-btn {
+          background: transparent !important;
+          border: none !important;
+          color: #667781 !important;
+          padding: 8px !important;
+          min-width: auto !important;
+          border-radius: 50% !important;
+          width: 40px !important;
+          height: 40px !important;
+          transition: all 0.2s ease !important;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.05) !important;
+            color: #075e54 !important;
+          }
+
+          &:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+          }
+
+          .p-button-icon {
+            font-size: 18px !important;
+          }
+        }
       }
 
       .send-btn {

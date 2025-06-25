@@ -171,10 +171,23 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
         source: CameraSource.Camera,
       });
 
-      // Convert to blob and handle as image message
-      const response = await fetch(image.dataUrl!);
+      if (!image.dataUrl) {
+        throw new Error('No image data received');
+      }
+
+      // Convert to blob
+      const response = await fetch(image.dataUrl);
       const blob = await response.blob();
-      // You can extend this to handle image messages too
+
+      // Create a simple file info object for the photo
+      const photoUrl = URL.createObjectURL(blob);
+
+      // You could call a callback here to handle the photo
+      console.log('Photo captured:', {
+        size: blob.size,
+        type: blob.type,
+        url: photoUrl,
+      });
     } catch (error) {
       console.error('Error taking photo:', error);
     }

@@ -7,10 +7,18 @@ import React, { useRef, useState } from 'react';
 import {
   FaCamera,
   FaFile,
+  FaImage,
   FaPaperPlane,
   FaSmile,
   FaVideo,
 } from 'react-icons/fa';
+import {
+  FileInfo,
+  handleWebFileInput,
+  pickImageFromGallery,
+  saveBlobToDevice,
+  takePhoto,
+} from '../../utils/helpers/capacitorApis/fileManager';
 import VideoRecorder from './VideoRecorder';
 import VoiceRecording from './VoiceRecording';
 import { Message } from './types';
@@ -36,6 +44,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [showAttachmentDialog, setShowAttachmentDialog] = useState(false);
   const [showVideoRecorder, setShowVideoRecorder] = useState(false);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
 
   const emojiPanelRef = useRef<OverlayPanel>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,38 +67,162 @@ const MessageInput: React.FC<MessageInputProps> = ({
     emojiPanelRef.current?.hide();
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      onFileUpload(files);
-      setShowAttachmentDialog(false);
+  // Handle camera capture directly
+  const handleCameraCapture = async () => {
+    if (isProcessingFile) return;
+
+    setIsProcessingFile(true);
+    try {
+      const fileInfo = await takePhoto({
+        quality: 90,
+        allowEditing: false,
+      });
+
+      await handleFileMessage(fileInfo, 'image');
+    } catch (error) {
+      console.error('Camera capture failed:', error);
+    } finally {
+      setIsProcessingFile(false);
     }
   };
 
-  const handleVideoRecorded = (
+  // Handle gallery image selection
+  const handleGallerySelect = async () => {
+    if (isProcessingFile) return;
+
+    setIsProcessingFile(true);
+    try {
+      const fileInfo = await pickImageFromGallery({
+        quality: 90,
+        allowEditing: false,
+      });
+
+      await handleFileMessage(fileInfo, 'image');
+      setShowAttachmentDialog(false);
+    } catch (error) {
+      console.error('Gallery selection failed:', error);
+    } finally {
+      setIsProcessingFile(false);
+    }
+  };
+
+  // Handle web file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || isProcessingFile) return;
+
+    setIsProcessingFile(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileInfo = await handleWebFileInput(file);
+
+        let messageType: Message['type'] = 'file';
+        if (file.type.startsWith('image/')) {
+          messageType = 'image';
+        } else if (file.type.startsWith('video/')) {
+          messageType = 'video';
+        }
+
+        await handleFileMessage(fileInfo, messageType);
+      }
+      setShowAttachmentDialog(false);
+    } catch (error) {
+      console.error('File selection failed:', error);
+    } finally {
+      setIsProcessingFile(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Create message from file info
+  const handleFileMessage = async (
+    fileInfo: FileInfo,
+    messageType: Message['type']
+  ) => {
+    const newMessage: Message = {
+      id: Date.now().toString() + Math.random(),
+      sender: 'me',
+      timestamp: new Date(),
+      status: 'sent',
+      type: messageType,
+      fileData: {
+        name: fileInfo.name,
+        size: fileInfo.size,
+        type: fileInfo.type,
+        url: fileInfo.url,
+      },
+    };
+
+    // Add video duration if it's a video file
+    if (messageType === 'video') {
+      // For video files, we'll need to get duration from the video element
+      // This is a placeholder - in real implementation you'd extract video metadata
+      newMessage.videoDuration = 0;
+    }
+
+    // Trigger the appropriate handler based on file type
+    if (messageType === 'video' && onSendVideoMessage) {
+      onSendVideoMessage(newMessage);
+    } else {
+      // For images and other files, we'll create a mock File object and FileList
+      const mockFile = new File([new Blob()], fileInfo.name, {
+        type: fileInfo.type,
+      });
+      Object.defineProperty(mockFile, 'size', { value: fileInfo.size });
+
+      const mockFileList = Object.create(FileList.prototype);
+      Object.defineProperty(mockFileList, 'length', { value: 1 });
+      Object.defineProperty(mockFileList, '0', { value: mockFile });
+      Object.defineProperty(mockFileList, 'item', {
+        value: (index: number) => (index === 0 ? mockFile : null),
+      });
+
+      onFileUpload(mockFileList);
+    }
+  };
+
+  const handleVideoRecorded = async (
     videoBlob: Blob,
     videoDuration: number,
     thumbnail?: string
   ) => {
-    const videoUrl = URL.createObjectURL(videoBlob);
-    const videoMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'me',
-      timestamp: new Date(),
-      status: 'sent',
-      type: 'video',
-      fileData: {
-        name: `video-${Date.now()}.mp4`,
-        size: videoBlob.size,
-        type: videoBlob.type,
-        url: videoUrl,
-      },
-      videoDuration,
-      videoThumbnail: thumbnail,
-    };
+    if (isProcessingFile) return;
 
-    onSendVideoMessage?.(videoMessage);
-    setShowVideoRecorder(false);
+    setIsProcessingFile(true);
+    try {
+      // Save video to device storage
+      const fileInfo = await saveBlobToDevice(
+        videoBlob,
+        `video-${Date.now()}.mp4`
+      );
+
+      const videoMessage: Message = {
+        id: Date.now().toString(),
+        sender: 'me',
+        timestamp: new Date(),
+        status: 'sent',
+        type: 'video',
+        fileData: {
+          name: fileInfo.name,
+          size: fileInfo.size,
+          type: fileInfo.type,
+          url: fileInfo.url,
+        },
+        videoDuration,
+        videoThumbnail: thumbnail,
+      };
+
+      onSendVideoMessage?.(videoMessage);
+      setShowVideoRecorder(false);
+    } catch (error) {
+      console.error('Video save failed:', error);
+    } finally {
+      setIsProcessingFile(false);
+    }
   };
 
   return (
@@ -100,7 +233,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             icon={<FaFile />}
             className='attachment-btn'
             onClick={() => setShowAttachmentDialog(true)}
-            disabled={disabled}
+            disabled={disabled || isProcessingFile}
           />
 
           <div className='message-input-field'>
@@ -110,13 +243,21 @@ const MessageInput: React.FC<MessageInputProps> = ({
               placeholder='Type a message...'
               className='message-input'
               onKeyPress={handleKeyPress}
-              disabled={disabled}
+              disabled={disabled || isProcessingFile}
             />
+
+            <Button
+              icon={<FaCamera />}
+              className='camera-btn'
+              onClick={handleCameraCapture}
+              disabled={disabled || isProcessingFile}
+            />
+
             <Button
               icon={<FaSmile />}
               className='emoji-btn'
               onClick={(e) => emojiPanelRef.current?.toggle(e)}
-              disabled={disabled}
+              disabled={disabled || isProcessingFile}
             />
           </div>
 
@@ -125,12 +266,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
               icon={<FaPaperPlane />}
               className='send-btn'
               onClick={handleSendMessage}
-              disabled={disabled}
+              disabled={disabled || isProcessingFile}
             />
           ) : (
             <VoiceRecording
               onSendAudioMessage={onSendAudioMessage}
-              disabled={disabled}
+              disabled={disabled || isProcessingFile}
             />
           )}
         </div>
@@ -157,10 +298,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
             icon={<FaCamera />}
             label='Take Photo'
             className='p-button-outlined attachment-option-btn'
-            onClick={() => {
-              fileInputRef.current?.click();
-              setShowAttachmentDialog(false);
-            }}
+            onClick={handleCameraCapture}
+            disabled={isProcessingFile}
+          />
+
+          <Button
+            icon={<FaImage />}
+            label='Choose from Gallery'
+            className='p-button-outlined attachment-option-btn'
+            onClick={handleGallerySelect}
+            disabled={isProcessingFile}
           />
 
           <Button
@@ -171,6 +318,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               setShowVideoRecorder(true);
               setShowAttachmentDialog(false);
             }}
+            disabled={isProcessingFile}
           />
 
           <Button
@@ -179,21 +327,23 @@ const MessageInput: React.FC<MessageInputProps> = ({
             className='p-button-outlined attachment-option-btn'
             onClick={() => {
               fileInputRef.current?.click();
-              setShowAttachmentDialog(false);
             }}
+            disabled={isProcessingFile}
           />
 
           <input
             ref={fileInputRef}
             type='file'
-            accept='image/*,video/*,.pdf,.doc,.docx'
+            accept='image/*,video/*,.pdf,.doc,.docx,.txt'
             onChange={handleFileSelect}
             style={{ display: 'none' }}
             multiple
           />
 
           <p className='attachment-help'>
-            Select photos, videos, or documents to send
+            {isProcessingFile
+              ? 'Processing file...'
+              : 'Select photos, videos, or documents to send'}
           </p>
         </div>
       </Dialog>

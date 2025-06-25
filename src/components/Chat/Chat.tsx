@@ -236,7 +236,6 @@ const Chat: React.FC<ChatProps> = ({
   const handleFileUpload = (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const fileUrl = URL.createObjectURL(file);
       let messageType: Message['type'] = 'file';
 
       if (file.type.startsWith('image/')) {
@@ -244,6 +243,9 @@ const Chat: React.FC<ChatProps> = ({
       } else if (file.type.startsWith('video/')) {
         messageType = 'video';
       }
+
+      // Create object URL for the file
+      const fileUrl = URL.createObjectURL(file);
 
       const newMessage: Message = {
         id: Date.now().toString() + Math.random(),
@@ -259,7 +261,29 @@ const Chat: React.FC<ChatProps> = ({
         },
       };
 
+      // Add video duration for video files (placeholder)
+      if (messageType === 'video') {
+        newMessage.videoDuration = 0; // This would be extracted from video metadata
+      }
+
       setMessages((prev) => [...prev, newMessage]);
+
+      // Simulate message status updates
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
+          )
+        );
+      }, 1000);
+
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
+          )
+        );
+      }, 2000);
     }
   };
 
