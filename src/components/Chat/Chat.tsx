@@ -118,27 +118,21 @@ const Chat: React.FC<ChatProps> = ({
   const currentChatUser = chatUser || defaultChatUser;
 
   const toggleAudioPlayback = (messageId: string, audioUrl: string) => {
-    const audioElement = audioRefs.current[messageId];
-
-    if (!audioElement) {
-      const audio = new Audio(audioUrl);
-      audioRefs.current[messageId] = audio;
-
-      audio.onended = () => {
-        setPlayingAudioId(null);
-      };
-
-      audio.play();
-      setPlayingAudioId(messageId);
-    } else {
-      if (playingAudioId === messageId) {
-        audioElement.pause();
-        audioElement.currentTime = 0;
-        setPlayingAudioId(null);
-      } else {
-        audioElement.play();
-        setPlayingAudioId(messageId);
+    // Stop all other audio first
+    Object.keys(audioRefs.current).forEach((id) => {
+      if (id !== messageId && audioRefs.current[id]) {
+        audioRefs.current[id].pause();
+        audioRefs.current[id].currentTime = 0;
       }
+    });
+
+    // Toggle the current audio
+    if (playingAudioId === messageId) {
+      // Pause the current audio
+      setPlayingAudioId(null);
+    } else {
+      // Play the new audio
+      setPlayingAudioId(messageId);
     }
   };
 

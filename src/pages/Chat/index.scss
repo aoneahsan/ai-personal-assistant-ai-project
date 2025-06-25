@@ -178,6 +178,100 @@
               gap: 12px;
               min-width: 250px;
 
+              // WhatsApp-style Audio Player
+              .whatsapp-audio-player {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+
+                .audio-play-btn {
+                  background: #075e54 !important;
+                  border: none !important;
+                  border-radius: 50% !important;
+                  color: white !important;
+                  width: 36px !important;
+                  height: 36px !important;
+                  min-width: 36px !important;
+                  font-size: 18px !important;
+
+                  &:hover {
+                    background: #128c7e !important;
+                  }
+
+                  .p-button-icon {
+                    font-size: 18px !important;
+                  }
+                }
+
+                .audio-waveform-container {
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+
+                  .audio-waveform {
+                    height: 20px;
+                    background: #e0e0e0;
+                    border-radius: 10px;
+                    position: relative;
+                    overflow: hidden;
+                    cursor: pointer;
+
+                    .audio-progress {
+                      height: 100%;
+                      background: #075e54;
+                      border-radius: 10px;
+                      transition: width 0.1s ease;
+                      min-width: 2px;
+                    }
+                  }
+
+                  .audio-time-info {
+                    display: flex;
+                    align-items: center;
+                    font-size: 11px;
+                    color: #667781;
+                    justify-content: flex-start;
+
+                    .current-time {
+                      color: #075e54;
+                      font-weight: 500;
+                    }
+
+                    .duration-separator {
+                      color: #8c8c8c;
+                    }
+
+                    .total-duration {
+                      color: #667781;
+                    }
+                  }
+                }
+
+                .audio-menu-btn {
+                  background: transparent !important;
+                  border: none !important;
+                  color: #667781 !important;
+                  padding: 4px !important;
+                  min-width: auto !important;
+                  border-radius: 50% !important;
+                  font-size: 16px !important;
+                  width: 28px !important;
+                  height: 28px !important;
+
+                  &:hover {
+                    background: rgba(0, 0, 0, 0.1) !important;
+                    color: #075e54 !important;
+                  }
+
+                  .p-button-icon {
+                    font-size: 16px !important;
+                  }
+                }
+              }
+
+              // Legacy styles for backward compatibility (can be removed later)
               .audio-play-btn {
                 background: #075e54 !important;
                 border: none !important;
@@ -209,7 +303,7 @@
                   height: 100%;
                   background: #075e54;
                   border-radius: 10px;
-                  width: 30%; // Sample progress
+                  width: 30%; // Sample progress - will be overridden by dynamic width
                 }
               }
 

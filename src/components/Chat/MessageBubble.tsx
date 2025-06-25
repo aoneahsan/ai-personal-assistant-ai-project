@@ -1,14 +1,8 @@
 import { Button } from 'primereact/button';
 import { Menu } from 'primereact/menu';
 import React, { useRef } from 'react';
-import {
-  FaDownload,
-  FaEllipsisV,
-  FaFile,
-  FaPause,
-  FaPlay,
-  FaVideo,
-} from 'react-icons/fa';
+import { FaDownload, FaFile, FaVideo } from 'react-icons/fa';
+import AudioPlayer from './AudioPlayer';
 import { Message } from './types';
 
 interface MessageBubbleProps {
@@ -130,28 +124,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const renderAudioMessage = () => (
     <div className='message-bubble message-audio'>
       <div className='audio-message'>
-        <Button
-          icon={playingAudioId === message.id ? <FaPause /> : <FaPlay />}
-          className='audio-play-btn'
-          size='small'
-          onClick={() => onAudioToggle(message.id, message.fileData?.url || '')}
-        />
-        <div className='audio-waveform'>
-          <div className='audio-progress'></div>
-        </div>
-        <span className='audio-duration'>
-          {formatDuration(message.audioDuration || 0)}
-        </span>
-        <Button
-          icon={<FaEllipsisV />}
-          className='audio-menu-btn'
-          size='small'
-          onClick={(e) => audioMenuRef.current?.toggle(e)}
-        />
-        <Menu
-          ref={audioMenuRef}
-          model={getAudioMenuItems()}
-          popup
+        <AudioPlayer
+          audioUrl={message.fileData?.url || ''}
+          duration={message.audioDuration || 0}
+          isPlaying={playingAudioId === message.id}
+          messageId={message.id}
+          onTogglePlay={() =>
+            onAudioToggle(message.id, message.fileData?.url || '')
+          }
+          onShowTranscript={() => onShowTranscript(message.id)}
+          transcript={message.transcript}
+          fileName={message.fileData?.name}
         />
       </div>
 
