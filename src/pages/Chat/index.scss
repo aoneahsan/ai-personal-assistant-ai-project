@@ -698,13 +698,23 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
       .attachment-btn {
+        background: transparent !important;
+        border: none !important;
         color: #667781 !important;
         padding: 8px !important;
         min-width: auto !important;
         border-radius: 50% !important;
+        width: 40px !important;
+        height: 40px !important;
+        transition: all 0.2s ease !important;
 
         &:hover {
           background: rgba(0, 0, 0, 0.05) !important;
+          color: #075e54 !important;
+        }
+
+        .p-button-icon {
+          font-size: 18px !important;
         }
       }
 
@@ -736,13 +746,23 @@
         }
 
         .emoji-btn {
+          background: transparent !important;
+          border: none !important;
           color: #667781 !important;
           padding: 8px !important;
           min-width: auto !important;
           border-radius: 50% !important;
+          width: 40px !important;
+          height: 40px !important;
+          transition: all 0.2s ease !important;
 
           &:hover {
             background: rgba(0, 0, 0, 0.05) !important;
+            color: #075e54 !important;
+          }
+
+          .p-button-icon {
+            font-size: 18px !important;
           }
         }
       }
@@ -754,9 +774,15 @@
         min-width: auto !important;
         border-radius: 50% !important;
         color: white !important;
+        width: 40px !important;
+        height: 40px !important;
 
         &:hover {
           background: #128c7e !important;
+        }
+
+        .p-button-icon {
+          font-size: 16px !important;
         }
       }
 
@@ -775,6 +801,7 @@
           font-size: 18px !important;
           width: 40px !important;
           height: 40px !important;
+          transition: all 0.2s ease !important;
 
           &:hover {
             background: #128c7e !important;
@@ -799,14 +826,14 @@
             width: 36px !important;
             height: 36px !important;
             min-width: 36px !important;
-            font-size: 18px !important;
+            font-size: 16px !important;
 
             &:hover {
               background: #e0a800 !important;
             }
 
             .p-button-icon {
-              font-size: 18px !important;
+              font-size: 16px !important;
             }
           }
 
@@ -818,14 +845,14 @@
             width: 36px !important;
             height: 36px !important;
             min-width: 36px !important;
-            font-size: 18px !important;
+            font-size: 16px !important;
 
             &:hover {
               background: #218838 !important;
             }
 
             .p-button-icon {
-              font-size: 18px !important;
+              font-size: 16px !important;
             }
           }
 
@@ -837,17 +864,45 @@
             width: 36px !important;
             height: 36px !important;
             min-width: 36px !important;
-            font-size: 20px !important;
+            font-size: 18px !important;
 
             &:hover {
               background: #c82333 !important;
             }
 
             .p-button-icon {
-              font-size: 20px !important;
+              font-size: 18px !important;
             }
           }
         }
+      }
+    }
+  }
+
+  // Recording Status
+  .recording-status {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(220, 53, 69, 0.95);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 90%;
+    pointer-events: none;
+
+    .recording-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+
+      span {
+        font-size: 14px;
+        font-weight: 500;
       }
     }
   }
@@ -865,6 +920,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     max-width: 90%;
+    pointer-events: none;
 
     .processing-info {
       display: flex;
@@ -887,40 +943,13 @@
     }
   }
 
-  // Recording Status
-  .recording-status {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(220, 53, 69, 0.9);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    max-width: 90%;
-
-    .recording-info {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-
-      span {
-        font-size: 14px;
-        font-weight: 500;
-      }
-    }
-  }
-
   // Browser Support Warning
   .speech-support-warning {
     position: fixed;
     bottom: 90px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 193, 7, 0.9);
+    background: rgba(255, 193, 7, 0.95);
     color: #333;
     padding: 8px 16px;
     border-radius: 20px;
@@ -929,6 +958,7 @@
     z-index: 999;
     max-width: 90%;
     text-align: center;
+    pointer-events: none;
 
     p {
       margin: 0;
@@ -991,6 +1021,25 @@
 
   // Attachment Dialog
   .attachment-dialog {
+    .p-dialog-header {
+      background: #075e54 !important;
+      color: white !important;
+      border-bottom: none !important;
+
+      .p-dialog-title {
+        color: white !important;
+        font-weight: 600 !important;
+      }
+
+      .p-dialog-header-icon {
+        color: white !important;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+      }
+    }
+
     .attachment-options {
       display: flex;
       flex-direction: column;
@@ -1004,16 +1053,40 @@
         font-size: 16px !important;
         font-weight: 500 !important;
         border-radius: 10px !important;
+        background: white !important;
+        border: 2px solid #e0e0e0 !important;
+        color: #333 !important;
+        transition: all 0.2s ease !important;
 
         .p-button-icon {
           margin-right: 12px !important;
           font-size: 18px !important;
+          color: #075e54 !important;
+        }
+
+        .p-button-label {
+          color: #333 !important;
+          font-weight: 500 !important;
         }
 
         &:hover {
           background: rgba(7, 94, 84, 0.1) !important;
           border-color: #075e54 !important;
           color: #075e54 !important;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+
+          .p-button-icon {
+            color: #075e54 !important;
+          }
+
+          .p-button-label {
+            color: #075e54 !important;
+          }
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
 
@@ -1086,6 +1159,26 @@
   &::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
   }
+}
+
+// Prevent tooltip overflow issues
+.p-tooltip {
+  max-width: 200px !important;
+  z-index: 9999 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.p-tooltip .p-tooltip-text {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+// Prevent body overflow when tooltips appear
+body {
+  overflow-x: hidden !important;
 }
 
 // Mobile responsiveness
@@ -1589,44 +1682,6 @@
           font-size: 24px !important;
         }
       }
-    }
-  }
-}
-
-// Attachment Dialog Styles
-.attachment-dialog {
-  .attachment-options {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-
-    .attachment-option-btn {
-      width: 100%;
-      padding: 15px !important;
-      justify-content: flex-start !important;
-      font-size: 16px !important;
-      font-weight: 500 !important;
-      border-radius: 10px !important;
-
-      .p-button-icon {
-        margin-right: 12px !important;
-        font-size: 18px !important;
-      }
-
-      &:hover {
-        background: rgba(7, 94, 84, 0.1) !important;
-        border-color: #075e54 !important;
-        color: #075e54 !important;
-      }
-    }
-
-    .attachment-help {
-      color: #666;
-      font-size: 14px;
-      margin: 10px 0 0 0;
-      text-align: center;
-      line-height: 1.4;
     }
   }
 }

@@ -454,7 +454,6 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
             icon={<FaMicrophone />}
             className='voice-btn'
             onClick={startRecording}
-            tooltip='Start voice recording'
             disabled={disabled || audioState.isProcessingAudio}
           />
         ) : (
@@ -463,23 +462,18 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
               icon={audioState.isPaused ? <FaPlay /> : <FaPause />}
               className={audioState.isPaused ? 'resume-btn' : 'pause-btn'}
               onClick={audioState.isPaused ? resumeRecording : pauseRecording}
-              tooltip={
-                audioState.isPaused ? 'Resume recording' : 'Pause recording'
-              }
               size='small'
             />
             <Button
               icon={<FaSquare />}
               className='stop-btn'
               onClick={stopRecording}
-              tooltip='Stop and send'
               size='small'
             />
             <Button
               icon={<FaTimes />}
               className='cancel-btn'
               onClick={cancelRecording}
-              tooltip='Cancel recording'
               size='small'
             />
           </div>
