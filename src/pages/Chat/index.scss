@@ -1066,62 +1066,128 @@
       }
     }
 
-    .attachment-options {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      padding: 20px;
+    .attachment-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 24px;
 
-      .attachment-option-btn {
-        width: 100%;
-        padding: 15px !important;
-        justify-content: flex-start !important;
-        font-size: 16px !important;
-        font-weight: 500 !important;
-        border-radius: 10px !important;
-        background: white !important;
-        border: 2px solid #e0e0e0 !important;
-        color: #333 !important;
-        transition: all 0.2s ease !important;
-
-        .p-button-icon {
-          margin-right: 12px !important;
-          font-size: 18px !important;
-          color: #075e54 !important;
-        }
-
-        .p-button-label {
-          color: #333 !important;
-          font-weight: 500 !important;
-        }
+      .attachment-option-card {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 16px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
 
         &:hover {
-          background: rgba(7, 94, 84, 0.1) !important;
-          border-color: #075e54 !important;
-          color: #075e54 !important;
-          transform: translateY(-1px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+          border-color: #075e54;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(7, 94, 84, 0.15);
 
-          .p-button-icon {
-            color: #075e54 !important;
+          .option-illustration .option-emoji {
+            transform: scale(1.1);
           }
 
-          .p-button-label {
-            color: #075e54 !important;
+          .option-icon {
+            color: #075e54;
           }
         }
 
         &:active {
           transform: translateY(0);
         }
+
+        .option-illustration {
+          margin-bottom: 12px;
+
+          .option-emoji {
+            font-size: 32px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+          }
+        }
+
+        .option-content {
+          .option-icon {
+            color: #667781;
+            font-size: 20px;
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
+          }
+
+          .option-title {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+          }
+
+          .option-description {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.3;
+          }
+        }
       }
 
-      .attachment-help {
-        color: #666;
-        font-size: 14px;
-        margin: 10px 0 0 0;
-        text-align: center;
-        line-height: 1.4;
+      .processing-indicator {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 20px;
+        background: rgba(7, 94, 84, 0.05);
+        border-radius: 12px;
+        margin-top: 8px;
+
+        .processing-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(7, 94, 84, 0.3);
+          border-top: 2px solid #075e54;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        p {
+          margin: 0;
+          color: #075e54;
+          font-weight: 500;
+          font-size: 14px;
+        }
+      }
+    }
+
+    // Mobile responsive
+    @media (max-width: 480px) {
+      .attachment-options-grid {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 12px;
+
+        .attachment-option-card {
+          padding: 16px;
+
+          .option-illustration .option-emoji {
+            font-size: 28px;
+          }
+
+          .option-content {
+            .option-title {
+              font-size: 15px;
+            }
+
+            .option-description {
+              font-size: 11px;
+            }
+          }
+        }
       }
     }
   }
@@ -1572,6 +1638,31 @@ body {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .camera-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px auto;
+      }
+
+      p {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
     }
 
     .camera-overlay {

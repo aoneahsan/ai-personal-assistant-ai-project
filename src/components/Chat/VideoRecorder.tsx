@@ -52,6 +52,7 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
       height: { ideal: 720 },
     },
     audio: true,
+    askPermissionOnMount: true,
     onStop: (blobUrl, blob) => {
       setRecordedVideoBlob(blob);
       setShowPreview(true);
@@ -88,6 +89,23 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
       }
     };
   }, [status, maxDuration]);
+
+  // Initialize camera when component mounts
+  useEffect(() => {
+    const initializeCamera = async () => {
+      try {
+        // Request camera permissions
+        await navigator.mediaDevices.getUserMedia({
+          video: { facingMode },
+          audio: false,
+        });
+      } catch (error) {
+        console.error('Camera permission denied:', error);
+      }
+    };
+
+    initializeCamera();
+  }, [facingMode]);
 
   const handleStartRecording = () => {
     setRecordingTime(0);
@@ -248,9 +266,18 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
             ref={(videoElement) => {
               if (videoElement && previewStream) {
                 videoElement.srcObject = previewStream;
+                // Ensure video plays
+                videoElement.play().catch(console.error);
               }
             }}
           />
+        )}
+
+        {!previewStream && (
+          <div className='camera-loading'>
+            <div className='loading-spinner'></div>
+            <p>Initializing camera...</p>
+          </div>
         )}
 
         <div className='camera-overlay'>
@@ -296,7 +323,7 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
             icon={isRecording ? <FaStop /> : <FaVideo />}
             className={`record-btn ${isRecording ? 'recording' : ''}`}
             onClick={isRecording ? handleStopRecording : handleStartRecording}
-            disabled={status === 'acquiring_media'}
+            disabled={status === 'acquiring_media' || !previewStream}
           />
 
           <Button

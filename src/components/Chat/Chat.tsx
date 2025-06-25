@@ -244,8 +244,8 @@ const Chat: React.FC<ChatProps> = ({
         messageType = 'video';
       }
 
-      // Create object URL for the file
-      const fileUrl = URL.createObjectURL(file);
+      // Check if the file has an actualUrl property (from Capacitor file manager)
+      const fileUrl = (file as any).actualUrl || URL.createObjectURL(file);
 
       const newMessage: Message = {
         id: Date.now().toString() + Math.random(),

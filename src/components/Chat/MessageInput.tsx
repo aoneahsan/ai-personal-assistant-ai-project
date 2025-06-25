@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import EmojiPicker from 'emoji-picker-react';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
@@ -49,6 +50,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const emojiPanelRef = useRef<OverlayPanel>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Check platform
+  const isNative = Capacitor.isNativePlatform();
+  const platform = Capacitor.getPlatform();
+
   const handleSendMessage = () => {
     if (currentMessage.trim() && !disabled) {
       onSendMessage();
@@ -71,6 +76,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleCameraCapture = async () => {
     if (isProcessingFile) return;
 
+    // Close the attachment dialog first
+    setShowAttachmentDialog(false);
+
     setIsProcessingFile(true);
     try {
       const fileInfo = await takePhoto({
@@ -90,6 +98,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleGallerySelect = async () => {
     if (isProcessingFile) return;
 
+    // Close the attachment dialog first
+    setShowAttachmentDialog(false);
+
     setIsProcessingFile(true);
     try {
       const fileInfo = await pickImageFromGallery({
@@ -98,7 +109,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
       });
 
       await handleFileMessage(fileInfo, 'image');
-      setShowAttachmentDialog(false);
     } catch (error) {
       console.error('Gallery selection failed:', error);
     } finally {
@@ -110,6 +120,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || isProcessingFile) return;
+
+    // Close the attachment dialog first
+    setShowAttachmentDialog(false);
 
     setIsProcessingFile(true);
     try {
@@ -126,7 +139,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
         await handleFileMessage(fileInfo, messageType);
       }
-      setShowAttachmentDialog(false);
     } catch (error) {
       console.error('File selection failed:', error);
     } finally {
@@ -159,16 +171,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
     // Add video duration if it's a video file
     if (messageType === 'video') {
-      // For video files, we'll need to get duration from the video element
-      // This is a placeholder - in real implementation you'd extract video metadata
       newMessage.videoDuration = 0;
     }
 
-    // Trigger the appropriate handler based on file type
+    // Send the message directly to the parent component
     if (messageType === 'video' && onSendVideoMessage) {
       onSendVideoMessage(newMessage);
     } else {
-      // For images and other files, we'll create a mock File object and FileList
+      // For images and other files, create a proper message and send it
+      // We'll bypass the FileList approach and send the message directly
       const mockFile = new File([new Blob()], fileInfo.name, {
         type: fileInfo.type,
       });
@@ -180,6 +191,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
       Object.defineProperty(mockFileList, 'item', {
         value: (index: number) => (index === 0 ? mockFile : null),
       });
+
+      // Pass the actual file URL through a custom property
+      (mockFile as any).actualUrl = fileInfo.url;
 
       onFileUpload(mockFileList);
     }
@@ -223,6 +237,60 @@ const MessageInput: React.FC<MessageInputProps> = ({
     } finally {
       setIsProcessingFile(false);
     }
+  };
+
+  // Get platform-specific attachment options
+  const getAttachmentOptions = () => {
+    const options = [];
+
+    if (isNative) {
+      // Native platform options
+      options.push({
+        icon: <FaCamera />,
+        label: 'Take Photo',
+        action: handleCameraCapture,
+        illustration: '📸',
+        description: 'Capture with camera',
+      });
+
+      options.push({
+        icon: <FaImage />,
+        label: 'Choose from Gallery',
+        action: handleGallerySelect,
+        illustration: '🖼️',
+        description: 'Select from photos',
+      });
+    } else {
+      // Web platform - combine gallery and file selection
+      options.push({
+        icon: <FaCamera />,
+        label: 'Take Photo',
+        action: handleCameraCapture,
+        illustration: '📸',
+        description: 'Capture with camera',
+      });
+
+      options.push({
+        icon: <FaFile />,
+        label: 'Choose File',
+        action: () => fileInputRef.current?.click(),
+        illustration: '📁',
+        description: 'Select files & images',
+      });
+    }
+
+    options.push({
+      icon: <FaVideo />,
+      label: 'Record Video',
+      action: () => {
+        setShowVideoRecorder(true);
+        setShowAttachmentDialog(false);
+      },
+      illustration: '🎥',
+      description: 'Record video message',
+    });
+
+    return options;
   };
 
   return (
@@ -285,51 +353,31 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <EmojiPicker onEmojiClick={handleEmojiClick} />
       </OverlayPanel>
 
-      {/* Attachment Dialog */}
+      {/* Enhanced Attachment Dialog */}
       <Dialog
         header='Send Attachment'
         visible={showAttachmentDialog}
-        style={{ width: '400px' }}
+        style={{ width: '450px' }}
         onHide={() => setShowAttachmentDialog(false)}
         className='attachment-dialog'
       >
-        <div className='attachment-options'>
-          <Button
-            icon={<FaCamera />}
-            label='Take Photo'
-            className='p-button-outlined attachment-option-btn'
-            onClick={handleCameraCapture}
-            disabled={isProcessingFile}
-          />
-
-          <Button
-            icon={<FaImage />}
-            label='Choose from Gallery'
-            className='p-button-outlined attachment-option-btn'
-            onClick={handleGallerySelect}
-            disabled={isProcessingFile}
-          />
-
-          <Button
-            icon={<FaVideo />}
-            label='Record Video'
-            className='p-button-outlined attachment-option-btn'
-            onClick={() => {
-              setShowVideoRecorder(true);
-              setShowAttachmentDialog(false);
-            }}
-            disabled={isProcessingFile}
-          />
-
-          <Button
-            icon={<FaFile />}
-            label='Choose File'
-            className='p-button-outlined attachment-option-btn'
-            onClick={() => {
-              fileInputRef.current?.click();
-            }}
-            disabled={isProcessingFile}
-          />
+        <div className='attachment-options-grid'>
+          {getAttachmentOptions().map((option, index) => (
+            <div
+              key={index}
+              className='attachment-option-card'
+              onClick={option.action}
+            >
+              <div className='option-illustration'>
+                <span className='option-emoji'>{option.illustration}</span>
+              </div>
+              <div className='option-content'>
+                <div className='option-icon'>{option.icon}</div>
+                <h4 className='option-title'>{option.label}</h4>
+                <p className='option-description'>{option.description}</p>
+              </div>
+            </div>
+          ))}
 
           <input
             ref={fileInputRef}
@@ -340,11 +388,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
             multiple
           />
 
-          <p className='attachment-help'>
-            {isProcessingFile
-              ? 'Processing file...'
-              : 'Select photos, videos, or documents to send'}
-          </p>
+          {isProcessingFile && (
+            <div className='processing-indicator'>
+              <div className='processing-spinner'></div>
+              <p>Processing file...</p>
+            </div>
+          )}
         </div>
       </Dialog>
 
