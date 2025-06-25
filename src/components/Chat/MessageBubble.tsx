@@ -3,6 +3,7 @@ import { Menu } from 'primereact/menu';
 import React, { useRef } from 'react';
 import { FaDownload, FaFile, FaVideo } from 'react-icons/fa';
 import AudioPlayer from './AudioPlayer';
+import VideoPlayer from './VideoPlayer';
 import { Message } from './types';
 
 interface MessageBubbleProps {
@@ -121,6 +122,27 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     </div>
   );
 
+  const renderVideoMessage = () => (
+    <div className='message-bubble message-video'>
+      <VideoPlayer
+        videoUrl={message.fileData?.url || ''}
+        thumbnail={message.videoThumbnail}
+        duration={message.videoDuration || 0}
+        fileName={message.fileData?.name}
+      />
+      <div className='message-meta'>
+        <span className='message-time'>{formatTime(message.timestamp)}</span>
+        {message.sender === 'me' && (
+          <span
+            className={`message-status ${message.status === 'read' ? 'read' : ''}`}
+          >
+            {getStatusIcon(message.status)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
   const renderAudioMessage = () => (
     <div className='message-bubble message-audio'>
       <div className='audio-message'>
@@ -216,10 +238,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         return renderTextMessage();
       case 'image':
         return renderImageMessage();
+      case 'video':
+        return renderVideoMessage();
       case 'audio':
         return renderAudioMessage();
       case 'file':
-      case 'video':
         return renderFileMessage();
       default:
         return renderTextMessage();

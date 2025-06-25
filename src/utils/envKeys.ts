@@ -15,6 +15,7 @@ const ENV_KEYS = {
   amplitudeApiKey: _env.VITE_AMPLITUDE_API_KEY,
   tolgeeApiUrl: _env.VITE_TOLGEE_API_URL,
   tolgeeApiKey: _env.VITE_TOLGEE_API_KEY,
+  tanstackRouterDevtools: _env.VITE_TANSTACK_ROUTER_DEVTOOLS === 'true',
 };
 
 export default ENV_KEYS;

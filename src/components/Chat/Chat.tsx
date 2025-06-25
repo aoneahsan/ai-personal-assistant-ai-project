@@ -212,6 +212,27 @@ const Chat: React.FC<ChatProps> = ({
     }, 2000);
   };
 
+  const handleSendVideoMessage = (message: Message) => {
+    setMessages((prev) => [...prev, message]);
+
+    // Simulate message status updates
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message.id ? { ...msg, status: 'delivered' } : msg
+        )
+      );
+    }, 1000);
+
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message.id ? { ...msg, status: 'read' } : msg
+        )
+      );
+    }, 2000);
+  };
+
   const handleFileUpload = (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -269,6 +290,7 @@ const Chat: React.FC<ChatProps> = ({
         onMessageChange={setCurrentMessage}
         onSendMessage={handleSendMessage}
         onSendAudioMessage={handleSendAudioMessage}
+        onSendVideoMessage={handleSendVideoMessage}
         onFileUpload={handleFileUpload}
         disabled={isProcessingAudio}
       />

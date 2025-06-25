@@ -2,7 +2,7 @@ export interface TranscriptSegment {
   text: string;
   startTime: number;
   endTime: number;
-  confidence?: number;
+  confidence: number;
 }
 
 export interface Message {
@@ -11,7 +11,7 @@ export interface Message {
   sender: 'me' | 'other';
   timestamp: Date;
   status?: 'sent' | 'delivered' | 'read';
-  type: 'text' | 'file' | 'audio' | 'image' | 'video';
+  type: 'text' | 'audio' | 'image' | 'file' | 'video';
   fileData?: {
     name: string;
     size: number;
@@ -19,16 +19,19 @@ export interface Message {
     url: string;
   };
   audioDuration?: number;
-  transcript?: TranscriptSegment[];
+  videoDuration?: number;
+  videoThumbnail?: string;
   quickTranscript?: string;
+  transcript?: TranscriptSegment[];
 }
 
 export interface ChatUser {
   id: string;
   name: string;
-  avatar?: string;
+  avatar: string;
   isOnline: boolean;
-  lastSeen?: Date;
+  lastSeen: Date;
+  status?: string;
 }
 
 export interface AudioRecordingState {
