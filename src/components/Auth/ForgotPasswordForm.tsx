@@ -75,113 +75,109 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   };
 
   return (
-    <div className='flex justify-content-center align-items-center min-h-screen py-4 px-3 bg-gray-50'>
-      <Card className='w-full max-w-md shadow-3 border-round-lg'>
-        <div className='p-5'>
-          {/* Header */}
-          <div className='text-center mb-5'>
-            <div className='mb-3'>
-              <i
-                className={`text-6xl ${isEmailSent ? 'pi pi-check-circle text-green-500' : 'pi pi-key text-primary'}`}
-              ></i>
-            </div>
-            <h1 className='text-4xl font-bold text-900 mb-2'>
-              {isEmailSent ? 'Check Your Email' : 'Reset Password'}
-            </h1>
-            <p className='text-600 text-lg'>
-              {isEmailSent
-                ? 'We sent a password reset link to your email address'
-                : 'Enter your email address and we will send you a link to reset your password'}
-            </p>
+    <Card className='w-full max-w-md shadow-3 border-round-lg'>
+      <div className='p-5'>
+        {/* Header */}
+        <div className='text-center mb-5'>
+          <div className='mb-3'>
+            <i
+              className={`text-6xl ${isEmailSent ? 'pi pi-check-circle text-green-500' : 'pi pi-key text-primary'}`}
+            ></i>
           </div>
+          <h1 className='text-4xl font-bold text-900 mb-2'>
+            {isEmailSent ? 'Check Your Email' : 'Reset Password'}
+          </h1>
+          <p className='text-600 text-lg'>
+            {isEmailSent
+              ? 'We sent a password reset link to your email address'
+              : 'Enter your email address and we will send you a link to reset your password'}
+          </p>
+        </div>
 
-          {!isEmailSent ? (
-            /* Reset Form */
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className='flex flex-column gap-4'
-            >
-              <div className='field'>
-                <label
-                  htmlFor='email'
-                  className='block text-900 font-medium mb-2'
-                >
-                  Email Address
-                </label>
-                <div className='p-input-icon-left'>
-                  <i className='pi pi-envelope'></i>
-                  <InputText
-                    id='email'
-                    {...register('email')}
-                    placeholder='Enter your email address'
-                    className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.email && (
-                  <small className='p-error mt-1 block'>
-                    {errors.email.message}
-                  </small>
-                )}
+        {!isEmailSent ? (
+          /* Reset Form */
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className='flex flex-column gap-4'
+          >
+            <div className='field'>
+              <label
+                htmlFor='email'
+                className='block text-900 font-medium mb-2'
+              >
+                Email Address
+              </label>
+              <div className='p-input-icon-left'>
+                <i className='pi pi-envelope'></i>
+                <InputText
+                  id='email'
+                  {...register('email')}
+                  placeholder='Enter your email address'
+                  className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
+                  disabled={isLoading}
+                />
               </div>
-
-              <Button
-                type='submit'
-                label={isLoading ? 'Sending...' : 'Send Reset Link'}
-                icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-send'}
-                loading={isLoading}
-                className='w-full p-button-lg'
-                disabled={isLoading}
-              />
-            </form>
-          ) : (
-            /* Success State */
-            <div className='flex flex-column gap-4'>
-              <Message
-                severity='success'
-                text={`Password reset email sent to ${email}`}
-                className='w-full'
-              />
-
-              <div className='bg-surface-50 border-round-lg p-4'>
-                <h3 className='text-900 font-semibold mb-3 mt-0'>
-                  What's next?
-                </h3>
-                <ul className='text-600 m-0 pl-3'>
-                  <li className='mb-2'>Check your inbox and spam folder</li>
-                  <li className='mb-2'>
-                    Click the link in the email to reset your password
-                  </li>
-                  <li className='mb-2'>The link will expire in 1 hour</li>
-                </ul>
-              </div>
-
-              <Button
-                type='button'
-                label={isLoading ? 'Resending...' : 'Resend Email'}
-                icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'}
-                loading={isLoading}
-                onClick={handleResendEmail}
-                className='w-full p-button-outlined'
-                disabled={isLoading}
-              />
+              {errors.email && (
+                <small className='p-error mt-1 block'>
+                  {errors.email.message}
+                </small>
+              )}
             </div>
-          )}
 
-          {/* Back to Login */}
-          <div className='text-center mt-5'>
+            <Button
+              type='submit'
+              label={isLoading ? 'Sending...' : 'Send Reset Link'}
+              icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-send'}
+              loading={isLoading}
+              className='w-full p-button-lg'
+              disabled={isLoading}
+            />
+          </form>
+        ) : (
+          /* Success State */
+          <div className='flex flex-column gap-4'>
+            <Message
+              severity='success'
+              text={`Password reset email sent to ${email}`}
+              className='w-full'
+            />
+
+            <div className='bg-surface-50 border-round-lg p-4'>
+              <h3 className='text-900 font-semibold mb-3 mt-0'>What's next?</h3>
+              <ul className='text-600 m-0 pl-3'>
+                <li className='mb-2'>Check your inbox and spam folder</li>
+                <li className='mb-2'>
+                  Click the link in the email to reset your password
+                </li>
+                <li className='mb-2'>The link will expire in 1 hour</li>
+              </ul>
+            </div>
+
             <Button
               type='button'
-              link
-              label='← Back to Sign In'
-              onClick={onBackToLogin}
-              className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+              label={isLoading ? 'Resending...' : 'Resend Email'}
+              icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'}
+              loading={isLoading}
+              onClick={handleResendEmail}
+              className='w-full p-button-outlined'
               disabled={isLoading}
             />
           </div>
+        )}
+
+        {/* Back to Login */}
+        <div className='text-center mt-5'>
+          <Button
+            type='button'
+            link
+            label='← Back to Sign In'
+            onClick={onBackToLogin}
+            className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+            disabled={isLoading}
+          />
         </div>
-      </Card>
-    </div>
+      </div>
+    </Card>
   );
 };
 

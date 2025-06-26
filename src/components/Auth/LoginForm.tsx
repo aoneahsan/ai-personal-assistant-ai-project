@@ -91,164 +91,162 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const isAnyLoading = isLoading || socialLoading !== null;
 
   return (
-    <div className='flex justify-content-center align-items-center min-h-screen py-4 px-3 bg-gray-50'>
-      <Card className='w-full max-w-md shadow-3 border-round-lg'>
-        <div className='p-5'>
-          {/* Header */}
-          <div className='text-center mb-5'>
-            <div className='mb-3'>
-              <i className='pi pi-users text-6xl text-primary'></i>
-            </div>
-            <h1 className='text-4xl font-bold text-900 mb-2'>Welcome Back</h1>
-            <p className='text-600 text-lg'>
-              Sign in to your account to continue
-            </p>
+    <Card className='w-full max-w-md shadow-3 border-round-lg'>
+      <div className='p-5'>
+        {/* Header */}
+        <div className='text-center mb-5'>
+          <div className='mb-3'>
+            <i className='pi pi-users text-6xl text-primary'></i>
           </div>
+          <h1 className='text-4xl font-bold text-900 mb-2'>Welcome Back</h1>
+          <p className='text-600 text-lg'>
+            Sign in to your account to continue
+          </p>
+        </div>
 
-          {/* Social Sign In Buttons */}
-          <div className='mb-5'>
+        {/* Social Sign In Buttons */}
+        <div className='mb-5'>
+          <Button
+            type='button'
+            label={
+              socialLoading === AuthProvider.GOOGLE
+                ? 'Signing in...'
+                : 'Continue with Google'
+            }
+            icon={
+              socialLoading === AuthProvider.GOOGLE
+                ? 'pi pi-spin pi-spinner'
+                : 'pi pi-google'
+            }
+            loading={socialLoading === AuthProvider.GOOGLE}
+            onClick={handleGoogleSignIn}
+            className='w-full mb-3 p-button-outlined border-300 text-700'
+            style={{ height: '3rem' }}
+            disabled={isAnyLoading}
+          />
+
+          {isAppleAvailable && (
             <Button
               type='button'
               label={
-                socialLoading === AuthProvider.GOOGLE
+                socialLoading === AuthProvider.APPLE
                   ? 'Signing in...'
-                  : 'Continue with Google'
+                  : 'Continue with Apple'
               }
               icon={
-                socialLoading === AuthProvider.GOOGLE
+                socialLoading === AuthProvider.APPLE
                   ? 'pi pi-spin pi-spinner'
-                  : 'pi pi-google'
+                  : 'pi pi-apple'
               }
-              loading={socialLoading === AuthProvider.GOOGLE}
-              onClick={handleGoogleSignIn}
+              loading={socialLoading === AuthProvider.APPLE}
+              onClick={handleAppleSignIn}
               className='w-full mb-3 p-button-outlined border-300 text-700'
-              style={{ height: '3rem' }}
+              style={{
+                height: '3rem',
+                backgroundColor: '#000',
+                color: '#fff',
+                borderColor: '#000',
+              }}
               disabled={isAnyLoading}
             />
+          )}
+        </div>
 
-            {isAppleAvailable && (
-              <Button
-                type='button'
-                label={
-                  socialLoading === AuthProvider.APPLE
-                    ? 'Signing in...'
-                    : 'Continue with Apple'
-                }
-                icon={
-                  socialLoading === AuthProvider.APPLE
-                    ? 'pi pi-spin pi-spinner'
-                    : 'pi pi-apple'
-                }
-                loading={socialLoading === AuthProvider.APPLE}
-                onClick={handleAppleSignIn}
-                className='w-full mb-3 p-button-outlined border-300 text-700'
-                style={{
-                  height: '3rem',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  borderColor: '#000',
-                }}
+        <Divider className='mb-5'>
+          <span className='bg-surface-0 px-3 text-500'>or</span>
+        </Divider>
+
+        {/* Email/Password Form */}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className='flex flex-column gap-4'
+        >
+          <div className='field'>
+            <label
+              htmlFor='email'
+              className='block text-900 font-medium mb-2'
+            >
+              Email Address
+            </label>
+            <div className='p-input-icon-left'>
+              <i className='pi pi-envelope'></i>
+              <InputText
+                id='email'
+                {...register('email')}
+                placeholder='Enter your email address'
+                className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
                 disabled={isAnyLoading}
               />
+            </div>
+            {errors.email && (
+              <small className='p-error mt-1 block'>
+                {errors.email.message}
+              </small>
             )}
           </div>
 
-          <Divider className='mb-5'>
-            <span className='bg-surface-0 px-3 text-500'>or</span>
-          </Divider>
-
-          {/* Email/Password Form */}
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className='flex flex-column gap-4'
-          >
-            <div className='field'>
-              <label
-                htmlFor='email'
-                className='block text-900 font-medium mb-2'
-              >
-                Email Address
-              </label>
-              <div className='p-input-icon-left'>
-                <i className='pi pi-envelope'></i>
-                <InputText
-                  id='email'
-                  {...register('email')}
-                  placeholder='Enter your email address'
-                  className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
-                  disabled={isAnyLoading}
-                />
-              </div>
-              {errors.email && (
-                <small className='p-error mt-1 block'>
-                  {errors.email.message}
-                </small>
-              )}
-            </div>
-
-            <div className='field'>
-              <label
-                htmlFor='password'
-                className='block text-900 font-medium mb-2'
-              >
-                Password
-              </label>
-              <div className='p-input-icon-left'>
-                <i className='pi pi-lock'></i>
-                <Password
-                  id='password'
-                  {...register('password')}
-                  placeholder='Enter your password'
-                  className={`w-full ${errors.password ? 'p-invalid' : ''}`}
-                  inputClassName='p-inputtext-lg'
-                  disabled={isAnyLoading}
-                  feedback={false}
-                  toggleMask
-                />
-              </div>
-              {errors.password && (
-                <small className='p-error mt-1 block'>
-                  {errors.password.message}
-                </small>
-              )}
-            </div>
-
-            <div className='flex justify-content-end mb-3'>
-              <Button
-                type='button'
-                link
-                label='Forgot your password?'
-                onClick={onForgotPassword}
-                className='p-0 text-primary-500 hover:text-primary-600'
+          <div className='field'>
+            <label
+              htmlFor='password'
+              className='block text-900 font-medium mb-2'
+            >
+              Password
+            </label>
+            <div className='p-input-icon-left'>
+              <i className='pi pi-lock'></i>
+              <Password
+                id='password'
+                {...register('password')}
+                placeholder='Enter your password'
+                className={`w-full ${errors.password ? 'p-invalid' : ''}`}
+                inputClassName='p-inputtext-lg'
                 disabled={isAnyLoading}
+                feedback={false}
+                toggleMask
               />
             </div>
+            {errors.password && (
+              <small className='p-error mt-1 block'>
+                {errors.password.message}
+              </small>
+            )}
+          </div>
 
-            <Button
-              type='submit'
-              label={isLoading ? 'Signing In...' : 'Sign In'}
-              icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-sign-in'}
-              loading={isLoading}
-              className='w-full p-button-lg'
-              disabled={isAnyLoading}
-            />
-          </form>
-
-          {/* Switch to Sign Up */}
-          <div className='text-center mt-5'>
-            <span className='text-600'>Don't have an account? </span>
+          <div className='flex justify-content-end mb-3'>
             <Button
               type='button'
               link
-              label='Create Account'
-              onClick={onSwitchToSignUp}
-              className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+              label='Forgot your password?'
+              onClick={onForgotPassword}
+              className='p-0 text-primary-500 hover:text-primary-600'
               disabled={isAnyLoading}
             />
           </div>
+
+          <Button
+            type='submit'
+            label={isLoading ? 'Signing In...' : 'Sign In'}
+            icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-sign-in'}
+            loading={isLoading}
+            className='w-full p-button-lg'
+            disabled={isAnyLoading}
+          />
+        </form>
+
+        {/* Switch to Sign Up */}
+        <div className='text-center mt-5'>
+          <span className='text-600'>Don't have an account? </span>
+          <Button
+            type='button'
+            link
+            label='Create Account'
+            onClick={onSwitchToSignUp}
+            className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+            disabled={isAnyLoading}
+          />
         </div>
-      </Card>
-    </div>
+      </div>
+    </Card>
   );
 };
 
