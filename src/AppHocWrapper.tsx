@@ -1,3 +1,5 @@
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import AmplitudeHoc from './hoc/AmplitudeHoc';
 import NetworkStatusHOC from './hoc/NetworkStatusHOC';
@@ -27,6 +29,20 @@ const AppHocWrapper = () => {
           <SocketIoHOC />
         </TanstackQueryHoc>
       </PrimeReactHoc>
+
+      {/* Toast Notifications */}
+      <ToastContainer
+        position='top-right'
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme='light'
+      />
     </>
   );
 };

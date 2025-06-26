@@ -1,3 +1,4 @@
+import AuthPage from '@/pages/Auth';
 import Chat from '@/pages/Chat';
 import ChatList from '@/pages/ChatList';
 import CompactDashboard from '@/pages/CompactDashboard';
@@ -13,6 +14,12 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: Dashboard,
+});
+
+const authRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth',
+  component: AuthPage,
 });
 
 const dashboardRoute = createRoute({
@@ -65,6 +72,7 @@ const notFoundRoute = createRoute({
 
 export const appRouteTree = rootRoute.addChildren([
   indexRoute,
+  authRoute,
   dashboardRoute,
   modernDashboardRoute,
   compactDashboardRoute,
