@@ -6,6 +6,7 @@ export const FIREBASE_CONFIG = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 };
 
 export const PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS = 'pca'; // Personal Chat Assistant
