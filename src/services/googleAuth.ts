@@ -3,6 +3,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import {
   GoogleAuthProvider,
   signInWithCredential,
+  signInWithPopup,
   UserCredential,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -15,14 +16,27 @@ export interface GoogleAuthService {
   refresh: () => Promise<void>;
 }
 
-// Initialize Google Auth
+// Initialize Google Auth - only for native platforms
 export const initializeGoogleAuth = async (): Promise<void> => {
   try {
-    await GoogleAuth.initialize({
-      clientId: import.meta.env.VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID,
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: true,
-    });
+    const platform = Capacitor.getPlatform();
+
+    // Only initialize for native platforms (iOS/Android)
+    if (platform === 'ios' || platform === 'android') {
+      console.log(`Initializing Google Auth for ${platform} platform`);
+
+      await GoogleAuth.initialize({
+        clientId: import.meta.env.VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID,
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+
+      console.log('Google Auth initialized successfully for native platform');
+    } else {
+      console.log(
+        'Web platform detected - Google Auth will use Firebase popup'
+      );
+    }
   } catch (error) {
     console.error('Error initializing Google Auth:', error);
     throw error;
@@ -34,58 +48,123 @@ export const googleAuthService: GoogleAuthService = {
   // Initialize Google Auth
   initialize: async (): Promise<void> => {
     try {
-      if (Capacitor.isNativePlatform()) {
+      const platform = Capacitor.getPlatform();
+
+      if (platform === 'ios' || platform === 'android') {
         await initializeGoogleAuth();
       }
+      // No initialization needed for web - Firebase handles it
     } catch (error) {
       console.error('Error initializing Google Auth:', error);
-      throw error;
+      // Don't throw error on initialization failure to prevent app crash
+      if (
+        Capacitor.getPlatform() === 'ios' ||
+        Capacitor.getPlatform() === 'android'
+      ) {
+        throw error;
+      }
     }
   },
 
   // Sign in with Google
   signIn: async (): Promise<UserCredential> => {
     try {
-      // Initialize if not already done
-      if (Capacitor.isNativePlatform()) {
+      const platform = Capacitor.getPlatform();
+
+      if (platform === 'ios' || platform === 'android') {
+        // Native platform - use Capacitor Google Auth
+        console.log(`Using native Google Auth for ${platform}`);
+
+        // Ensure Google Auth is initialized
         await initializeGoogleAuth();
+
+        const googleUser = await GoogleAuth.signIn();
+        console.log('Google Auth native sign-in successful');
+
+        if (!googleUser.authentication?.idToken) {
+          throw new Error('No ID token received from Google');
+        }
+
+        // Create Firebase credential with Google ID token
+        const credential = GoogleAuthProvider.credential(
+          googleUser.authentication.idToken,
+          googleUser.authentication.accessToken
+        );
+
+        // Sign in to Firebase with the Google credential
+        const userCredential = await signInWithCredential(auth, credential);
+        console.log('Firebase credential sign-in successful');
+        return userCredential;
+      } else {
+        // Web platform - use Firebase popup
+        console.log('Using Firebase popup for web platform');
+
+        const provider = new GoogleAuthProvider();
+        provider.addScope('profile');
+        provider.addScope('email');
+
+        const userCredential = await signInWithPopup(auth, provider);
+        console.log('Firebase popup sign-in successful');
+        return userCredential;
       }
-
-      const googleUser = await GoogleAuth.signIn();
-
-      if (!googleUser.authentication?.idToken) {
-        throw new Error('No ID token received from Google');
-      }
-
-      // Create Firebase credential with Google ID token
-      const credential = GoogleAuthProvider.credential(
-        googleUser.authentication.idToken
-      );
-
-      // Sign in to Firebase with the Google credential
-      const userCredential = await signInWithCredential(auth, credential);
-
-      return userCredential;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in with Google:', error);
-      throw new Error('Failed to sign in with Google. Please try again.');
+
+      // Handle specific error cases
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign in was cancelled. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error(
+          'Pop-up was blocked. Please allow pop-ups and try again.'
+        );
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        throw new Error('Another sign-in attempt is in progress.');
+      } else if (
+        error.message?.includes('user cancelled') ||
+        error.message?.includes('canceled')
+      ) {
+        throw new Error('Sign in was cancelled. Please try again.');
+      }
+
+      // Platform-specific error handling
+      const platform = Capacitor.getPlatform();
+      if (platform === 'ios' || platform === 'android') {
+        throw new Error(
+          'Failed to sign in with Google on mobile. Please try again.'
+        );
+      } else {
+        throw new Error('Failed to sign in with Google. Please try again.');
+      }
     }
   },
 
   // Sign out from Google
   signOut: async (): Promise<void> => {
     try {
-      await GoogleAuth.signOut();
+      const platform = Capacitor.getPlatform();
+
+      if (platform === 'ios' || platform === 'android') {
+        console.log(`Signing out from Google Auth on ${platform}`);
+        await GoogleAuth.signOut();
+      }
+      // For web, Firebase signOut will handle it
+      console.log('Google sign-out completed');
     } catch (error) {
       console.error('Error signing out from Google:', error);
-      throw error;
+      // Don't throw error on sign out failure
     }
   },
 
-  // Refresh Google Auth
+  // Refresh Google Auth - only for native platforms
   refresh: async (): Promise<void> => {
     try {
-      await GoogleAuth.refresh();
+      const platform = Capacitor.getPlatform();
+
+      if (platform === 'ios' || platform === 'android') {
+        console.log(`Refreshing Google Auth on ${platform}`);
+        await GoogleAuth.refresh();
+      }
+      // No refresh needed for web platform
     } catch (error) {
       console.error('Error refreshing Google Auth:', error);
       throw error;

@@ -69,7 +69,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         displayName: data.displayName,
       });
       toast.success(
-        'Account created successfully! Please check your email for verification.'
+        'Welcome! Account created successfully. Please check your email for verification.'
       );
       reset();
       onSuccess?.();
@@ -86,7 +86,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     setSocialLoading(AuthProvider.GOOGLE);
     try {
       await unifiedAuthService.signInWithGoogle();
-      toast.success('Signed up with Google successfully!');
+      toast.success('Welcome! Account created with Google successfully.');
       onSuccess?.();
     } catch (error) {
       toast.error(
@@ -101,7 +101,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     setSocialLoading(AuthProvider.APPLE);
     try {
       await unifiedAuthService.signInWithApple();
-      toast.success('Signed up with Apple successfully!');
+      toast.success('Welcome! Account created with Apple successfully.');
       onSuccess?.();
     } catch (error) {
       toast.error(
@@ -112,196 +112,239 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     }
   };
 
+  const isAnyLoading = isLoading || socialLoading !== null;
+
   return (
-    <Card className='w-full max-w-md mx-auto'>
-      <div className='text-center mb-6'>
-        <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-          Create Account
-        </h1>
-        <p className='text-gray-600'>Sign up to get started</p>
-      </div>
+    <div className='flex justify-content-center align-items-center min-h-screen py-4 px-3 bg-gray-50'>
+      <Card className='w-full max-w-md shadow-3 border-round-lg'>
+        <div className='p-5'>
+          {/* Header */}
+          <div className='text-center mb-5'>
+            <div className='mb-3'>
+              <i className='pi pi-user-plus text-6xl text-primary'></i>
+            </div>
+            <h1 className='text-4xl font-bold text-900 mb-2'>Create Account</h1>
+            <p className='text-600 text-lg'>Join us today and get started</p>
+          </div>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className='space-y-4'
-      >
-        <div className='field'>
-          <label
-            htmlFor='displayName'
-            className='block text-sm font-medium text-gray-700 mb-1'
+          {/* Social Sign Up Buttons */}
+          <div className='mb-5'>
+            <Button
+              type='button'
+              label={
+                socialLoading === AuthProvider.GOOGLE
+                  ? 'Creating account...'
+                  : 'Continue with Google'
+              }
+              icon={
+                socialLoading === AuthProvider.GOOGLE
+                  ? 'pi pi-spin pi-spinner'
+                  : 'pi pi-google'
+              }
+              loading={socialLoading === AuthProvider.GOOGLE}
+              onClick={handleGoogleSignIn}
+              className='w-full mb-3 p-button-outlined border-300 text-700'
+              style={{ height: '3rem' }}
+              disabled={isAnyLoading}
+            />
+
+            {isAppleAvailable && (
+              <Button
+                type='button'
+                label={
+                  socialLoading === AuthProvider.APPLE
+                    ? 'Creating account...'
+                    : 'Continue with Apple'
+                }
+                icon={
+                  socialLoading === AuthProvider.APPLE
+                    ? 'pi pi-spin pi-spinner'
+                    : 'pi pi-apple'
+                }
+                loading={socialLoading === AuthProvider.APPLE}
+                onClick={handleAppleSignIn}
+                className='w-full mb-3 p-button-outlined border-300 text-700'
+                style={{
+                  height: '3rem',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  borderColor: '#000',
+                }}
+                disabled={isAnyLoading}
+              />
+            )}
+          </div>
+
+          <Divider className='mb-5'>
+            <span className='bg-surface-0 px-3 text-500'>or</span>
+          </Divider>
+
+          {/* Email/Password Form */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className='flex flex-column gap-4'
           >
-            Full Name
-          </label>
-          <InputText
-            id='displayName'
-            {...register('displayName')}
-            placeholder='Enter your full name'
-            className={`w-full ${errors.displayName ? 'p-invalid' : ''}`}
-            disabled={isLoading}
-          />
-          {errors.displayName && (
-            <small className='p-error block mt-1'>
-              {errors.displayName.message}
-            </small>
-          )}
+            <div className='field'>
+              <label
+                htmlFor='displayName'
+                className='block text-900 font-medium mb-2'
+              >
+                Full Name
+              </label>
+              <div className='p-input-icon-left'>
+                <i className='pi pi-user'></i>
+                <InputText
+                  id='displayName'
+                  {...register('displayName')}
+                  placeholder='Enter your full name'
+                  className={`w-full p-inputtext-lg ${errors.displayName ? 'p-invalid' : ''}`}
+                  disabled={isAnyLoading}
+                />
+              </div>
+              {errors.displayName && (
+                <small className='p-error mt-1 block'>
+                  {errors.displayName.message}
+                </small>
+              )}
+            </div>
+
+            <div className='field'>
+              <label
+                htmlFor='email'
+                className='block text-900 font-medium mb-2'
+              >
+                Email Address
+              </label>
+              <div className='p-input-icon-left'>
+                <i className='pi pi-envelope'></i>
+                <InputText
+                  id='email'
+                  {...register('email')}
+                  placeholder='Enter your email address'
+                  className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
+                  disabled={isAnyLoading}
+                />
+              </div>
+              {errors.email && (
+                <small className='p-error mt-1 block'>
+                  {errors.email.message}
+                </small>
+              )}
+            </div>
+
+            <div className='field'>
+              <label
+                htmlFor='password'
+                className='block text-900 font-medium mb-2'
+              >
+                Password
+              </label>
+              <div className='p-input-icon-left'>
+                <i className='pi pi-lock'></i>
+                <Password
+                  id='password'
+                  {...register('password')}
+                  placeholder='Create a strong password'
+                  className={`w-full ${errors.password ? 'p-invalid' : ''}`}
+                  inputClassName='p-inputtext-lg'
+                  disabled={isAnyLoading}
+                  feedback={true}
+                  toggleMask
+                />
+              </div>
+              {errors.password && (
+                <small className='p-error mt-1 block'>
+                  {errors.password.message}
+                </small>
+              )}
+            </div>
+
+            <div className='field'>
+              <label
+                htmlFor='confirmPassword'
+                className='block text-900 font-medium mb-2'
+              >
+                Confirm Password
+              </label>
+              <div className='p-input-icon-left'>
+                <i className='pi pi-lock'></i>
+                <Password
+                  id='confirmPassword'
+                  {...register('confirmPassword')}
+                  placeholder='Confirm your password'
+                  className={`w-full ${errors.confirmPassword ? 'p-invalid' : ''}`}
+                  inputClassName='p-inputtext-lg'
+                  disabled={isAnyLoading}
+                  feedback={false}
+                  toggleMask
+                />
+              </div>
+              {errors.confirmPassword && (
+                <small className='p-error mt-1 block'>
+                  {errors.confirmPassword.message}
+                </small>
+              )}
+            </div>
+
+            <div className='field-checkbox flex align-items-start gap-2 mb-4'>
+              <Checkbox
+                inputId='acceptTerms'
+                checked={acceptTerms}
+                onChange={(e) => setValue('acceptTerms', e.checked || false)}
+                disabled={isAnyLoading}
+                className={`mt-1 ${errors.acceptTerms ? 'p-invalid' : ''}`}
+              />
+              <label
+                htmlFor='acceptTerms'
+                className='text-900 line-height-3'
+              >
+                I agree to the{' '}
+                <a
+                  href='#'
+                  className='text-primary-500 hover:text-primary-600 no-underline'
+                >
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a
+                  href='#'
+                  className='text-primary-500 hover:text-primary-600 no-underline'
+                >
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+            {errors.acceptTerms && (
+              <small className='p-error block -mt-3 mb-3'>
+                {errors.acceptTerms.message}
+              </small>
+            )}
+
+            <Button
+              type='submit'
+              label={isLoading ? 'Creating Account...' : 'Create Account'}
+              icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-user-plus'}
+              loading={isLoading}
+              className='w-full p-button-lg'
+              disabled={isAnyLoading}
+            />
+          </form>
+
+          {/* Switch to Login */}
+          <div className='text-center mt-5'>
+            <span className='text-600'>Already have an account? </span>
+            <Button
+              type='button'
+              link
+              label='Sign In'
+              onClick={onSwitchToLogin}
+              className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+              disabled={isAnyLoading}
+            />
+          </div>
         </div>
-
-        <div className='field'>
-          <label
-            htmlFor='email'
-            className='block text-sm font-medium text-gray-700 mb-1'
-          >
-            Email Address
-          </label>
-          <InputText
-            id='email'
-            {...register('email')}
-            placeholder='Enter your email'
-            className={`w-full ${errors.email ? 'p-invalid' : ''}`}
-            disabled={isLoading}
-          />
-          {errors.email && (
-            <small className='p-error block mt-1'>{errors.email.message}</small>
-          )}
-        </div>
-
-        <div className='field'>
-          <label
-            htmlFor='password'
-            className='block text-sm font-medium text-gray-700 mb-1'
-          >
-            Password
-          </label>
-          <Password
-            id='password'
-            {...register('password')}
-            placeholder='Enter your password'
-            className={`w-full ${errors.password ? 'p-invalid' : ''}`}
-            disabled={isLoading}
-            feedback={true}
-            toggleMask
-          />
-          {errors.password && (
-            <small className='p-error block mt-1'>
-              {errors.password.message}
-            </small>
-          )}
-        </div>
-
-        <div className='field'>
-          <label
-            htmlFor='confirmPassword'
-            className='block text-sm font-medium text-gray-700 mb-1'
-          >
-            Confirm Password
-          </label>
-          <Password
-            id='confirmPassword'
-            {...register('confirmPassword')}
-            placeholder='Confirm your password'
-            className={`w-full ${errors.confirmPassword ? 'p-invalid' : ''}`}
-            disabled={isLoading}
-            feedback={false}
-            toggleMask
-          />
-          {errors.confirmPassword && (
-            <small className='p-error block mt-1'>
-              {errors.confirmPassword.message}
-            </small>
-          )}
-        </div>
-
-        <div className='field-checkbox'>
-          <Checkbox
-            inputId='acceptTerms'
-            checked={acceptTerms}
-            onChange={(e) => setValue('acceptTerms', e.checked || false)}
-            disabled={isLoading}
-            className={errors.acceptTerms ? 'p-invalid' : ''}
-          />
-          <label
-            htmlFor='acceptTerms'
-            className='ml-2 text-sm text-gray-700'
-          >
-            I agree to the{' '}
-            <a
-              href='#'
-              className='text-primary-500 hover:text-primary-600'
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a
-              href='#'
-              className='text-primary-500 hover:text-primary-600'
-            >
-              Privacy Policy
-            </a>
-          </label>
-          {errors.acceptTerms && (
-            <small className='p-error block mt-1'>
-              {errors.acceptTerms.message}
-            </small>
-          )}
-        </div>
-
-        <Button
-          type='submit'
-          label={isLoading ? 'Creating Account...' : 'Create Account'}
-          loading={isLoading}
-          className='w-full'
-          disabled={isLoading}
-        />
-      </form>
-
-      <Divider className='my-6'>
-        <span className='text-gray-500'>OR</span>
-      </Divider>
-
-      <div className='space-y-3'>
-        <Button
-          type='button'
-          label={
-            socialLoading === AuthProvider.GOOGLE
-              ? 'Signing up...'
-              : 'Continue with Google'
-          }
-          icon='pi pi-google'
-          loading={socialLoading === AuthProvider.GOOGLE}
-          onClick={handleGoogleSignIn}
-          className='w-full p-button-outlined'
-          disabled={socialLoading !== null}
-        />
-
-        {isAppleAvailable && (
-          <Button
-            type='button'
-            label={
-              socialLoading === AuthProvider.APPLE
-                ? 'Signing up...'
-                : 'Continue with Apple'
-            }
-            icon='pi pi-apple'
-            loading={socialLoading === AuthProvider.APPLE}
-            onClick={handleAppleSignIn}
-            className='w-full p-button-outlined p-button-dark'
-            disabled={socialLoading !== null}
-          />
-        )}
-      </div>
-
-      <div className='text-center mt-6'>
-        <span className='text-gray-600'>Already have an account? </span>
-        <Button
-          type='button'
-          link
-          label='Sign In'
-          onClick={onSwitchToLogin}
-          className='p-0 text-primary-500 hover:text-primary-600'
-          disabled={isLoading || socialLoading !== null}
-        />
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 };
 

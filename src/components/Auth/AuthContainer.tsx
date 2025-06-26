@@ -1,7 +1,9 @@
 import { unifiedAuthService } from '@/services/authService';
 import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
+import { Button } from 'primereact/button';
 import React, { useEffect, useState } from 'react';
+import AuthDebugInfo from './AuthDebugInfo';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import LoginForm from './LoginForm';
 import SignUpForm from './SignUpForm';
@@ -24,6 +26,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   onAuthSuccess,
 }) => {
   const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   const navigate = useNavigate();
   const isAuthenticated = useIsAuthenticatedZState();
 
@@ -81,9 +84,27 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
-      <div className='max-w-md w-full space-y-8'>{renderAuthForm()}</div>
-    </div>
+    <>
+      {renderAuthForm()}
+
+      {/* Debug Button - only show in development */}
+      {import.meta.env.DEV && (
+        <div className='fixed bottom-4 right-4'>
+          <Button
+            icon='pi pi-cog'
+            label='Debug Auth'
+            onClick={() => setShowDebugInfo(true)}
+            className='p-button-outlined p-button-secondary'
+            size='small'
+          />
+        </div>
+      )}
+
+      {/* Debug Modal */}
+      {showDebugInfo && (
+        <AuthDebugInfo onClose={() => setShowDebugInfo(false)} />
+      )}
+    </>
   );
 };
 
