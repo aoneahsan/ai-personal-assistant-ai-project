@@ -161,23 +161,24 @@ const LoginForm: React.FC<LoginFormProps> = ({
           onSubmit={handleSubmit(onSubmit)}
           className='flex flex-column gap-4'
         >
-          <div className='field'>
+          <div className='field mb-4'>
             <label
               htmlFor='email'
               className='block text-900 font-medium mb-2'
             >
               Email Address
             </label>
-            <div className='p-input-icon-left'>
+            <span className='p-input-icon-left w-full'>
               <i className='pi pi-envelope'></i>
               <InputText
                 id='email'
                 {...register('email')}
                 placeholder='Enter your email address'
                 className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
+                style={{ width: '100%', paddingLeft: '2.5rem' }}
                 disabled={isAnyLoading}
               />
-            </div>
+            </span>
             {errors.email && (
               <small className='p-error mt-1 block'>
                 {errors.email.message}
@@ -185,26 +186,28 @@ const LoginForm: React.FC<LoginFormProps> = ({
             )}
           </div>
 
-          <div className='field'>
+          <div className='field mb-4'>
             <label
               htmlFor='password'
               className='block text-900 font-medium mb-2'
             >
               Password
             </label>
-            <div className='p-input-icon-left'>
+            <span className='p-input-icon-left w-full'>
               <i className='pi pi-lock'></i>
               <Password
                 id='password'
                 {...register('password')}
                 placeholder='Enter your password'
                 className={`w-full ${errors.password ? 'p-invalid' : ''}`}
-                inputClassName='p-inputtext-lg'
+                inputClassName='p-inputtext-lg w-full'
+                inputStyle={{ width: '100%', paddingLeft: '2.5rem' }}
+                style={{ width: '100%' }}
                 disabled={isAnyLoading}
                 feedback={false}
                 toggleMask
               />
-            </div>
+            </span>
             {errors.password && (
               <small className='p-error mt-1 block'>
                 {errors.password.message}

@@ -100,23 +100,24 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
             onSubmit={handleSubmit(onSubmit)}
             className='flex flex-column gap-4'
           >
-            <div className='field'>
+            <div className='field mb-4'>
               <label
                 htmlFor='email'
                 className='block text-900 font-medium mb-2'
               >
                 Email Address
               </label>
-              <div className='p-input-icon-left'>
+              <span className='p-input-icon-left w-full'>
                 <i className='pi pi-envelope'></i>
                 <InputText
                   id='email'
                   {...register('email')}
                   placeholder='Enter your email address'
                   className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
+                  style={{ width: '100%', paddingLeft: '2.5rem' }}
                   disabled={isLoading}
                 />
-              </div>
+              </span>
               {errors.email && (
                 <small className='p-error mt-1 block'>
                   {errors.email.message}

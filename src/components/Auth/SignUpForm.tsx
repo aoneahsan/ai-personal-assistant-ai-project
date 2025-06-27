@@ -183,23 +183,24 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           onSubmit={handleSubmit(onSubmit)}
           className='flex flex-column gap-4'
         >
-          <div className='field'>
+          <div className='field mb-4'>
             <label
               htmlFor='displayName'
               className='block text-900 font-medium mb-2'
             >
               Full Name
             </label>
-            <div className='p-input-icon-left'>
+            <span className='p-input-icon-left w-full'>
               <i className='pi pi-user'></i>
               <InputText
                 id='displayName'
                 {...register('displayName')}
                 placeholder='Enter your full name'
                 className={`w-full p-inputtext-lg ${errors.displayName ? 'p-invalid' : ''}`}
+                style={{ width: '100%', paddingLeft: '2.5rem' }}
                 disabled={isAnyLoading}
               />
-            </div>
+            </span>
             {errors.displayName && (
               <small className='p-error mt-1 block'>
                 {errors.displayName.message}
@@ -207,23 +208,24 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             )}
           </div>
 
-          <div className='field'>
+          <div className='field mb-4'>
             <label
               htmlFor='email'
               className='block text-900 font-medium mb-2'
             >
               Email Address
             </label>
-            <div className='p-input-icon-left'>
+            <span className='p-input-icon-left w-full'>
               <i className='pi pi-envelope'></i>
               <InputText
                 id='email'
                 {...register('email')}
                 placeholder='Enter your email address'
                 className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
+                style={{ width: '100%', paddingLeft: '2.5rem' }}
                 disabled={isAnyLoading}
               />
-            </div>
+            </span>
             {errors.email && (
               <small className='p-error mt-1 block'>
                 {errors.email.message}
@@ -231,26 +233,28 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             )}
           </div>
 
-          <div className='field'>
+          <div className='field mb-4'>
             <label
               htmlFor='password'
               className='block text-900 font-medium mb-2'
             >
               Password
             </label>
-            <div className='p-input-icon-left'>
+            <span className='p-input-icon-left w-full'>
               <i className='pi pi-lock'></i>
               <Password
                 id='password'
                 {...register('password')}
                 placeholder='Create a strong password'
                 className={`w-full ${errors.password ? 'p-invalid' : ''}`}
-                inputClassName='p-inputtext-lg'
+                inputClassName='p-inputtext-lg w-full'
+                inputStyle={{ width: '100%', paddingLeft: '2.5rem' }}
+                style={{ width: '100%' }}
                 disabled={isAnyLoading}
                 feedback={true}
                 toggleMask
               />
-            </div>
+            </span>
             {errors.password && (
               <small className='p-error mt-1 block'>
                 {errors.password.message}
@@ -258,26 +262,28 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             )}
           </div>
 
-          <div className='field'>
+          <div className='field mb-4'>
             <label
               htmlFor='confirmPassword'
               className='block text-900 font-medium mb-2'
             >
               Confirm Password
             </label>
-            <div className='p-input-icon-left'>
+            <span className='p-input-icon-left w-full'>
               <i className='pi pi-lock'></i>
               <Password
                 id='confirmPassword'
                 {...register('confirmPassword')}
                 placeholder='Confirm your password'
                 className={`w-full ${errors.confirmPassword ? 'p-invalid' : ''}`}
-                inputClassName='p-inputtext-lg'
+                inputClassName='p-inputtext-lg w-full'
+                inputStyle={{ width: '100%', paddingLeft: '2.5rem' }}
+                style={{ width: '100%' }}
                 disabled={isAnyLoading}
                 feedback={false}
                 toggleMask
               />
-            </div>
+            </span>
             {errors.confirmPassword && (
               <small className='p-error mt-1 block'>
                 {errors.confirmPassword.message}
