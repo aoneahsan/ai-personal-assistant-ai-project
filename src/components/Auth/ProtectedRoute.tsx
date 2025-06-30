@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  redirectTo = '/auth',
+  redirectTo = '/chats',
 }) => {
   const isAuthenticated = useIsAuthenticatedZState();
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const timer = setTimeout(() => {
       setIsChecking(false);
       if (!isAuthenticated) {
-        navigate({ to: redirectTo });
+        navigate({ to: '/auth' });
       }
     }, 100);
 

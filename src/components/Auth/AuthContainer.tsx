@@ -23,7 +23,7 @@ interface AuthContainerProps {
 
 const AuthContainer: React.FC<AuthContainerProps> = ({
   initialMode = AuthMode.LOGIN,
-  redirectTo = '/dashboard',
+  redirectTo = '/chats',
   onAuthSuccess,
 }) => {
   const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
@@ -50,7 +50,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   // Redirect if already authenticated
   useEffect(() => {
     if (!isInitializing && isAuthenticated) {
-      console.log('User already authenticated, redirecting to dashboard');
+      console.log('User already authenticated, redirecting to chats');
       if (onAuthSuccess) {
         onAuthSuccess();
       } else {
@@ -109,7 +109,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
             className='mb-4'
           />
           <p className='text-gray-600 text-lg'>
-            {isInitializing ? 'Initializing...' : 'Redirecting to dashboard...'}
+            {isInitializing ? 'Initializing...' : 'Redirecting to chats...'}
           </p>
         </div>
       </div>

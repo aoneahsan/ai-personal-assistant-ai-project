@@ -21,7 +21,7 @@ export const PUBLIC_ROUTES = ['/auth'] as const;
 
 // Default redirect routes
 export const DEFAULT_ROUTES = {
-  AFTER_LOGIN: '/dashboard',
+  AFTER_LOGIN: '/chats',
   AFTER_LOGOUT: '/auth',
   UNAUTHORIZED: '/auth',
 } as const;
