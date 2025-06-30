@@ -12,6 +12,37 @@ export const useUserDataZState = create<IPCAUserDataZState>((set) => ({
   updateData: (newData: IPCAUser | null) => set({ data: newData }),
 }));
 
+// Authentication initialization state
+interface AuthInitializationState {
+  isInitializing: boolean;
+  isAuthServicesReady: boolean;
+  isAuthStateSettled: boolean;
+  setInitializing: (initializing: boolean) => void;
+  setAuthServicesReady: (ready: boolean) => void;
+  setAuthStateSettled: (settled: boolean) => void;
+  reset: () => void;
+}
+
+export const useAuthInitializationZState = create<AuthInitializationState>(
+  (set) => ({
+    isInitializing: true,
+    isAuthServicesReady: false,
+    isAuthStateSettled: false,
+    setInitializing: (initializing: boolean) =>
+      set({ isInitializing: initializing }),
+    setAuthServicesReady: (ready: boolean) =>
+      set({ isAuthServicesReady: ready }),
+    setAuthStateSettled: (settled: boolean) =>
+      set({ isAuthStateSettled: settled }),
+    reset: () =>
+      set({
+        isInitializing: true,
+        isAuthServicesReady: false,
+        isAuthStateSettled: false,
+      }),
+  })
+);
+
 export const useIsAuthenticatedZState = () => {
   const userData = useUserDataZState((state) => state.data);
 
@@ -24,8 +55,9 @@ export const useIsAuthenticatedZState = () => {
   // Return true if either condition is met
   const isAuthenticated = hasUserData || hasFirebaseAuth;
 
-  // Debug logging for troubleshooting
-  if (import.meta.env.DEV) {
+  // Debug logging for troubleshooting (reduced frequency)
+  if (import.meta.env.DEV && Math.random() < 0.1) {
+    // Only log 10% of the time to reduce noise
     console.log('Auth State Check:', {
       hasUserData,
       hasFirebaseAuth,
@@ -38,6 +70,25 @@ export const useIsAuthenticatedZState = () => {
   }
 
   return isAuthenticated;
+};
+
+// Hook to check if auth system is fully ready
+export const useIsAuthSystemReady = () => {
+  const { isInitializing, isAuthServicesReady, isAuthStateSettled } =
+    useAuthInitializationZState();
+
+  const isReady = !isInitializing && isAuthServicesReady && isAuthStateSettled;
+
+  if (import.meta.env.DEV) {
+    console.log('Auth System Status:', {
+      isInitializing,
+      isAuthServicesReady,
+      isAuthStateSettled,
+      isReady,
+    });
+  }
+
+  return isReady;
 };
 
 // User Profile State for detailed profile information

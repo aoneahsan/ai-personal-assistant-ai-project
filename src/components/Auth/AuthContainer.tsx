@@ -2,7 +2,6 @@ import { unifiedAuthService } from '@/services/authService';
 import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
-import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { useEffect, useState } from 'react';
 import AuthDebugInfo from './AuthDebugInfo';
 import ForgotPasswordForm from './ForgotPasswordForm';
@@ -28,19 +27,16 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
 }) => {
   const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
   const navigate = useNavigate();
   const isAuthenticated = useIsAuthenticatedZState();
 
-  // Initialize authentication services
+  // Initialize authentication services once
   useEffect(() => {
     const initAuth = async () => {
       try {
         await unifiedAuthService.initialize();
       } catch (error) {
         console.error('Failed to initialize auth services:', error);
-      } finally {
-        setIsInitializing(false);
       }
     };
 
@@ -48,7 +44,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   }, []);
 
   const handleAuthSuccess = () => {
-    console.log('Authentication successful, redirecting to:', redirectTo);
+    console.log('🎉 Authentication successful, redirecting to:', redirectTo);
     if (onAuthSuccess) {
       onAuthSuccess();
     } else {
@@ -84,26 +80,6 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
         return null;
     }
   };
-
-  // Show loading state while initializing
-  if (isInitializing) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex align-items-center justify-content-center'>
-        <div className='text-center'>
-          <ProgressSpinner
-            style={{ width: '50px', height: '50px' }}
-            strokeWidth='4'
-            fill='transparent'
-            animationDuration='1s'
-            className='mb-4'
-          />
-          <p className='text-gray-600 text-lg'>
-            Initializing authentication...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className='min-h-screen bg-gray-50 flex flex-column'>

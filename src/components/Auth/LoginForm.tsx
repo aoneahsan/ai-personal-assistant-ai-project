@@ -63,11 +63,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
     try {
       await unifiedAuthService.signInWithGoogle();
       toast.success('Welcome! You have signed in with Google successfully.');
-
-      // Wait a moment for auth state to settle before redirecting
-      setTimeout(() => {
-        onSuccess?.();
-      }, 500);
+      onSuccess?.();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to sign in with Google'
@@ -82,11 +78,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
     try {
       await unifiedAuthService.signInWithApple();
       toast.success('Welcome! You have signed in with Apple successfully.');
-
-      // Wait a moment for auth state to settle before redirecting
-      setTimeout(() => {
-        onSuccess?.();
-      }, 500);
+      onSuccess?.();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to sign in with Apple'

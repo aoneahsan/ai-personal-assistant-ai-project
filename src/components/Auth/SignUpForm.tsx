@@ -87,11 +87,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     try {
       await unifiedAuthService.signInWithGoogle();
       toast.success('Welcome! Account created with Google successfully.');
-
-      // Wait a moment for auth state to settle before redirecting
-      setTimeout(() => {
-        onSuccess?.();
-      }, 500);
+      onSuccess?.();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to sign up with Google'

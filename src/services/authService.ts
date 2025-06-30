@@ -3,7 +3,10 @@ import {
   getFirebaseConfigStatus,
   isGoogleAuthConfigured,
 } from '@/utils/constants/generic/firebase';
-import { useUserDataZState } from '@/zustandStates/userState';
+import {
+  useAuthInitializationZState,
+  useUserDataZState,
+} from '@/zustandStates/userState';
 import { Capacitor } from '@capacitor/core';
 import { User } from 'firebase/auth';
 import { appleAuthService } from './appleAuth';
@@ -36,11 +39,18 @@ export interface SignUpData {
 // Unified Authentication Service
 export class UnifiedAuthService {
   private updateUserData = useUserDataZState.getState().updateData;
+  private updateAuthInitialization = useAuthInitializationZState.getState();
   private isInitialized = false;
+  private authStateChangeTimeout: NodeJS.Timeout | null = null;
 
   // Initialize authentication services
   async initialize(): Promise<void> {
     try {
+      console.log('🔄 Starting authentication services initialization...');
+      this.updateAuthInitialization.setInitializing(true);
+      this.updateAuthInitialization.setAuthServicesReady(false);
+      this.updateAuthInitialization.setAuthStateSettled(false);
+
       const platform = Capacitor.getPlatform();
       console.log(
         `Initializing authentication services for platform: ${platform}`
@@ -79,33 +89,55 @@ export class UnifiedAuthService {
       );
 
       this.isInitialized = true;
+      this.updateAuthInitialization.setAuthServicesReady(true);
+      console.log('✅ Authentication services ready');
+
+      // Set a timeout to mark auth state as settled if no immediate auth state change occurs
+      this.authStateChangeTimeout = setTimeout(() => {
+        this.updateAuthInitialization.setAuthStateSettled(true);
+        this.updateAuthInitialization.setInitializing(false);
+        console.log('✅ Auth state settled (timeout)');
+      }, 1000);
+
       console.log(
-        `Authentication services initialized successfully for ${platform}`
+        `✅ Authentication services initialized successfully for ${platform}`
       );
     } catch (error) {
-      console.error('Error initializing auth services:', error);
-      // Don't throw error to prevent app crash
+      console.error('❌ Error initializing auth services:', error);
+      // Mark as ready even if there were errors to prevent infinite loading
+      this.updateAuthInitialization.setAuthServicesReady(true);
+      this.updateAuthInitialization.setAuthStateSettled(true);
+      this.updateAuthInitialization.setInitializing(false);
     }
   }
 
   // Handle authentication state changes
   private async handleAuthStateChange(user: User | null): Promise<void> {
     console.log(
-      'Auth state change triggered:',
+      '🔄 Auth state change triggered:',
       user ? user.email : 'signed out'
     );
+
+    // Clear any existing timeout since we have a real auth state change
+    if (this.authStateChangeTimeout) {
+      clearTimeout(this.authStateChangeTimeout);
+      this.authStateChangeTimeout = null;
+    }
 
     if (user) {
       // User is signed in
       try {
-        console.log('User signed in:', user.email, 'UID:', user.uid);
+        console.log('👤 User signed in:', user.email, 'UID:', user.uid);
 
         // Get user data from Firestore
         let userData = await getUserFromFirestore(user.uid);
 
         // If user doesn't exist in Firestore, save them
         if (!userData) {
-          console.log('Creating new user record in Firestore for:', user.email);
+          console.log(
+            '📝 Creating new user record in Firestore for:',
+            user.email
+          );
           await saveUserToFirestore(user);
           userData = await getUserFromFirestore(user.uid);
         }
@@ -118,6 +150,18 @@ export class UnifiedAuthService {
           console.error(
             '❌ Failed to get user data from Firestore after saving'
           );
+          // Fallback to basic user data
+          const basicUserData = {
+            id: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            emailVerified: user.emailVerified,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          this.updateUserData(basicUserData as any);
+          console.log('✅ Fallback: Basic user data set in Zustand state');
         }
       } catch (error) {
         console.error('❌ Error handling auth state change:', error);
@@ -139,6 +183,11 @@ export class UnifiedAuthService {
       console.log('🔓 User signed out, clearing Zustand state');
       this.updateUserData(null);
     }
+
+    // Mark auth state as settled and initialization as complete
+    this.updateAuthInitialization.setAuthStateSettled(true);
+    this.updateAuthInitialization.setInitializing(false);
+    console.log('✅ Auth state settled');
   }
 
   // Check if service is properly configured

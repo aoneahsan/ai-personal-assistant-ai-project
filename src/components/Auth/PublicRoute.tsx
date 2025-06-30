@@ -1,7 +1,10 @@
-import { useIsAuthenticatedZState } from '@/zustandStates/userState';
+import {
+  useIsAuthenticatedZState,
+  useIsAuthSystemReady,
+} from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -13,29 +16,26 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
   redirectTo = '/chats',
 }) => {
   const isAuthenticated = useIsAuthenticatedZState();
+  const isAuthSystemReady = useIsAuthSystemReady();
   const navigate = useNavigate();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Give more time to allow authentication state to initialize and settle
-    const timer = setTimeout(() => {
-      setIsChecking(false);
+    // Only make routing decisions when auth system is fully ready
+    if (isAuthSystemReady) {
       if (isAuthenticated) {
         console.log(
-          'User is authenticated, redirecting from public route to:',
+          '✅ User is authenticated, redirecting from public route to:',
           redirectTo
         );
         navigate({ to: redirectTo });
       } else {
-        console.log('User is not authenticated, showing public route');
+        console.log('🔓 User is not authenticated, showing public route');
       }
-    }, 300); // Increased from 100ms to 300ms
+    }
+  }, [isAuthenticated, isAuthSystemReady, navigate, redirectTo]);
 
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, navigate, redirectTo]);
-
-  // Show loading state while checking authentication
-  if (isChecking) {
+  // Show loading state while auth system is initializing
+  if (!isAuthSystemReady) {
     return (
       <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
         <div className='text-center'>
@@ -46,7 +46,9 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
             animationDuration='1s'
             className='mb-4'
           />
-          <p className='text-gray-600 text-lg'>Loading...</p>
+          <p className='text-gray-600 text-lg'>
+            Initializing authentication...
+          </p>
         </div>
       </div>
     );
