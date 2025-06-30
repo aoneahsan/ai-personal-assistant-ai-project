@@ -93,3 +93,4 @@ functions/.env.*
 functions/.firebase/**/*
 functions/firebase-debug.log
 functions/lib/**/*
+.env
