@@ -4,7 +4,7 @@ import {
 } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,13 +18,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const isAuthenticated = useIsAuthenticatedZState();
   const isAuthSystemReady = useIsAuthSystemReady();
   const navigate = useNavigate();
+  const hasRedirectedRef = useRef(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     // Only make routing decisions when auth system is fully ready
-    if (isAuthSystemReady) {
+    if (isAuthSystemReady && !hasRedirectedRef.current) {
       if (!isAuthenticated) {
         console.log('🔒 User is not authenticated, redirecting to auth page');
-        navigate({ to: redirectTo });
+        hasRedirectedRef.current = true;
+        setIsRedirecting(true);
+
+        // Small delay to prevent rapid redirects
+        setTimeout(() => {
+          navigate({ to: redirectTo, replace: true });
+        }, 100);
       } else {
         console.log(
           '✅ User is authenticated, allowing access to protected route'
@@ -32,6 +40,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       }
     }
   }, [isAuthenticated, isAuthSystemReady, navigate, redirectTo]);
+
+  // Reset redirect flag when auth state changes
+  useEffect(() => {
+    if (isAuthenticated && hasRedirectedRef.current) {
+      hasRedirectedRef.current = false;
+      setIsRedirecting(false);
+    }
+  }, [isAuthenticated]);
 
   // Show loading state while auth system is initializing
   if (!isAuthSystemReady) {
@@ -54,7 +70,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // If user is not authenticated, show loading while redirect happens
-  if (!isAuthenticated) {
+  if (!isAuthenticated || isRedirecting) {
     return (
       <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
         <div className='text-center'>

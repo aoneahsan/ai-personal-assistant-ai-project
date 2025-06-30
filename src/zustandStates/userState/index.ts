@@ -1,5 +1,6 @@
 import { auth } from '@/services/firebase';
 import { IPCAUser } from '@/types/user';
+import React from 'react';
 import { create } from 'zustand';
 
 interface IPCAUserDataZState {
@@ -49,23 +50,21 @@ export const useIsAuthenticatedZState = () => {
   // First check Zustand store for user data
   const hasUserData = Boolean(userData?.id && userData?.email);
 
-  // Fallback to Firebase auth state for immediate checks (helps with timing issues)
-  const hasFirebaseAuth = Boolean(auth.currentUser);
+  // Fallback to Firebase auth state for immediate checks (only if Zustand is empty)
+  const hasFirebaseAuth = !hasUserData && Boolean(auth.currentUser);
 
   // Return true if either condition is met
   const isAuthenticated = hasUserData || hasFirebaseAuth;
 
-  // Debug logging for troubleshooting (reduced frequency)
-  if (import.meta.env.DEV && Math.random() < 0.1) {
-    // Only log 10% of the time to reduce noise
+  // Minimal debug logging to prevent performance issues
+  if (import.meta.env.DEV && Math.random() < 0.01) {
+    // Only log 1% of the time to reduce noise
     console.log('Auth State Check:', {
       hasUserData,
       hasFirebaseAuth,
       isAuthenticated,
-      userDataId: userData?.id,
-      userDataEmail: userData?.email,
-      firebaseUserId: auth.currentUser?.uid,
-      firebaseUserEmail: auth.currentUser?.email,
+      userDataId: userData?.id || 'none',
+      firebaseUserId: auth.currentUser?.uid || 'none',
     });
   }
 
@@ -79,13 +78,18 @@ export const useIsAuthSystemReady = () => {
 
   const isReady = !isInitializing && isAuthServicesReady && isAuthStateSettled;
 
-  if (import.meta.env.DEV) {
-    console.log('Auth System Status:', {
-      isInitializing,
-      isAuthServicesReady,
-      isAuthStateSettled,
-      isReady,
-    });
+  // Only log when state changes to reduce noise
+  const prevStateRef = React.useRef<boolean>(isReady);
+  if (prevStateRef.current !== isReady) {
+    prevStateRef.current = isReady;
+    if (import.meta.env.DEV) {
+      console.log('🔄 Auth System Status Changed:', {
+        isInitializing,
+        isAuthServicesReady,
+        isAuthStateSettled,
+        isReady,
+      });
+    }
   }
 
   return isReady;

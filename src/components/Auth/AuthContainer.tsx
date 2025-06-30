@@ -1,8 +1,7 @@
-import { unifiedAuthService } from '@/services/authService';
 import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import AuthDebugInfo from './AuthDebugInfo';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import LoginForm from './LoginForm';
@@ -29,19 +28,6 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const navigate = useNavigate();
   const isAuthenticated = useIsAuthenticatedZState();
-
-  // Initialize authentication services once
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        await unifiedAuthService.initialize();
-      } catch (error) {
-        console.error('Failed to initialize auth services:', error);
-      }
-    };
-
-    initAuth();
-  }, []);
 
   const handleAuthSuccess = () => {
     console.log('🎉 Authentication successful, redirecting to:', redirectTo);

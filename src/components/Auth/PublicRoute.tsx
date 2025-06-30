@@ -4,7 +4,7 @@ import {
 } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -18,21 +18,37 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
   const isAuthenticated = useIsAuthenticatedZState();
   const isAuthSystemReady = useIsAuthSystemReady();
   const navigate = useNavigate();
+  const hasRedirectedRef = useRef(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     // Only make routing decisions when auth system is fully ready
-    if (isAuthSystemReady) {
+    if (isAuthSystemReady && !hasRedirectedRef.current) {
       if (isAuthenticated) {
         console.log(
           '✅ User is authenticated, redirecting from public route to:',
           redirectTo
         );
-        navigate({ to: redirectTo });
+        hasRedirectedRef.current = true;
+        setIsRedirecting(true);
+
+        // Small delay to prevent rapid redirects
+        setTimeout(() => {
+          navigate({ to: redirectTo, replace: true });
+        }, 100);
       } else {
         console.log('🔓 User is not authenticated, showing public route');
       }
     }
   }, [isAuthenticated, isAuthSystemReady, navigate, redirectTo]);
+
+  // Reset redirect flag when auth state changes
+  useEffect(() => {
+    if (!isAuthenticated && hasRedirectedRef.current) {
+      hasRedirectedRef.current = false;
+      setIsRedirecting(false);
+    }
+  }, [isAuthenticated]);
 
   // Show loading state while auth system is initializing
   if (!isAuthSystemReady) {
@@ -55,7 +71,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
   }
 
   // If user is authenticated, don't render children (redirect will happen)
-  if (isAuthenticated) {
+  if (isAuthenticated || isRedirecting) {
     return (
       <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
         <div className='text-center'>

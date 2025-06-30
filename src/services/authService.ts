@@ -45,6 +45,12 @@ export class UnifiedAuthService {
 
   // Initialize authentication services
   async initialize(): Promise<void> {
+    // Prevent multiple initializations
+    if (this.isInitialized) {
+      console.log('🔄 Auth services already initialized, skipping...');
+      return;
+    }
+
     try {
       console.log('🔄 Starting authentication services initialization...');
       this.updateAuthInitialization.setInitializing(true);
@@ -69,8 +75,12 @@ export class UnifiedAuthService {
       // Initialize Google Auth based on platform
       if (isGoogleAuthConfigured()) {
         console.log('Google Auth configuration found, initializing...');
-        await googleAuthService.initialize();
-        console.log('Google Auth initialized successfully');
+        try {
+          await googleAuthService.initialize();
+          console.log('Google Auth initialized successfully');
+        } catch (error) {
+          console.warn('Google Auth initialization failed:', error);
+        }
       } else {
         console.warn(
           'Google Auth not configured - VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID missing'
@@ -92,12 +102,14 @@ export class UnifiedAuthService {
       this.updateAuthInitialization.setAuthServicesReady(true);
       console.log('✅ Authentication services ready');
 
-      // Set a timeout to mark auth state as settled if no immediate auth state change occurs
+      // Shorter timeout to mark auth state as settled if no immediate auth state change occurs
       this.authStateChangeTimeout = setTimeout(() => {
-        this.updateAuthInitialization.setAuthStateSettled(true);
-        this.updateAuthInitialization.setInitializing(false);
-        console.log('✅ Auth state settled (timeout)');
-      }, 1000);
+        if (!useAuthInitializationZState.getState().isAuthStateSettled) {
+          this.updateAuthInitialization.setAuthStateSettled(true);
+          this.updateAuthInitialization.setInitializing(false);
+          console.log('✅ Auth state settled (timeout - no user found)');
+        }
+      }, 500); // Reduced from 1000ms to 500ms
 
       console.log(
         `✅ Authentication services initialized successfully for ${platform}`
@@ -108,6 +120,7 @@ export class UnifiedAuthService {
       this.updateAuthInitialization.setAuthServicesReady(true);
       this.updateAuthInitialization.setAuthStateSettled(true);
       this.updateAuthInitialization.setInitializing(false);
+      this.isInitialized = true; // Prevent retry loops
     }
   }
 
