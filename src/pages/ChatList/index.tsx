@@ -1,13 +1,17 @@
 import LimitationsModal from '@/components/Chat/LimitationsModal';
 import UserSearch from '@/components/Chat/UserSearch';
+import { unifiedAuthService } from '@/services/authService';
 import { UserSearchResult } from '@/services/chatService';
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
-import React, { useState } from 'react';
+import { Menu } from 'primereact/menu';
+import { MenuItem } from 'primereact/menuitem';
+import React, { useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { FaInfoCircle, FaPlus, FaSearch } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import './index.scss';
 
 interface ChatContact {
@@ -24,6 +28,8 @@ const ChatList: React.FC = () => {
   const navigate = useNavigate();
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [showLimitations, setShowLimitations] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const menuRef = useRef<Menu>(null);
 
   const contacts: ChatContact[] = [
     {
@@ -115,6 +121,46 @@ const ChatList: React.FC = () => {
     });
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await unifiedAuthService.signOut();
+      toast.success('Logged out successfully');
+      // The auth system will automatically redirect to login page
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const menuItems: MenuItem[] = [
+    {
+      label: 'New Group',
+      icon: 'pi pi-users',
+      command: () => {
+        toast.info('Group chats coming soon!');
+      },
+    },
+    {
+      label: 'Settings',
+      icon: 'pi pi-cog',
+      command: () => {
+        toast.info('Settings page coming soon!');
+      },
+    },
+    {
+      separator: true,
+    },
+    {
+      label: 'Logout',
+      icon: 'pi pi-sign-out',
+      command: handleLogout,
+      className: isLoggingOut ? 'p-disabled' : '',
+    },
+  ];
+
   return (
     <div className='chat-list-container'>
       {/* Header */}
@@ -138,6 +184,9 @@ const ChatList: React.FC = () => {
           <Button
             icon={<BsThreeDotsVertical />}
             className='p-button-text header-btn'
+            tooltip='Menu'
+            tooltipOptions={{ position: 'bottom' }}
+            onClick={(e) => menuRef.current?.toggle(e)}
           />
         </div>
       </div>
@@ -190,6 +239,14 @@ const ChatList: React.FC = () => {
         tooltip='Start New Chat'
         tooltipOptions={{ position: 'top' }}
         onClick={() => setShowUserSearch(true)}
+      />
+
+      {/* Header Menu */}
+      <Menu
+        ref={menuRef}
+        model={menuItems}
+        popup
+        className='chat-list-menu'
       />
 
       {/* User Search Modal */}

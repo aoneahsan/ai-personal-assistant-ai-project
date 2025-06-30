@@ -12,10 +12,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    background: #075e54;
-    color: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 10;
+    background: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    min-height: 60px;
 
     .chat-header-left {
       display: flex;
@@ -24,44 +23,61 @@
       flex: 1;
 
       .chat-back-btn {
-        color: white !important;
+        color: #128c7e !important;
         padding: 8px !important;
         min-width: auto !important;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.1) !important;
+          background: rgba(18, 140, 126, 0.1) !important;
         }
       }
 
       .chat-avatar {
-        width: 45px !important;
-        height: 45px !important;
+        border: 2px solid #e0e0e0;
       }
 
       .chat-user-info {
+        flex: 1;
+
         .chat-user-name {
           margin: 0;
-          font-size: 1.1rem;
+          font-size: 16px;
           font-weight: 500;
-          color: white;
+          color: #303030;
+          line-height: 1.2;
         }
 
         .chat-user-status {
-          font-size: 0.85rem;
-          color: rgba(255, 255, 255, 0.8);
+          font-size: 13px;
+          color: #667781;
+          line-height: 1.2;
         }
       }
     }
 
     .chat-header-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .chat-action-btn,
       .chat-menu-btn {
-        color: white !important;
+        color: #128c7e !important;
         padding: 8px !important;
         min-width: auto !important;
+        border-radius: 50% !important;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.1) !important;
+          background: rgba(18, 140, 126, 0.1) !important;
         }
+
+        .p-button-icon {
+          font-size: 18px;
+        }
+      }
+
+      .chat-action-btn {
+        margin-right: 4px;
       }
     }
   }
@@ -1800,5 +1816,24 @@ body {
         }
       }
     }
+  }
+}
+
+// Chat Options Menu
+.chat-options-menu {
+  .p-menuitem {
+    &.text-red-500 {
+      .p-menuitem-link {
+        color: #ef4444 !important;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.1) !important;
+        }
+      }
+    }
+  }
+
+  .p-menuitem-separator {
+    margin: 4px 0;
   }
 }

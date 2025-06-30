@@ -380,11 +380,49 @@ const Chat: React.FC<ChatProps> = ({
   // Check if any audio is being processed
   const isProcessingAudio = false;
 
+  // Chat header action handlers
+  const handleClearChat = () => {
+    setMessages([]);
+    console.log('Chat cleared');
+  };
+
+  const handleDeleteChat = () => {
+    // For now, just clear messages and navigate back
+    setMessages([]);
+    if (onBack) {
+      onBack();
+    } else {
+      // Navigate back to chat list
+      window.history.back();
+    }
+    console.log('Chat deleted');
+  };
+
+  const handleBlockUser = () => {
+    // For now, just show a success message
+    console.log('User blocked:', currentChatUser.name);
+    // Could implement actual blocking logic here
+  };
+
+  const handleMuteNotifications = (muted: boolean) => {
+    console.log(
+      'Notifications',
+      muted ? 'muted' : 'unmuted',
+      'for:',
+      currentChatUser.name
+    );
+    // Could implement actual mute logic here
+  };
+
   return (
     <div className='chat-container'>
       <ChatHeader
         chatUser={currentChatUser}
         onBack={onBack}
+        onClearChat={handleClearChat}
+        onDeleteChat={handleDeleteChat}
+        onBlockUser={handleBlockUser}
+        onMuteNotifications={handleMuteNotifications}
       />
 
       <MessagesList

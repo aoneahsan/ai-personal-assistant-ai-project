@@ -278,3 +278,31 @@
     }
   }
 }
+
+// Chat List Menu Styling
+.chat-list-menu {
+  .p-menuitem {
+    .p-menuitem-link {
+      padding: 12px 16px;
+
+      .p-menuitem-icon {
+        margin-right: 12px;
+        font-size: 16px;
+      }
+    }
+
+    &:last-child {
+      .p-menuitem-link {
+        color: #ef4444 !important;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.1) !important;
+        }
+      }
+    }
+  }
+
+  .p-menuitem-separator {
+    margin: 4px 0;
+  }
+}
