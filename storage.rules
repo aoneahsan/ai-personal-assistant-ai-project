@@ -1,10 +1,38 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+// Firebase Storage Security Rules
 service firebase.storage {
   match /b/{bucket}/o {
+    // Allow authenticated users to upload and access media files
+    match /pca_files/{allPaths=**} {
+      // Allow read access to authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write (upload) access to authenticated users
+      // Restrict file size to 50MB and specific file types
+      allow write: if request.auth != null 
+        && request.resource.size < 50 * 1024 * 1024 // 50MB limit
+        && (
+          // Image files
+          request.resource.contentType.matches('image/.*') ||
+          // Audio files
+          request.resource.contentType.matches('audio/.*') ||
+          // Video files
+          request.resource.contentType.matches('video/.*') ||
+          // Document files
+          request.resource.contentType in [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain'
+          ]
+        );
+      
+      // Allow delete access for cleanup purposes (this would typically be done by Cloud Functions)
+      allow delete: if request.auth != null;
+    }
+    
+    // Deny all other access
     match /{allPaths=**} {
       allow read, write: if false;
     }

@@ -24,6 +24,14 @@ import {
   getFirestore,
   setDoc,
 } from 'firebase/firestore';
+import {
+  deleteObject,
+  getDownloadURL,
+  getStorage,
+  ref,
+  StorageReference,
+  uploadBytes,
+} from 'firebase/storage';
 
 // Initialize Firebase
 const app = initializeApp(FIREBASE_CONFIG);
@@ -33,6 +41,9 @@ export const auth = getAuth(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
+
+// Initialize Firebase Storage and get a reference to the service
+export const storage = getStorage(app);
 
 // Auth Service Interface
 export interface AuthService {
@@ -239,5 +250,161 @@ const getAuthErrorMessage = (errorCode: string): string => {
       return 'An error occurred during authentication.';
   }
 };
+
+// File upload types
+export interface FileUploadResult {
+  url: string;
+  fileName: string;
+  size: number;
+  type: string;
+  uploadedAt: Date;
+  expiresAt: Date; // 10 days from upload
+}
+
+// File Storage Service
+export class FileStorageService {
+  private readonly STORAGE_PREFIX = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_files`;
+  private readonly BACKUP_DAYS = 10; // Files expire after 10 days
+
+  // Upload audio file
+  async uploadAudio(
+    file: File,
+    chatId: string,
+    senderId: string
+  ): Promise<FileUploadResult> {
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const storagePath = `${this.STORAGE_PREFIX}/audio/${chatId}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+
+      console.log('🎵 Uploading audio file:', fileName);
+
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const uploadedAt = new Date();
+      const expiresAt = new Date(
+        uploadedAt.getTime() + this.BACKUP_DAYS * 24 * 60 * 60 * 1000
+      );
+
+      console.log('✅ Audio uploaded successfully:', downloadURL);
+
+      return {
+        url: downloadURL,
+        fileName,
+        size: file.size,
+        type: file.type,
+        uploadedAt,
+        expiresAt,
+      };
+    } catch (error) {
+      console.error('❌ Error uploading audio:', error);
+      throw error;
+    }
+  }
+
+  // Upload image file
+  async uploadImage(
+    file: File,
+    chatId: string,
+    senderId: string
+  ): Promise<FileUploadResult> {
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const storagePath = `${this.STORAGE_PREFIX}/images/${chatId}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+
+      console.log('🖼️ Uploading image file:', fileName);
+
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const uploadedAt = new Date();
+      const expiresAt = new Date(
+        uploadedAt.getTime() + this.BACKUP_DAYS * 24 * 60 * 60 * 1000
+      );
+
+      console.log('✅ Image uploaded successfully:', downloadURL);
+
+      return {
+        url: downloadURL,
+        fileName,
+        size: file.size,
+        type: file.type,
+        uploadedAt,
+        expiresAt,
+      };
+    } catch (error) {
+      console.error('❌ Error uploading image:', error);
+      throw error;
+    }
+  }
+
+  // Upload video file
+  async uploadVideo(
+    file: File,
+    chatId: string,
+    senderId: string
+  ): Promise<FileUploadResult> {
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const storagePath = `${this.STORAGE_PREFIX}/videos/${chatId}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+
+      console.log('🎥 Uploading video file:', fileName);
+
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const uploadedAt = new Date();
+      const expiresAt = new Date(
+        uploadedAt.getTime() + this.BACKUP_DAYS * 24 * 60 * 60 * 1000
+      );
+
+      console.log('✅ Video uploaded successfully:', downloadURL);
+
+      return {
+        url: downloadURL,
+        fileName,
+        size: file.size,
+        type: file.type,
+        uploadedAt,
+        expiresAt,
+      };
+    } catch (error) {
+      console.error('❌ Error uploading video:', error);
+      throw error;
+    }
+  }
+
+  // Delete file from storage
+  async deleteFile(filePath: string): Promise<void> {
+    try {
+      const fileRef = ref(storage, filePath);
+      await deleteObject(fileRef);
+      console.log('🗑️ File deleted successfully:', filePath);
+    } catch (error) {
+      console.error('❌ Error deleting file:', error);
+      throw error;
+    }
+  }
+
+  // Get storage reference for a file
+  getFileRef(filePath: string): StorageReference {
+    return ref(storage, filePath);
+  }
+
+  // Get backup policy info
+  getBackupPolicy() {
+    return {
+      days: this.BACKUP_DAYS,
+      description: `Files are automatically deleted after ${this.BACKUP_DAYS} days to save storage space`,
+      configurable: true, // This will be a user setting in the future
+    };
+  }
+}
+
+// Export singleton instance
+export const fileStorageService = new FileStorageService();
 
 export default authService;

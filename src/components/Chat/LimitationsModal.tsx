@@ -1,6 +1,8 @@
 import { chatService } from '@/services/chatService';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+import { Divider } from 'primereact/divider';
+import { Tag } from 'primereact/tag';
 import React from 'react';
 
 interface LimitationsModalProps {
@@ -16,65 +18,85 @@ const LimitationsModal: React.FC<LimitationsModalProps> = ({
 
   return (
     <Dialog
+      header='ℹ️ Current Chat System Limitations'
       visible={visible}
-      onHide={onHide}
-      header='Current Chat Limitations'
-      modal
       style={{ width: '90vw', maxWidth: '600px' }}
-      className='limitations-dialog'
+      onHide={onHide}
+      dismissableMask
+      draggable={false}
+      resizable={false}
     >
-      <div className='p-4'>
+      <div className='limitations-content'>
         <div className='mb-4'>
-          <p className='text-600 line-height-3'>
-            We're continuously improving the chat system. Here are the current
-            limitations and features that are in development:
+          <p className='text-700 line-height-3 m-0'>
+            This chat system is currently in development. Here are the current
+            limitations and features:
           </p>
         </div>
 
-        <div className='flex flex-column gap-4'>
+        <div className='limitations-list'>
           {limitations.map((limitation, index) => (
             <div
               key={index}
-              className='border-1 border-300 border-round-lg p-4 bg-surface-50'
+              className='limitation-item mb-4'
             >
               <div className='flex align-items-start gap-3'>
-                <div
-                  className='text-2xl'
-                  style={{ minWidth: '2rem' }}
-                >
-                  {limitation.icon}
+                <div className='limitation-icon'>
+                  <span
+                    className='text-2xl'
+                    role='img'
+                    aria-label='icon'
+                  >
+                    {limitation.icon}
+                  </span>
                 </div>
                 <div className='flex-1'>
-                  <h4 className='text-900 font-semibold mb-2 mt-0'>
-                    {limitation.title}
-                  </h4>
-                  <p className='text-600 line-height-3 m-0'>
+                  <div className='flex align-items-center gap-2 mb-2'>
+                    <h4 className='text-900 m-0 font-semibold text-lg'>
+                      {limitation.title}
+                    </h4>
+                    {limitation.isSettingConfigurable && (
+                      <Tag
+                        value='Configurable'
+                        severity='info'
+                        icon='pi pi-cog'
+                        className='text-xs'
+                      />
+                    )}
+                  </div>
+                  <p className='text-600 m-0 line-height-3 text-base'>
                     {limitation.description}
                   </p>
                 </div>
               </div>
+              {index < limitations.length - 1 && (
+                <Divider className='mt-4 mb-0' />
+              )}
             </div>
           ))}
         </div>
 
-        <div className='mt-5 p-3 bg-blue-50 border-round-lg border-1 border-blue-200'>
-          <div className='flex align-items-center gap-2 mb-2'>
-            <i className='pi pi-info-circle text-blue-600'></i>
-            <span className='font-semibold text-blue-900'>Coming Soon</span>
+        <div className='mt-5 pt-4 border-top-1 surface-border'>
+          <div className='bg-blue-50 border-left-3 border-blue-500 p-4 border-round'>
+            <div className='flex align-items-center gap-2 mb-2'>
+              <i className='pi pi-info-circle text-blue-600'></i>
+              <strong className='text-blue-900'>Development Status</strong>
+            </div>
+            <p className='text-blue-800 m-0 text-sm line-height-3'>
+              We're actively working on improving these features. Settings
+              marked as "Configurable" will have user controls in future
+              updates. File backup policies and transcript features are designed
+              to evolve based on user needs.
+            </p>
           </div>
-          <p className='text-blue-800 line-height-3 m-0'>
-            We're working on advanced features like message encryption, file
-            sharing, voice/video calls, group chats, and much more. Stay tuned
-            for updates!
-          </p>
         </div>
 
-        <div className='flex justify-content-end gap-2 mt-4 pt-3 border-top-1 border-300'>
+        <div className='flex justify-content-end gap-2 mt-4'>
           <Button
             label='Got it'
-            icon='pi pi-check'
             onClick={onHide}
             className='p-button-primary'
+            autoFocus
           />
         </div>
       </div>
