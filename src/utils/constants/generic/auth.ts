@@ -5,15 +5,16 @@ export const AUTH_ROUTES = {
   FORGOT_PASSWORD: '/auth?mode=forgot-password',
 } as const;
 
-// Protected Routes - routes that require authentication
-export const PROTECTED_ROUTES = [
+// Protected Routes - routes that require authentication (currently active routes only)
+export const PROTECTED_ROUTES = ['/chats', '/chat'] as const;
+
+// Commented Protected Routes - routes that will require authentication when uncommented
+export const COMMENTED_PROTECTED_ROUTES = [
   '/dashboard',
   '/modern-dashboard',
   '/compact-dashboard',
   '/edit-profile',
   '/compact-edit-profile',
-  '/chats',
-  '/chat',
 ] as const;
 
 // Public Routes - routes accessible without authentication

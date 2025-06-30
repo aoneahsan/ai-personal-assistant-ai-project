@@ -47,19 +47,8 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
     initAuth();
   }, []);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (!isInitializing && isAuthenticated) {
-      console.log('User already authenticated, redirecting to chats');
-      if (onAuthSuccess) {
-        onAuthSuccess();
-      } else {
-        navigate({ to: redirectTo });
-      }
-    }
-  }, [isAuthenticated, navigate, redirectTo, onAuthSuccess, isInitializing]);
-
   const handleAuthSuccess = () => {
+    console.log('Authentication successful, redirecting to:', redirectTo);
     if (onAuthSuccess) {
       onAuthSuccess();
     } else {
@@ -96,8 +85,8 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
     }
   };
 
-  // Show loading state while initializing or if user is already authenticated
-  if (isInitializing || isAuthenticated) {
+  // Show loading state while initializing
+  if (isInitializing) {
     return (
       <div className='min-h-screen bg-gray-50 flex align-items-center justify-content-center'>
         <div className='text-center'>
@@ -109,7 +98,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
             className='mb-4'
           />
           <p className='text-gray-600 text-lg'>
-            {isInitializing ? 'Initializing...' : 'Redirecting to chats...'}
+            Initializing authentication...
           </p>
         </div>
       </div>

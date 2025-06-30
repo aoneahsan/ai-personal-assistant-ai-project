@@ -1,4 +1,5 @@
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
+import PublicRoute from '@/components/Auth/PublicRoute';
 import AuthPage from '@/pages/Auth';
 import Chat from '@/pages/Chat';
 import ChatList from '@/pages/ChatList';
@@ -17,14 +18,18 @@ const indexRoute = createRoute({
   ),
 });
 
-// Auth route - public route
+// Auth route - public route with auth guard (redirects authenticated users)
 const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth',
-  component: AuthPage,
+  component: () => (
+    <PublicRoute>
+      <AuthPage />
+    </PublicRoute>
+  ),
 });
 
-// Chat routes - keeping these active
+// Chat routes - keeping these active with auth protection
 const chatListRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/chats',

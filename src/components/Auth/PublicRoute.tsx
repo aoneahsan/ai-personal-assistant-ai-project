@@ -3,14 +3,14 @@ import { useNavigate } from '@tanstack/react-router';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { useEffect, useState } from 'react';
 
-interface ProtectedRouteProps {
+interface PublicRouteProps {
   children: React.ReactNode;
   redirectTo?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+const PublicRoute: React.FC<PublicRouteProps> = ({
   children,
-  redirectTo = '/auth',
+  redirectTo = '/chats',
 }) => {
   const isAuthenticated = useIsAuthenticatedZState();
   const navigate = useNavigate();
@@ -20,13 +20,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     // Give a small delay to allow authentication state to initialize
     const timer = setTimeout(() => {
       setIsChecking(false);
-      if (!isAuthenticated) {
-        console.log('User is not authenticated, redirecting to auth page');
-        navigate({ to: redirectTo });
-      } else {
+      if (isAuthenticated) {
         console.log(
-          'User is authenticated, allowing access to protected route'
+          'User is authenticated, redirecting from public route to:',
+          redirectTo
         );
+        navigate({ to: redirectTo });
       }
     }, 100);
 
@@ -45,14 +44,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             animationDuration='1s'
             className='mb-4'
           />
-          <p className='text-gray-600 text-lg'>Checking authentication...</p>
+          <p className='text-gray-600 text-lg'>Loading...</p>
         </div>
       </div>
     );
   }
 
-  // If user is not authenticated, show loading while redirect happens
-  if (!isAuthenticated) {
+  // If user is authenticated, don't render children (redirect will happen)
+  if (isAuthenticated) {
     return (
       <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
         <div className='text-center'>
@@ -63,7 +62,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             animationDuration='1s'
             className='mb-4'
           />
-          <p className='text-gray-600 text-lg'>Redirecting to login...</p>
+          <p className='text-gray-600 text-lg'>Redirecting to chats...</p>
         </div>
       </div>
     );
@@ -72,4 +71,4 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+export default PublicRoute;
