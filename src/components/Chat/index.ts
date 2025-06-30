@@ -1,8 +1,13 @@
+export { default as AudioPlayer } from './AudioPlayer';
 export { default as Chat } from './Chat';
 export { default as ChatHeader } from './ChatHeader';
+export { default as LimitationsModal } from './LimitationsModal';
 export { default as MessageBubble } from './MessageBubble';
 export { default as MessageInput } from './MessageInput';
 export { default as MessagesList } from './MessagesList';
 export { default as TranscriptDialog } from './TranscriptDialog';
 export * from './types';
+export { default as UserSearch } from './UserSearch';
+export { default as VideoPlayer } from './VideoPlayer';
+export { default as VideoRecorder } from './VideoRecorder';
 export { default as VoiceRecording } from './VoiceRecording';

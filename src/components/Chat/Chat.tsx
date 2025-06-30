@@ -1,4 +1,8 @@
-import React, { useRef, useState } from 'react';
+import { chatService } from '@/services/chatService';
+import { useUserDataZState } from '@/zustandStates/userState';
+import { useSearch } from '@tanstack/react-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import ChatHeader from './ChatHeader';
 import MessageInput from './MessageInput';
 import MessagesList from './MessagesList';
@@ -16,18 +20,127 @@ const Chat: React.FC<ChatProps> = ({
   initialMessages = [],
   onBack,
 }) => {
-  // Default chat user if none provided
-  const defaultChatUser: ChatUser = {
-    id: '1',
-    name: 'Sarah Johnson',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+  const currentUser = useUserDataZState((state) => state.data);
+  const search = useSearch({ from: '/chat' }) as any;
+
+  // State for messages and chat
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [showTranscriptDialog, setShowTranscriptDialog] = useState<
+    string | null
+  >(null);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  // Determine chat user from props or search params
+  const currentChatUser: ChatUser = chatUser || {
+    id: search?.userId || '1',
+    name: search?.userName || 'Unknown User',
+    avatar: search?.userAvatar || '',
     isOnline: true,
     lastSeen: new Date(),
   };
 
-  // Default sample messages if none provided
-  const defaultMessages: Message[] = [
+  // Set up chat when component mounts or search params change
+  useEffect(() => {
+    const setupChat = async () => {
+      if (!currentUser) {
+        console.log('No current user, skipping chat setup');
+        return;
+      }
+
+      try {
+        // If we have a chatId from search params, use it
+        if (search?.chatId) {
+          setChatId(search.chatId);
+          console.log('Using chatId from search params:', search.chatId);
+        } else if (search?.userId && search?.userEmail) {
+          // Create or get conversation
+          const newChatId = await chatService.createOrGetConversation(
+            currentUser.id!,
+            currentUser.email!,
+            search.userId,
+            search.userEmail
+          );
+          setChatId(newChatId);
+          console.log('Created/got chatId:', newChatId);
+        } else {
+          // Use default behavior for existing contacts
+          console.log('Using default chat behavior');
+          setMessages(getDefaultMessages());
+          return;
+        }
+      } catch (error) {
+        console.error('Error setting up chat:', error);
+        toast.error('Failed to set up chat');
+      }
+    };
+
+    setupChat();
+  }, [currentUser, search?.chatId, search?.userId, search?.userEmail]);
+
+  // Subscribe to messages when chatId is available
+  useEffect(() => {
+    if (!chatId) {
+      return;
+    }
+
+    console.log('Setting up message subscription for chatId:', chatId);
+    setIsLoadingMessages(true);
+
+    const unsubscribe = chatService.subscribeToMessages(
+      chatId,
+      (firestoreMessages) => {
+        console.log('Received Firestore messages:', firestoreMessages.length);
+
+        // Convert Firestore messages to local message format
+        const convertedMessages = firestoreMessages.map(
+          (msg): Message => ({
+            id: msg.id || '',
+            text: msg.text,
+            sender: msg.senderId === currentUser?.id ? 'me' : 'other',
+            timestamp: msg.timestamp?.toDate?.() || new Date(),
+            status: msg.status,
+            type: msg.type,
+            fileData: msg.fileData,
+            audioDuration: msg.audioDuration,
+            videoDuration: msg.videoDuration,
+            videoThumbnail: msg.videoThumbnail,
+            quickTranscript: msg.quickTranscript,
+            transcript: msg.transcript,
+          })
+        );
+
+        setMessages(convertedMessages);
+        setIsLoadingMessages(false);
+      }
+    );
+
+    unsubscribeRef.current = unsubscribe;
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, [chatId, currentUser?.id]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, []);
+
+  // Default messages for existing contacts (backward compatibility)
+  const getDefaultMessages = (): Message[] => [
     {
       id: '1',
       text: 'Hey! How are you doing?',
@@ -60,62 +173,7 @@ const Chat: React.FC<ChatProps> = ({
       status: 'read',
       type: 'text',
     },
-    {
-      id: '5',
-      sender: 'me',
-      timestamp: new Date(Date.now() - 1800000),
-      status: 'read',
-      type: 'audio',
-      fileData: {
-        name: 'voice-message.wav',
-        size: 45000,
-        type: 'audio/wav',
-        url: 'data:audio/wav;base64,sample',
-      },
-      audioDuration: 12,
-      quickTranscript: 'This is a sample audio message with transcription...',
-      transcript: [
-        {
-          text: 'This is a sample audio message',
-          startTime: 0.0,
-          endTime: 2.4,
-          confidence: 0.95,
-        },
-        {
-          text: 'with transcription support that works perfectly',
-          startTime: 2.6,
-          endTime: 5.8,
-          confidence: 0.92,
-        },
-        {
-          text: 'and includes timestamps for each segment',
-          startTime: 6.0,
-          endTime: 9.2,
-          confidence: 0.89,
-        },
-        {
-          text: 'making it accessible for everyone!',
-          startTime: 9.4,
-          endTime: 12.0,
-          confidence: 0.94,
-        },
-      ],
-    },
   ];
-
-  const [messages, setMessages] = useState<Message[]>(
-    initialMessages.length > 0 ? initialMessages : defaultMessages
-  );
-  const [currentMessage, setCurrentMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-  const [showTranscriptDialog, setShowTranscriptDialog] = useState<
-    string | null
-  >(null);
-
-  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-
-  const currentChatUser = chatUser || defaultChatUser;
 
   const toggleAudioPlayback = (messageId: string, audioUrl: string) => {
     // Stop all other audio first
@@ -140,11 +198,40 @@ const Chat: React.FC<ChatProps> = ({
     setShowTranscriptDialog(messageId);
   };
 
-  const handleSendMessage = () => {
-    if (currentMessage.trim()) {
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim() || !currentUser) {
+      return;
+    }
+
+    const messageText = currentMessage.trim();
+    setCurrentMessage('');
+
+    // If we have a chatId, save to Firestore
+    if (chatId) {
+      try {
+        await chatService.sendMessage(
+          chatId,
+          currentUser.id!,
+          currentUser.email!,
+          {
+            text: messageText,
+            type: 'text',
+          }
+        );
+
+        console.log('✅ Message sent to Firestore');
+        // Message will be added to UI via the subscription
+      } catch (error) {
+        console.error('❌ Error sending message:', error);
+        toast.error('Failed to send message');
+        // Restore the message text
+        setCurrentMessage(messageText);
+      }
+    } else {
+      // Fallback to local state for backward compatibility
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: currentMessage.trim(),
+        text: messageText,
         sender: 'me',
         timestamp: new Date(),
         status: 'sent',
@@ -152,7 +239,6 @@ const Chat: React.FC<ChatProps> = ({
       };
 
       setMessages((prev) => [...prev, newMessage]);
-      setCurrentMessage('');
 
       // Simulate message status updates
       setTimeout(() => {
@@ -292,7 +378,7 @@ const Chat: React.FC<ChatProps> = ({
     : null;
 
   // Check if any audio is being processed
-  const isProcessingAudio = false; // This would be managed by VoiceRecording component
+  const isProcessingAudio = false;
 
   return (
     <div className='chat-container'>
@@ -307,6 +393,7 @@ const Chat: React.FC<ChatProps> = ({
         playingAudioId={playingAudioId}
         onAudioToggle={toggleAudioPlayback}
         onShowTranscript={showTranscript}
+        isLoading={isLoadingMessages}
       />
 
       <MessageInput

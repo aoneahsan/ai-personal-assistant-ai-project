@@ -1,10 +1,13 @@
+import LimitationsModal from '@/components/Chat/LimitationsModal';
+import UserSearch from '@/components/Chat/UserSearch';
+import { UserSearchResult } from '@/services/chatService';
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
-import React from 'react';
+import React, { useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FaPlus, FaSearch } from 'react-icons/fa';
+import { FaInfoCircle, FaPlus, FaSearch } from 'react-icons/fa';
 import './index.scss';
 
 interface ChatContact {
@@ -19,6 +22,8 @@ interface ChatContact {
 
 const ChatList: React.FC = () => {
   const navigate = useNavigate();
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [showLimitations, setShowLimitations] = useState(false);
 
   const contacts: ChatContact[] = [
     {
@@ -97,6 +102,19 @@ const ChatList: React.FC = () => {
     navigate({ to: '/chat', search: { contactId } });
   };
 
+  const handleUserFound = (user: UserSearchResult, chatId: string) => {
+    // Navigate to the chat with the found user
+    navigate({
+      to: '/chat',
+      search: {
+        chatId,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.displayName,
+      },
+    });
+  };
+
   return (
     <div className='chat-list-container'>
       {/* Header */}
@@ -104,8 +122,18 @@ const ChatList: React.FC = () => {
         <h2 className='chat-list-title'>Chats</h2>
         <div className='chat-list-actions'>
           <Button
+            icon={<FaInfoCircle />}
+            className='p-button-text header-btn'
+            tooltip='Current Limitations'
+            tooltipOptions={{ position: 'bottom' }}
+            onClick={() => setShowLimitations(true)}
+          />
+          <Button
             icon={<FaSearch />}
             className='p-button-text header-btn'
+            tooltip='Find User'
+            tooltipOptions={{ position: 'bottom' }}
+            onClick={() => setShowUserSearch(true)}
           />
           <Button
             icon={<BsThreeDotsVertical />}
@@ -159,6 +187,22 @@ const ChatList: React.FC = () => {
         icon={<FaPlus />}
         className='fab-button'
         rounded
+        tooltip='Start New Chat'
+        tooltipOptions={{ position: 'top' }}
+        onClick={() => setShowUserSearch(true)}
+      />
+
+      {/* User Search Modal */}
+      <UserSearch
+        visible={showUserSearch}
+        onHide={() => setShowUserSearch(false)}
+        onUserFound={handleUserFound}
+      />
+
+      {/* Limitations Modal */}
+      <LimitationsModal
+        visible={showLimitations}
+        onHide={() => setShowLimitations(false)}
       />
     </div>
   );

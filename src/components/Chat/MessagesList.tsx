@@ -1,3 +1,4 @@
+import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import { Message } from './types';
@@ -8,6 +9,7 @@ interface MessagesListProps {
   playingAudioId: string | null;
   onAudioToggle: (messageId: string, audioUrl: string) => void;
   onShowTranscript: (messageId: string) => void;
+  isLoading?: boolean;
 }
 
 const MessagesList: React.FC<MessagesListProps> = ({
@@ -16,6 +18,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
   playingAudioId,
   onAudioToggle,
   onShowTranscript,
+  isLoading = false,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,6 +33,18 @@ const MessagesList: React.FC<MessagesListProps> = ({
   return (
     <div className='messages-container'>
       <div className='messages-list'>
+        {/* Loading state */}
+        {isLoading && messages.length === 0 && (
+          <div className='flex align-items-center justify-content-center p-4'>
+            <ProgressSpinner
+              style={{ width: '30px', height: '30px' }}
+              strokeWidth='4'
+            />
+            <span className='ml-3 text-600'>Loading messages...</span>
+          </div>
+        )}
+
+        {/* Messages */}
         {messages.map((message) => (
           <div
             key={message.id}
