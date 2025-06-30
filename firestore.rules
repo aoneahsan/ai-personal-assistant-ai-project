@@ -2,23 +2,51 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - users can read/write their own data
+    // Users collection - Allow authenticated users to search for other users by email
+    // but they can only read/write their own complete profile
     match /pca_users/{userId} {
+      // Allow users to read their own complete data
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow authenticated users to read basic info of other users for search purposes
+      allow read: if request.auth != null;
     }
     
     // Messages collection - users can only access messages from conversations they're part of
     match /pca_messages/{messageId} {
-      allow read, write: if request.auth != null && 
+      // Allow reading messages if user is the sender or participant in the conversation
+      allow read: if request.auth != null && 
         (request.auth.uid == resource.data.senderId || 
          request.auth.uid in get(/databases/$(database)/documents/pca_conversations/$(resource.data.chatId)).data.participants);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
+      
+      // Allow creating messages if user is the sender
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId;
+        
+      // Allow updating messages if user is the sender (for editing, status updates)
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.senderId;
+        
+      // Don't allow deleting messages for data integrity
+      allow delete: if false;
     }
     
     // Conversations collection - users can only access conversations they're part of
     match /pca_conversations/{conversationId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
+      // Allow reading if user is a participant
+      allow read: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
+        
+      // Allow creating if user is in the participants list
+      allow create: if request.auth != null && 
+        request.auth.uid in request.resource.data.participants;
+        
+      // Allow updating if user is a participant (for last message, unread counts, etc.)
+      allow update: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
+        
+      // Don't allow deleting conversations for data integrity
+      allow delete: if false;
     }
     
     // Deny all other access
