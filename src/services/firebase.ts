@@ -167,16 +167,28 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
       `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_users`,
       user.uid
     );
+
+    // Normalize email to lowercase for consistent storage and searching
+    const normalizedEmail = user.email?.toLowerCase?.() || '';
+
     const userData: IPCAUser = {
       id: user.uid,
-      email: user.email || '',
+      email: normalizedEmail,
       name: user.displayName || '',
       type: 'user',
     };
 
+    console.log('💾 Saving user to Firestore:', {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      type: userData.type,
+    });
+
     await setDoc(userRef, userData, { merge: true });
+    console.log('✅ User saved to Firestore successfully');
   } catch (error) {
-    console.error('Error saving user to Firestore:', error);
+    console.error('❌ Error saving user to Firestore:', error);
     throw error;
   }
 };

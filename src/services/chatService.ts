@@ -156,20 +156,63 @@ export class ChatService {
   // Find user by email
   async findUserByEmail(email: string): Promise<UserSearchResult> {
     try {
-      console.log('🔍 Searching for user by email:', email);
+      // Normalize the email to lowercase for consistent searching
+      const normalizedEmail = email.toLowerCase().trim();
+      console.log('🔍 Searching for user by email:', normalizedEmail);
 
+      // Debug: Let's also check what users exist in the database
+      console.log('🔍 Debug: Checking all users in database...');
+      const allUsersQuery = collection(db, this.USERS_COLLECTION);
+      const allUsersSnapshot = await getDocs(allUsersQuery);
+
+      console.log('📊 Total users in database:', allUsersSnapshot.size);
+      allUsersSnapshot.forEach((doc) => {
+        const userData = doc.data();
+        console.log('👤 User found:', {
+          id: doc.id,
+          email: userData.email,
+          name: userData.name,
+          type: userData.type,
+        });
+      });
+
+      // Now search for the specific user
       const q = query(
         collection(db, this.USERS_COLLECTION),
-        where('email', '==', email.toLowerCase().trim())
+        where('email', '==', normalizedEmail)
       );
 
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.log('❌ User not found:', email);
+        console.log('❌ User not found with email:', normalizedEmail);
+
+        // Try case-insensitive search by getting all users and filtering
+        console.log('🔍 Attempting case-insensitive search...');
+        const allUsers = await getDocs(collection(db, this.USERS_COLLECTION));
+
+        for (const doc of allUsers.docs) {
+          const userData = doc.data();
+          const userEmail = userData.email?.toLowerCase?.() || '';
+
+          if (userEmail === normalizedEmail) {
+            console.log(
+              '✅ Found user with case-insensitive search:',
+              userData.email
+            );
+            return {
+              id: doc.id,
+              email: userData.email || normalizedEmail,
+              displayName: userData.name || userData.email || 'Unknown User',
+              photoURL: undefined,
+              isFound: true,
+            };
+          }
+        }
+
         return {
           id: '',
-          email,
+          email: email, // Return original email for display
           displayName: '',
           isFound: false,
         };

@@ -1,5 +1,6 @@
 import LimitationsModal from '@/components/Chat/LimitationsModal';
 import UserSearch from '@/components/Chat/UserSearch';
+import UserSearchDebug from '@/components/Chat/UserSearchDebug';
 import { unifiedAuthService } from '@/services/authService';
 import { UserSearchResult } from '@/services/chatService';
 import { useNavigate } from '@tanstack/react-router';
@@ -167,6 +168,7 @@ const ChatList: React.FC = () => {
       <div className='chat-list-header'>
         <h2 className='chat-list-title'>Chats</h2>
         <div className='chat-list-actions'>
+          <UserSearchDebug />
           <Button
             icon={<FaInfoCircle />}
             className='p-button-text header-btn'
@@ -261,6 +263,8 @@ const ChatList: React.FC = () => {
         visible={showLimitations}
         onHide={() => setShowLimitations(false)}
       />
+
+      <UserSearchDebug />
     </div>
   );
 };
