@@ -17,7 +17,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Give a small delay to allow authentication state to initialize
+    // Give more time to allow authentication state to initialize and settle
     const timer = setTimeout(() => {
       setIsChecking(false);
       if (isAuthenticated) {
@@ -26,8 +26,10 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
           redirectTo
         );
         navigate({ to: redirectTo });
+      } else {
+        console.log('User is not authenticated, showing public route');
       }
-    }, 100);
+    }, 300); // Increased from 100ms to 300ms
 
     return () => clearTimeout(timer);
   }, [isAuthenticated, navigate, redirectTo]);

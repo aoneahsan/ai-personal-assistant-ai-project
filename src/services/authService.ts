@@ -90,30 +90,53 @@ export class UnifiedAuthService {
 
   // Handle authentication state changes
   private async handleAuthStateChange(user: User | null): Promise<void> {
+    console.log(
+      'Auth state change triggered:',
+      user ? user.email : 'signed out'
+    );
+
     if (user) {
       // User is signed in
       try {
-        console.log('User signed in:', user.email);
+        console.log('User signed in:', user.email, 'UID:', user.uid);
 
         // Get user data from Firestore
         let userData = await getUserFromFirestore(user.uid);
 
         // If user doesn't exist in Firestore, save them
         if (!userData) {
-          console.log('Creating new user record in Firestore');
+          console.log('Creating new user record in Firestore for:', user.email);
           await saveUserToFirestore(user);
           userData = await getUserFromFirestore(user.uid);
         }
 
-        // Update Zustand state
-        this.updateUserData(userData);
-        console.log('User data updated in state');
+        if (userData) {
+          // Update Zustand state
+          this.updateUserData(userData);
+          console.log('✅ User data updated in Zustand state:', userData.email);
+        } else {
+          console.error(
+            '❌ Failed to get user data from Firestore after saving'
+          );
+        }
       } catch (error) {
-        console.error('Error handling auth state change:', error);
+        console.error('❌ Error handling auth state change:', error);
+        // Even if Firestore fails, we can still set basic user data
+        const basicUserData = {
+          id: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          emailVerified: user.emailVerified,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        this.updateUserData(basicUserData as any);
+        console.log('✅ Fallback: Basic user data set in Zustand state');
       }
     } else {
       // User is signed out
-      console.log('User signed out');
+      console.log('🔓 User signed out, clearing Zustand state');
       this.updateUserData(null);
     }
   }

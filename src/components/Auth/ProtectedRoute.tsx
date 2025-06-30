@@ -17,7 +17,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Give a small delay to allow authentication state to initialize
+    // Give more time to allow authentication state to initialize and settle
     const timer = setTimeout(() => {
       setIsChecking(false);
       if (!isAuthenticated) {
@@ -28,7 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           'User is authenticated, allowing access to protected route'
         );
       }
-    }, 100);
+    }, 300); // Increased from 100ms to 300ms
 
     return () => clearTimeout(timer);
   }, [isAuthenticated, navigate, redirectTo]);

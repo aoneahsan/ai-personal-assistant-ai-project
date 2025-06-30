@@ -1,3 +1,4 @@
+import { auth } from '@/services/firebase';
 import { IPCAUser } from '@/types/user';
 import { create } from 'zustand';
 
@@ -13,7 +14,30 @@ export const useUserDataZState = create<IPCAUserDataZState>((set) => ({
 
 export const useIsAuthenticatedZState = () => {
   const userData = useUserDataZState((state) => state.data);
-  return Boolean(userData?.id && userData?.email);
+
+  // First check Zustand store for user data
+  const hasUserData = Boolean(userData?.id && userData?.email);
+
+  // Fallback to Firebase auth state for immediate checks (helps with timing issues)
+  const hasFirebaseAuth = Boolean(auth.currentUser);
+
+  // Return true if either condition is met
+  const isAuthenticated = hasUserData || hasFirebaseAuth;
+
+  // Debug logging for troubleshooting
+  if (import.meta.env.DEV) {
+    console.log('Auth State Check:', {
+      hasUserData,
+      hasFirebaseAuth,
+      isAuthenticated,
+      userDataId: userData?.id,
+      userDataEmail: userData?.email,
+      firebaseUserId: auth.currentUser?.uid,
+      firebaseUserEmail: auth.currentUser?.email,
+    });
+  }
+
+  return isAuthenticated;
 };
 
 // User Profile State for detailed profile information

@@ -1,3 +1,4 @@
+import AuthStateDebug from '@/components/Auth/AuthStateDebug';
 import AppSwipeHOC from '@/hoc/AppSwipeHOC';
 import { unifiedAuthService } from '@/services/authService';
 import ENV_KEYS from '@/utils/envKeys';
@@ -30,11 +31,17 @@ const appRootRoute = createRootRoute({
           <Outlet />
         </AppSwipeHOC>
 
-        {!ENV_KEYS.isProduction && ENV_KEYS.tanstackRouterDevtools && (
-          <TanStackRouterDevtools
-            position='top-right'
-            router={router}
-          />
+        {/* Debug Components - Development Only */}
+        {!ENV_KEYS.isProduction && (
+          <>
+            <AuthStateDebug />
+            {ENV_KEYS.tanstackRouterDevtools && (
+              <TanStackRouterDevtools
+                position='top-right'
+                router={router}
+              />
+            )}
+          </>
         )}
       </>
     );
