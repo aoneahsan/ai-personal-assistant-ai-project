@@ -7,7 +7,7 @@ import { Divider } from 'primereact/divider';
 import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 
@@ -51,6 +51,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     reset,
     setValue,
     watch,
+    control,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -72,7 +73,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         'Welcome! Account created successfully. Please check your email for verification.'
       );
       reset();
-      onSuccess?.();
+      // Add delay to allow auth state to update
+      setTimeout(() => {
+        onSuccess?.();
+      }, 500);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to create account'
@@ -87,7 +91,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     try {
       await unifiedAuthService.signInWithGoogle();
       toast.success('Welcome! Account created with Google successfully.');
-      onSuccess?.();
+      // Add delay to allow auth state to update
+      setTimeout(() => {
+        onSuccess?.();
+      }, 500);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to sign up with Google'
@@ -102,7 +109,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     try {
       await unifiedAuthService.signInWithApple();
       toast.success('Welcome! Account created with Apple successfully.');
-      onSuccess?.();
+      // Add delay to allow auth state to update
+      setTimeout(() => {
+        onSuccess?.();
+      }, 500);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to sign up with Apple'
@@ -115,18 +125,20 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const isAnyLoading = isLoading || socialLoading !== null;
 
   return (
-    <Card className='w-full max-w-md shadow-3 border-round-lg'>
-      <div className='p-5'>
+    <Card className='w-full max-w-md shadow-4 border-round-xl overflow-hidden'>
+      <div className='p-6'>
         {/* Header */}
-        <div className='text-center mb-5'>
-          <div className='mb-3'>
+        <div className='text-center mb-6'>
+          <div className='mb-4'>
             <i className='pi pi-user-plus text-6xl text-primary'></i>
           </div>
           <h1 className='text-4xl font-bold text-900 mb-2'>Create Account</h1>
-          <p className='text-600 text-lg'>Join us today and get started</p>
+          <p className='text-600 text-lg line-height-3'>
+            Join us today and get started
+          </p>
         </div>
 
-        {/* Social Sign Up Buttons */}
+        {/* Social Login Buttons */}
         <div className='mb-5'>
           <Button
             type='button'
@@ -142,8 +154,12 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             }
             loading={socialLoading === AuthProvider.GOOGLE}
             onClick={handleGoogleSignIn}
-            className='w-full mb-3 p-button-outlined border-300 text-700'
-            style={{ height: '3rem' }}
+            className='w-full mb-3 p-button-outlined border-300 text-700 hover:bg-primary-50'
+            style={{
+              height: '3.5rem',
+              borderRadius: '12px',
+              fontWeight: '500',
+            }}
             disabled={isAnyLoading}
           />
 
@@ -162,12 +178,14 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
               }
               loading={socialLoading === AuthProvider.APPLE}
               onClick={handleAppleSignIn}
-              className='w-full mb-3 p-button-outlined border-300 text-700'
+              className='w-full mb-3'
               style={{
-                height: '3rem',
+                height: '3.5rem',
                 backgroundColor: '#000',
                 color: '#fff',
                 borderColor: '#000',
+                borderRadius: '12px',
+                fontWeight: '500',
               }}
               disabled={isAnyLoading}
             />
@@ -175,7 +193,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
 
         <Divider className='mb-5'>
-          <span className='bg-surface-0 px-3 text-500'>or</span>
+          <span className='bg-surface-0 px-4 text-500 font-medium'>or</span>
         </Divider>
 
         {/* Email/Password Form */}
@@ -183,115 +201,176 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           onSubmit={handleSubmit(onSubmit)}
           className='flex flex-column gap-4'
         >
+          {/* Full Name Field */}
           <div className='field mb-4'>
             <label
               htmlFor='displayName'
-              className='block text-900 font-medium mb-2'
+              className='block text-900 font-semibold mb-3 text-base'
             >
               Full Name
             </label>
-            <span className='p-input-icon-left w-full'>
-              <i className='pi pi-user'></i>
+            <div className='p-input-icon-left w-full'>
+              <i className='pi pi-user text-400'></i>
               <InputText
                 id='displayName'
                 {...register('displayName')}
                 placeholder='Enter your full name'
                 className={`w-full p-inputtext-lg ${errors.displayName ? 'p-invalid' : ''}`}
-                style={{ width: '100%', paddingLeft: '2.5rem' }}
+                style={{
+                  width: '100%',
+                  paddingLeft: '3rem',
+                  height: '3.5rem',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                }}
                 disabled={isAnyLoading}
               />
-            </span>
+            </div>
             {errors.displayName && (
-              <small className='p-error mt-1 block'>
+              <small className='p-error mt-2 block text-sm font-medium'>
                 {errors.displayName.message}
               </small>
             )}
           </div>
 
+          {/* Email Field */}
           <div className='field mb-4'>
             <label
               htmlFor='email'
-              className='block text-900 font-medium mb-2'
+              className='block text-900 font-semibold mb-3 text-base'
             >
               Email Address
             </label>
-            <span className='p-input-icon-left w-full'>
-              <i className='pi pi-envelope'></i>
+            <div className='p-input-icon-left w-full'>
+              <i className='pi pi-envelope text-400'></i>
               <InputText
                 id='email'
                 {...register('email')}
                 placeholder='Enter your email address'
                 className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
-                style={{ width: '100%', paddingLeft: '2.5rem' }}
+                style={{
+                  width: '100%',
+                  paddingLeft: '3rem',
+                  height: '3.5rem',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                }}
                 disabled={isAnyLoading}
               />
-            </span>
+            </div>
             {errors.email && (
-              <small className='p-error mt-1 block'>
+              <small className='p-error mt-2 block text-sm font-medium'>
                 {errors.email.message}
               </small>
             )}
           </div>
 
+          {/* Password Field */}
           <div className='field mb-4'>
             <label
               htmlFor='password'
-              className='block text-900 font-medium mb-2'
+              className='block text-900 font-semibold mb-3 text-base'
             >
               Password
             </label>
-            <span className='p-input-icon-left w-full'>
-              <i className='pi pi-lock'></i>
-              <Password
-                id='password'
-                {...register('password')}
-                placeholder='Create a strong password'
-                className={`w-full ${errors.password ? 'p-invalid' : ''}`}
-                inputClassName='p-inputtext-lg w-full'
-                inputStyle={{ width: '100%', paddingLeft: '2.5rem' }}
-                style={{ width: '100%' }}
-                disabled={isAnyLoading}
-                feedback={true}
-                toggleMask
+            <div className='p-input-icon-left w-full'>
+              <i className='pi pi-lock text-400'></i>
+              <Controller
+                name='password'
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Password
+                    id='password'
+                    {...field}
+                    placeholder='Create a strong password'
+                    className={`w-full ${fieldState.error ? 'p-invalid' : ''}`}
+                    inputClassName='p-inputtext-lg w-full'
+                    inputStyle={{
+                      width: '100%',
+                      paddingLeft: '3rem',
+                      height: '3.5rem',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                    }}
+                    style={{ width: '100%' }}
+                    disabled={isAnyLoading}
+                    feedback={true}
+                    toggleMask
+                    pt={{
+                      input: {
+                        style: {
+                          paddingLeft: '3rem',
+                          height: '3.5rem',
+                          borderRadius: '12px',
+                          fontSize: '1rem',
+                        },
+                      },
+                    }}
+                  />
+                )}
               />
-            </span>
+            </div>
             {errors.password && (
-              <small className='p-error mt-1 block'>
+              <small className='p-error mt-2 block text-sm font-medium'>
                 {errors.password.message}
               </small>
             )}
           </div>
 
+          {/* Confirm Password Field */}
           <div className='field mb-4'>
             <label
               htmlFor='confirmPassword'
-              className='block text-900 font-medium mb-2'
+              className='block text-900 font-semibold mb-3 text-base'
             >
               Confirm Password
             </label>
-            <span className='p-input-icon-left w-full'>
-              <i className='pi pi-lock'></i>
-              <Password
-                id='confirmPassword'
-                {...register('confirmPassword')}
-                placeholder='Confirm your password'
-                className={`w-full ${errors.confirmPassword ? 'p-invalid' : ''}`}
-                inputClassName='p-inputtext-lg w-full'
-                inputStyle={{ width: '100%', paddingLeft: '2.5rem' }}
-                style={{ width: '100%' }}
-                disabled={isAnyLoading}
-                feedback={false}
-                toggleMask
+            <div className='p-input-icon-left w-full'>
+              <i className='pi pi-lock text-400'></i>
+              <Controller
+                name='confirmPassword'
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Password
+                    id='confirmPassword'
+                    {...field}
+                    placeholder='Confirm your password'
+                    className={`w-full ${fieldState.error ? 'p-invalid' : ''}`}
+                    inputClassName='p-inputtext-lg w-full'
+                    inputStyle={{
+                      width: '100%',
+                      paddingLeft: '3rem',
+                      height: '3.5rem',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                    }}
+                    style={{ width: '100%' }}
+                    disabled={isAnyLoading}
+                    feedback={false}
+                    toggleMask
+                    pt={{
+                      input: {
+                        style: {
+                          paddingLeft: '3rem',
+                          height: '3.5rem',
+                          borderRadius: '12px',
+                          fontSize: '1rem',
+                        },
+                      },
+                    }}
+                  />
+                )}
               />
-            </span>
+            </div>
             {errors.confirmPassword && (
-              <small className='p-error mt-1 block'>
+              <small className='p-error mt-2 block text-sm font-medium'>
                 {errors.confirmPassword.message}
               </small>
             )}
           </div>
 
-          <div className='field-checkbox flex align-items-start gap-2 mb-4'>
+          {/* Terms and Conditions */}
+          <div className='field-checkbox flex align-items-start gap-3 mb-5'>
             <Checkbox
               inputId='acceptTerms'
               checked={acceptTerms}
@@ -301,49 +380,55 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             />
             <label
               htmlFor='acceptTerms'
-              className='text-900 line-height-3'
+              className='text-900 line-height-3 text-sm'
             >
               I agree to the{' '}
               <a
                 href='#'
-                className='text-primary-500 hover:text-primary-600 no-underline'
+                className='text-primary-500 hover:text-primary-600 no-underline font-medium'
               >
                 Terms of Service
               </a>{' '}
               and{' '}
               <a
                 href='#'
-                className='text-primary-500 hover:text-primary-600 no-underline'
+                className='text-primary-500 hover:text-primary-600 no-underline font-medium'
               >
                 Privacy Policy
               </a>
             </label>
           </div>
           {errors.acceptTerms && (
-            <small className='p-error block -mt-3 mb-3'>
+            <small className='p-error block -mt-4 mb-4 text-sm font-medium'>
               {errors.acceptTerms.message}
             </small>
           )}
 
+          {/* Submit Button */}
           <Button
             type='submit'
             label={isLoading ? 'Creating Account...' : 'Create Account'}
             icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-user-plus'}
             loading={isLoading}
-            className='w-full p-button-lg'
+            className='w-full p-button-lg font-semibold'
+            style={{
+              height: '3.5rem',
+              borderRadius: '12px',
+              fontSize: '1rem',
+            }}
             disabled={isAnyLoading}
           />
         </form>
 
         {/* Switch to Login */}
-        <div className='text-center mt-5'>
+        <div className='text-center mt-6'>
           <span className='text-600'>Already have an account? </span>
           <Button
             type='button'
             link
             label='Sign In'
             onClick={onSwitchToLogin}
-            className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+            className='p-0 text-primary-500 hover:text-primary-600 font-semibold'
             disabled={isAnyLoading}
           />
         </div>

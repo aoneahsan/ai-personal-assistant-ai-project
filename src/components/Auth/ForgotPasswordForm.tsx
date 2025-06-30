@@ -75,11 +75,11 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   };
 
   return (
-    <Card className='w-full max-w-md shadow-3 border-round-lg'>
-      <div className='p-5'>
+    <Card className='w-full max-w-md shadow-4 border-round-xl overflow-hidden'>
+      <div className='p-6'>
         {/* Header */}
-        <div className='text-center mb-5'>
-          <div className='mb-3'>
+        <div className='text-center mb-6'>
+          <div className='mb-4'>
             <i
               className={`text-6xl ${isEmailSent ? 'pi pi-check-circle text-green-500' : 'pi pi-key text-primary'}`}
             ></i>
@@ -87,7 +87,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           <h1 className='text-4xl font-bold text-900 mb-2'>
             {isEmailSent ? 'Check Your Email' : 'Reset Password'}
           </h1>
-          <p className='text-600 text-lg'>
+          <p className='text-600 text-lg line-height-3'>
             {isEmailSent
               ? 'We sent a password reset link to your email address'
               : 'Enter your email address and we will send you a link to reset your password'}
@@ -103,23 +103,29 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
             <div className='field mb-4'>
               <label
                 htmlFor='email'
-                className='block text-900 font-medium mb-2'
+                className='block text-900 font-semibold mb-3 text-base'
               >
                 Email Address
               </label>
-              <span className='p-input-icon-left w-full'>
-                <i className='pi pi-envelope'></i>
+              <div className='p-input-icon-left w-full'>
+                <i className='pi pi-envelope text-400'></i>
                 <InputText
                   id='email'
                   {...register('email')}
                   placeholder='Enter your email address'
                   className={`w-full p-inputtext-lg ${errors.email ? 'p-invalid' : ''}`}
-                  style={{ width: '100%', paddingLeft: '2.5rem' }}
+                  style={{
+                    width: '100%',
+                    paddingLeft: '3rem',
+                    height: '3.5rem',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                  }}
                   disabled={isLoading}
                 />
-              </span>
+              </div>
               {errors.email && (
-                <small className='p-error mt-1 block'>
+                <small className='p-error mt-2 block text-sm font-medium'>
                   {errors.email.message}
                 </small>
               )}
@@ -130,7 +136,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               label={isLoading ? 'Sending...' : 'Send Reset Link'}
               icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-send'}
               loading={isLoading}
-              className='w-full p-button-lg'
+              className='w-full p-button-lg font-semibold'
+              style={{
+                height: '3.5rem',
+                borderRadius: '12px',
+                fontSize: '1rem',
+              }}
               disabled={isLoading}
             />
           </form>
@@ -141,11 +152,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               severity='success'
               text={`Password reset email sent to ${email}`}
               className='w-full'
+              style={{ borderRadius: '12px' }}
             />
 
-            <div className='bg-surface-50 border-round-lg p-4'>
+            <div className='bg-surface-50 border-round-xl p-5'>
               <h3 className='text-900 font-semibold mb-3 mt-0'>What's next?</h3>
-              <ul className='text-600 m-0 pl-3'>
+              <ul className='text-600 m-0 pl-3 line-height-3'>
                 <li className='mb-2'>Check your inbox and spam folder</li>
                 <li className='mb-2'>
                   Click the link in the email to reset your password
@@ -160,20 +172,25 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'}
               loading={isLoading}
               onClick={handleResendEmail}
-              className='w-full p-button-outlined'
+              className='w-full p-button-outlined font-semibold'
+              style={{
+                height: '3.5rem',
+                borderRadius: '12px',
+                fontSize: '1rem',
+              }}
               disabled={isLoading}
             />
           </div>
         )}
 
         {/* Back to Login */}
-        <div className='text-center mt-5'>
+        <div className='text-center mt-6'>
           <Button
             type='button'
             link
             label='← Back to Sign In'
             onClick={onBackToLogin}
-            className='p-0 text-primary-500 hover:text-primary-600 font-medium'
+            className='p-0 text-primary-500 hover:text-primary-600 font-semibold'
             disabled={isLoading}
           />
         </div>
