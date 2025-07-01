@@ -3,12 +3,19 @@
   flex-direction: column;
   height: 100vh;
   max-height: 100vh;
+  width: 100vw;
   background: linear-gradient(
     180deg,
     var(--color-background) 0%,
     var(--color-background-secondary) 100%
   );
   position: relative;
+  z-index: 1001;
+  isolation: isolate;
+
+  // Ensure this page covers the entire viewport
+  min-height: 100vh;
+  min-width: 100vw;
 
   // Chat Header
   .chat-header {
@@ -684,6 +691,7 @@
     border-top: 1px solid var(--color-border);
     position: relative;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    z-index: 1002;
 
     .message-input-wrapper {
       display: flex;

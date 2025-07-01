@@ -348,3 +348,20 @@ button,
     }
   }
 }
+
+// ADDED: Hide interfering fixed elements from other pages when chat is active
+body:has(.chat-container) {
+  .fab-button {
+    display: none !important;
+  }
+
+  .chat-list-container {
+    display: none !important;
+  }
+}
+
+// Fallback for browsers that don't support :has()
+.chat-container ~ * .fab-button,
+.chat-container + * .fab-button {
+  display: none !important;
+}
