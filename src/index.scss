@@ -88,6 +88,48 @@ html {
   }
 }
 
+// ADDED: Specific overrides for message input field
+.message-input-container {
+  .p-inputtext {
+    background: transparent !important;
+    color: var(--color-text-primary) !important;
+    border: none !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+
+    &::placeholder {
+      color: var(--color-text-secondary) !important;
+      opacity: 0.8 !important;
+      font-weight: 400 !important;
+    }
+
+    &:focus {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+      color: var(--color-text-primary) !important;
+    }
+
+    &:disabled {
+      opacity: 0.6 !important;
+      background: transparent !important;
+      color: var(--color-text-secondary) !important;
+    }
+  }
+}
+
+// ADDED: Force visibility for all React Icons in message input
+.message-input-container {
+  svg {
+    color: inherit !important;
+    fill: currentColor !important;
+  }
+
+  .p-button-icon {
+    color: inherit !important;
+  }
+}
+
 // Dialog overrides
 .p-dialog {
   background: var(--color-surface) !important;
