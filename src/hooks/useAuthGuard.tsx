@@ -45,13 +45,13 @@ export const useAuthGuard = ({
 
     // Handle redirects based on auth state
     if (requireAuth && !isAuthenticated && redirectTo) {
-      console.log(
+      consoleLog(
         'Auth required but user not authenticated, redirecting to:',
         redirectTo
       );
       navigate({ to: redirectTo });
     } else if (!requireAuth && isAuthenticated && redirectTo) {
-      console.log(
+      consoleLog(
         'Auth not required but user authenticated, redirecting to:',
         redirectTo
       );

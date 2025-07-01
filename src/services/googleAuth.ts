@@ -1,3 +1,4 @@
+import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import {
@@ -23,7 +24,7 @@ export const initializeGoogleAuth = async (): Promise<void> => {
 
     // Only initialize for native platforms (iOS/Android)
     if (platform === 'ios' || platform === 'android') {
-      console.log(`Initializing Google Auth for ${platform} platform`);
+      consoleLog(`Initializing Google Auth for ${platform} platform`);
 
       await GoogleAuth.initialize({
         clientId: import.meta.env.VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID,
@@ -31,14 +32,12 @@ export const initializeGoogleAuth = async (): Promise<void> => {
         grantOfflineAccess: true,
       });
 
-      console.log('Google Auth initialized successfully for native platform');
+      consoleLog('Google Auth initialized successfully for native platform');
     } else {
-      console.log(
-        'Web platform detected - Google Auth will use Firebase popup'
-      );
+      consoleLog('Web platform detected - Google Auth will use Firebase popup');
     }
   } catch (error) {
-    console.error('Error initializing Google Auth:', error);
+    consoleError('Error initializing Google Auth:', error);
     throw error;
   }
 };
@@ -55,7 +54,7 @@ export const googleAuthService: GoogleAuthService = {
       }
       // No initialization needed for web - Firebase handles it
     } catch (error) {
-      console.error('Error initializing Google Auth:', error);
+      consoleError('Error initializing Google Auth:', error);
       // Don't throw error on initialization failure to prevent app crash
       if (
         Capacitor.getPlatform() === 'ios' ||
@@ -73,13 +72,13 @@ export const googleAuthService: GoogleAuthService = {
 
       if (platform === 'ios' || platform === 'android') {
         // Native platform - use Capacitor Google Auth
-        console.log(`Using native Google Auth for ${platform}`);
+        consoleLog(`Using native Google Auth for ${platform}`);
 
         // Ensure Google Auth is initialized
         await initializeGoogleAuth();
 
         const googleUser = await GoogleAuth.signIn();
-        console.log('Google Auth native sign-in successful');
+        consoleLog('Google Auth native sign-in successful');
 
         if (!googleUser.authentication?.idToken) {
           throw new Error('No ID token received from Google');
@@ -93,22 +92,22 @@ export const googleAuthService: GoogleAuthService = {
 
         // Sign in to Firebase with the Google credential
         const userCredential = await signInWithCredential(auth, credential);
-        console.log('Firebase credential sign-in successful');
+        consoleLog('Firebase credential sign-in successful');
         return userCredential;
       } else {
         // Web platform - use Firebase popup
-        console.log('Using Firebase popup for web platform');
+        consoleLog('Using Firebase popup for web platform');
 
         const provider = new GoogleAuthProvider();
         provider.addScope('profile');
         provider.addScope('email');
 
         const userCredential = await signInWithPopup(auth, provider);
-        console.log('Firebase popup sign-in successful');
+        consoleLog('Firebase popup sign-in successful');
         return userCredential;
       }
     } catch (error: any) {
-      console.error('Error signing in with Google:', error);
+      consoleError('Error signing in with Google:', error);
 
       // Handle specific error cases
       if (error.code === 'auth/popup-closed-by-user') {
@@ -144,13 +143,13 @@ export const googleAuthService: GoogleAuthService = {
       const platform = Capacitor.getPlatform();
 
       if (platform === 'ios' || platform === 'android') {
-        console.log(`Signing out from Google Auth on ${platform}`);
+        consoleLog(`Signing out from Google Auth on ${platform}`);
         await GoogleAuth.signOut();
       }
       // For web, Firebase signOut will handle it
-      console.log('Google sign-out completed');
+      consoleLog('Google sign-out completed');
     } catch (error) {
-      console.error('Error signing out from Google:', error);
+      consoleError('Error signing out from Google:', error);
       // Don't throw error on sign out failure
     }
   },
@@ -161,12 +160,12 @@ export const googleAuthService: GoogleAuthService = {
       const platform = Capacitor.getPlatform();
 
       if (platform === 'ios' || platform === 'android') {
-        console.log(`Refreshing Google Auth on ${platform}`);
+        consoleLog(`Refreshing Google Auth on ${platform}`);
         await GoogleAuth.refresh();
       }
       // No refresh needed for web platform
     } catch (error) {
-      console.error('Error refreshing Google Auth:', error);
+      consoleError('Error refreshing Google Auth:', error);
       throw error;
     }
   },

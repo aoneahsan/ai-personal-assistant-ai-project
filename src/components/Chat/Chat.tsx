@@ -1,4 +1,5 @@
 import { chatService } from '@/services/chatService';
+import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useSearch } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -50,7 +51,7 @@ const Chat: React.FC<ChatProps> = ({
   useEffect(() => {
     const setupChat = async () => {
       if (!currentUser) {
-        console.log('No current user, skipping chat setup');
+        consoleLog('No current user, skipping chat setup');
         return;
       }
 
@@ -58,7 +59,7 @@ const Chat: React.FC<ChatProps> = ({
         // If we have a chatId from search params, use it
         if (search?.chatId) {
           setChatId(search.chatId);
-          console.log('Using chatId from search params:', search.chatId);
+          consoleLog('Using chatId from search params:', search.chatId);
         } else if (search?.userId && search?.userEmail) {
           // Create or get conversation
           const newChatId = await chatService.createOrGetConversation(
@@ -68,15 +69,15 @@ const Chat: React.FC<ChatProps> = ({
             search.userEmail
           );
           setChatId(newChatId);
-          console.log('Created/got chatId:', newChatId);
+          consoleLog('Created/got chatId:', newChatId);
         } else {
           // Use default behavior for existing contacts
-          console.log('Using default chat behavior');
+          consoleLog('Using default chat behavior');
           setMessages(getDefaultMessages());
           return;
         }
       } catch (error) {
-        console.error('Error setting up chat:', error);
+        consoleError('Error setting up chat:', error);
         toast.error('Failed to set up chat');
       }
     };
@@ -90,13 +91,13 @@ const Chat: React.FC<ChatProps> = ({
       return;
     }
 
-    console.log('Setting up message subscription for chatId:', chatId);
+    consoleLog('Setting up message subscription for chatId:', chatId);
     setIsLoadingMessages(true);
 
     const unsubscribe = chatService.subscribeToMessages(
       chatId,
       (firestoreMessages) => {
-        console.log('Received Firestore messages:', firestoreMessages.length);
+        consoleLog('Received Firestore messages:', firestoreMessages.length);
 
         // Convert Firestore messages to local message format
         const convertedMessages = firestoreMessages.map(
@@ -219,10 +220,10 @@ const Chat: React.FC<ChatProps> = ({
           }
         );
 
-        console.log('✅ Message sent to Firestore');
+        consoleLog('✅ Message sent to Firestore');
         // Message will be added to UI via the subscription
       } catch (error) {
-        console.error('❌ Error sending message:', error);
+        consoleError('❌ Error sending message:', error);
         toast.error('Failed to send message');
         // Restore the message text
         setCurrentMessage(messageText);
@@ -383,7 +384,7 @@ const Chat: React.FC<ChatProps> = ({
   // Chat header action handlers
   const handleClearChat = () => {
     setMessages([]);
-    console.log('Chat cleared');
+    consoleLog('Chat cleared');
   };
 
   const handleDeleteChat = () => {
@@ -395,17 +396,17 @@ const Chat: React.FC<ChatProps> = ({
       // Navigate back to chat list
       window.history.back();
     }
-    console.log('Chat deleted');
+    consoleLog('Chat deleted');
   };
 
   const handleBlockUser = () => {
     // For now, just show a success message
-    console.log('User blocked:', currentChatUser.name);
+    consoleLog('User blocked:', currentChatUser.name);
     // Could implement actual blocking logic here
   };
 
   const handleMuteNotifications = (muted: boolean) => {
-    console.log(
+    consoleLog(
       'Notifications',
       muted ? 'muted' : 'unmuted',
       'for:',

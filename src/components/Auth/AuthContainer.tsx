@@ -1,7 +1,8 @@
+import { consoleLog } from '@/utils/helpers/consoleHelper';
 import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import AuthDebugInfo from './AuthDebugInfo';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import LoginForm from './LoginForm';
@@ -29,14 +30,14 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   const navigate = useNavigate();
   const isAuthenticated = useIsAuthenticatedZState();
 
-  const handleAuthSuccess = () => {
-    console.log('🎉 Authentication successful, redirecting to:', redirectTo);
+  const handleAuthSuccess = useCallback(() => {
+    consoleLog('🎉 Authentication successful, redirecting to:', redirectTo);
     if (onAuthSuccess) {
       onAuthSuccess();
     } else {
       navigate({ to: redirectTo });
     }
-  };
+  }, [navigate, redirectTo, onAuthSuccess]);
 
   const renderAuthForm = () => {
     switch (currentMode) {

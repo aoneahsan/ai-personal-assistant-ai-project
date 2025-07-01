@@ -11,6 +11,11 @@ interface AuthDebugInfoProps {
 }
 
 const AuthDebugInfo: React.FC<AuthDebugInfoProps> = ({ onClose }) => {
+  // Only render in development mode
+  if (!import.meta.env.DEV) {
+    return null;
+  }
+
   const configStatus = unifiedAuthService.getConfigurationStatus();
   const platform = Capacitor.getPlatform();
   const isNative = Capacitor.isNativePlatform();

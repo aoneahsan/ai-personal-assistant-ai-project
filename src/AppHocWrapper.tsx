@@ -9,10 +9,14 @@ import ProductFruitsHOC from './hoc/ProductFruitsHOC';
 import SocketIoHOC from './hoc/SocketIoHOC';
 import TanstackQueryHoc from './hoc/Tanstack/QueryHoc';
 import TolgeeHoc from './hoc/TolgeeHoc';
+import useTheme from './hooks/useTheme';
 
 import './index.scss';
 
 const AppHocWrapper = () => {
+  // Initialize theme system
+  useTheme();
+
   return (
     <>
       <PrimeReactHoc>

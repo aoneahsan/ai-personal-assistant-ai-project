@@ -1,3 +1,4 @@
+import { consoleError } from '@/utils/helpers/consoleHelper';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
@@ -93,7 +94,7 @@ export const saveBlobToDevice = async (
       };
     }
   } catch (error) {
-    console.error('Error saving file to device:', error);
+    consoleError('Error saving file to device:', error);
     throw new Error('Failed to save file to device');
   }
 };
@@ -139,7 +140,7 @@ export const takePhoto = async (
 
     return fileInfo;
   } catch (error) {
-    console.error('Error taking photo:', error);
+    consoleError('Error taking photo:', error);
     await showCapacitorToastMessage({
       text: 'Failed to take photo. Please try again.',
       duration: 'short',
@@ -179,7 +180,7 @@ export const pickImageFromGallery = async (
 
     return fileInfo;
   } catch (error) {
-    console.error('Error picking image:', error);
+    consoleError('Error picking image:', error);
     await showCapacitorToastMessage({
       text: 'Failed to select image. Please try again.',
       duration: 'short',
@@ -204,7 +205,7 @@ export const readFileFromDevice = async (path: string): Promise<string> => {
       return await blobToBase64(blob);
     }
   } catch (error) {
-    console.error('Error reading file:', error);
+    consoleError('Error reading file:', error);
     throw new Error('Failed to read file from device');
   }
 };
@@ -217,7 +218,7 @@ export const deleteFileFromDevice = async (path: string): Promise<void> => {
       directory: Directory.Data,
     });
   } catch (error) {
-    console.error('Error deleting file:', error);
+    consoleError('Error deleting file:', error);
     throw new Error('Failed to delete file from device');
   }
 };
@@ -240,7 +241,7 @@ export const handleWebFileInput = async (file: File): Promise<FileInfo> => {
       };
     }
   } catch (error) {
-    console.error('Error handling web file:', error);
+    consoleError('Error handling web file:', error);
     throw new Error('Failed to process file');
   }
 };
@@ -253,7 +254,7 @@ export const getFileInfo = async (path: string): Promise<any> => {
       directory: Directory.Data,
     });
   } catch (error) {
-    console.error('Error getting file info:', error);
+    consoleError('Error getting file info:', error);
     throw new Error('Failed to get file information');
   }
 };

@@ -1,7 +1,9 @@
 import {
-  SignInWithApple,
-  SignInWithAppleResponse,
-} from '@capacitor-community/apple-sign-in';
+  consoleError,
+  consoleLog,
+  consoleWarn,
+} from '@/utils/helpers/consoleHelper';
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 import { Capacitor } from '@capacitor/core';
 import {
   OAuthProvider,
@@ -15,6 +17,90 @@ export interface AppleAuthService {
   isAvailable: () => boolean;
   signIn: () => Promise<UserCredential>;
 }
+
+// Apple Auth Methods
+export const appleAuthService: AppleAuthService = {
+  // Check if Apple Sign In is available (only on iOS)
+  isAvailable: (): boolean => {
+    const platform = Capacitor.getPlatform();
+    consoleLog(`Checking Apple Sign In availability on platform: ${platform}`);
+
+    const isAvailable = platform === 'ios';
+    consoleLog(`Apple Sign In available: ${isAvailable}`);
+
+    return isAvailable;
+  },
+
+  // Sign in with Apple
+  signIn: async (): Promise<UserCredential> => {
+    try {
+      const platform = Capacitor.getPlatform();
+      consoleLog(`Attempting Apple Sign In on platform: ${platform}`);
+
+      // Check if Apple Sign In is available
+      if (!appleAuthService.isAvailable()) {
+        consoleError(`Apple Sign In not available on ${platform}`);
+        throw new Error(
+          `Apple Sign In is only available on iOS devices. Current platform: ${platform}`
+        );
+      }
+
+      // Generate nonce for security
+      const rawNonce = generateNonce();
+      const hashedNonce = await hashNonce(rawNonce);
+
+      // The nonce is required for Apple Sign In
+      if (!rawNonce) {
+        throw new Error('Failed to generate nonce for Apple Sign In');
+      }
+
+      consoleLog('Generating secure nonce for Apple Sign In');
+
+      try {
+        consoleLog('Initiating Apple Sign In with Capacitor plugin');
+
+        const result = await SignInWithApple.authorize({
+          clientId: import.meta.env.VITE_FIREBASE_PROJECT_ID + '.app',
+          redirectURI: `https://${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com/__/auth/handler`,
+          scopes: 'email name',
+          state: hashedNonce,
+          nonce: rawNonce,
+        });
+
+        consoleLog('Apple Sign In response received');
+
+        if (!result.response.identityToken) {
+          consoleError('No identity token received from Apple');
+          throw new Error('No identity token received from Apple Sign In');
+        }
+
+        consoleLog('Creating Firebase credential with Apple identity token');
+
+        // Create the Apple credential
+        const provider = new OAuthProvider('apple.com');
+        const credential = provider.credential({
+          idToken: result.response.identityToken,
+          rawNonce,
+        });
+
+        consoleLog('Signing in to Firebase with Apple credential');
+
+        // Sign in to Firebase with the Apple credential
+        const userCredential = await signInWithCredential(auth, credential);
+        consoleLog('Apple Sign In completed successfully');
+
+        return userCredential;
+      } catch (error) {
+        consoleError('Error signing in with Apple:', error);
+        throw error;
+      }
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
+export default appleAuthService;
 
 // Generate a random nonce for Apple Sign In (cryptographically secure)
 const generateNonce = (): string => {
@@ -40,7 +126,7 @@ const generateNonce = (): string => {
 };
 
 // Hash the nonce using SHA256 (required for Apple Sign In)
-const sha256 = async (str: string): Promise<string> => {
+const hashNonce = async (str: string): Promise<string> => {
   if (typeof crypto !== 'undefined' && crypto.subtle) {
     const encoder = new TextEncoder();
     const data = encoder.encode(str);
@@ -50,106 +136,6 @@ const sha256 = async (str: string): Promise<string> => {
       .join('');
   }
   // Fallback - return the original string (not ideal but works for development)
-  console.warn('crypto.subtle not available, using plain nonce');
+  consoleWarn('crypto.subtle not available, using plain nonce');
   return str;
 };
-
-// Apple Auth Methods
-export const appleAuthService: AppleAuthService = {
-  // Check if Apple Sign In is available (only on iOS)
-  isAvailable: (): boolean => {
-    const platform = Capacitor.getPlatform();
-    console.log(`Checking Apple Sign In availability on platform: ${platform}`);
-
-    const isAvailable = platform === 'ios';
-    console.log(`Apple Sign In available: ${isAvailable}`);
-
-    return isAvailable;
-  },
-
-  // Sign in with Apple
-  signIn: async (): Promise<UserCredential> => {
-    try {
-      const platform = Capacitor.getPlatform();
-      console.log(`Attempting Apple Sign In on platform: ${platform}`);
-
-      // Check if Apple Sign In is available
-      if (!appleAuthService.isAvailable()) {
-        console.error(`Apple Sign In not available on ${platform}`);
-
-        if (platform === 'web') {
-          throw new Error(
-            'Apple Sign In is not available on web browsers. Please use Google Sign In or email/password instead.'
-          );
-        } else if (platform === 'android') {
-          throw new Error(
-            'Apple Sign In is not available on Android devices. Please use Google Sign In or email/password instead.'
-          );
-        } else {
-          throw new Error('Apple Sign In is only available on iOS devices');
-        }
-      }
-
-      console.log('Generating secure nonce for Apple Sign In');
-      const rawNonce = generateNonce();
-      const hashedNonce = await sha256(rawNonce);
-
-      // Sign in with Apple
-      console.log('Initiating Apple Sign In with Capacitor plugin');
-      const appleResponse: SignInWithAppleResponse =
-        await SignInWithApple.authorize({
-          clientId: import.meta.env.VITE_FIREBASE_PROJECT_ID + '.app',
-          redirectURI: `https://${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com/__/auth/handler`,
-          scopes: 'email name',
-          state: generateNonce(), // Use random state
-          nonce: hashedNonce,
-        });
-
-      console.log('Apple Sign In response received');
-
-      if (!appleResponse.response?.identityToken) {
-        console.error('No identity token received from Apple');
-        throw new Error('No identity token received from Apple');
-      }
-
-      console.log('Creating Firebase credential with Apple identity token');
-      // Create Firebase credential with Apple ID token
-      const provider = new OAuthProvider('apple.com');
-      const credential = provider.credential({
-        idToken: appleResponse.response.identityToken,
-        rawNonce: rawNonce, // Use the original raw nonce
-      });
-
-      // Sign in to Firebase with the Apple credential
-      console.log('Signing in to Firebase with Apple credential');
-      const userCredential = await signInWithCredential(auth, credential);
-
-      console.log('Apple Sign In completed successfully');
-      return userCredential;
-    } catch (error: any) {
-      console.error('Error signing in with Apple:', error);
-
-      // Handle specific Apple Sign In errors
-      if (error.code === 'auth/invalid-credential') {
-        throw new Error('Apple Sign In failed. Please try again.');
-      } else if (error.code === 'auth/operation-not-allowed') {
-        throw new Error(
-          'Apple Sign In is not enabled. Please contact support.'
-        );
-      } else if (
-        error.message?.includes('user cancelled') ||
-        error.message?.includes('canceled')
-      ) {
-        throw new Error('Apple Sign In was cancelled.');
-      } else if (error.message?.includes('not available')) {
-        // Re-throw our custom availability messages
-        throw error;
-      }
-
-      // Default error message
-      throw new Error('Failed to sign in with Apple. Please try again.');
-    }
-  },
-};
-
-export default appleAuthService;

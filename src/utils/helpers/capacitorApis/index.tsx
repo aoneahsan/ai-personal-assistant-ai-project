@@ -1,3 +1,4 @@
+import { consoleError } from '@/utils/helpers/consoleHelper';
 import { Clipboard } from '@capacitor/clipboard';
 import { ShowOptions, Toast } from '@capacitor/toast';
 
@@ -33,7 +34,7 @@ export const copyToClipboardWithToast = async ({
 
     return true;
   } catch (error) {
-    console.error('Clipboard copy failed:', error);
+    consoleError('Clipboard copy failed:', error);
 
     // Show error toast
     await showCapacitorToastMessage({
@@ -43,5 +44,16 @@ export const copyToClipboardWithToast = async ({
     });
 
     return false;
+  }
+};
+
+export const copyToClipboard = async (text: string): Promise<void> => {
+  try {
+    await Clipboard.write({
+      string: text,
+    });
+  } catch (error) {
+    consoleError('Clipboard copy failed:', error);
+    throw error;
   }
 };

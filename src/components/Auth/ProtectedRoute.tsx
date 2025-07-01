@@ -1,3 +1,4 @@
+import { consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   useIsAuthenticatedZState,
   useIsAuthSystemReady,
@@ -25,7 +26,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     // Only make routing decisions when auth system is fully ready
     if (isAuthSystemReady && !hasRedirectedRef.current) {
       if (!isAuthenticated) {
-        console.log('🔒 User is not authenticated, redirecting to auth page');
+        consoleLog('🔒 User is not authenticated, redirecting to auth page');
         hasRedirectedRef.current = true;
         setIsRedirecting(true);
 
@@ -34,8 +35,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           navigate({ to: redirectTo, replace: true });
         }, 100);
       } else {
-        console.log(
-          '✅ User is authenticated, allowing access to protected route'
+        consoleLog(
+          '✅ User is authenticated, rendering protected route:',
+          window.location.pathname
         );
       }
     }

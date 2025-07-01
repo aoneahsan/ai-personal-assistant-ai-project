@@ -1,3 +1,4 @@
+import { consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   useIsAuthenticatedZState,
   useIsAuthSystemReady,
@@ -25,7 +26,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
     // Only make routing decisions when auth system is fully ready
     if (isAuthSystemReady && !hasRedirectedRef.current) {
       if (isAuthenticated) {
-        console.log(
+        consoleLog(
           '✅ User is authenticated, redirecting from public route to:',
           redirectTo
         );
@@ -37,7 +38,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
           navigate({ to: redirectTo, replace: true });
         }, 100);
       } else {
-        console.log('🔓 User is not authenticated, showing public route');
+        consoleLog('🔓 User is not authenticated, showing public route');
       }
     }
   }, [isAuthenticated, isAuthSystemReady, navigate, redirectTo]);

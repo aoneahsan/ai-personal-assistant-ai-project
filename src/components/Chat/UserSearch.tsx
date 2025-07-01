@@ -1,4 +1,6 @@
+import { unifiedAuthService } from '@/services/authService';
 import { chatService, UserSearchResult } from '@/services/chatService';
+import { consoleError } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
@@ -49,15 +51,30 @@ const UserSearch: React.FC<UserSearchProps> = ({
     setSearchResult(null);
 
     try {
-      const result = await chatService.findUserByEmail(searchEmail);
-      setSearchResult(result);
-      setHasSearched(true);
+      const result = await chatService.findUserByEmail(searchEmail.trim());
 
-      if (!result.isFound) {
-        toast.error(`User with email "${searchEmail}" not found in our system`);
+      if (result.isFound && result.id) {
+        // Create or get conversation with the found user
+        const currentUser = unifiedAuthService.getCurrentUserData();
+        if (!currentUser) {
+          throw new Error('No current user found');
+        }
+
+        const chatId = await chatService.createOrGetConversation(
+          currentUser.id,
+          currentUser.email,
+          result.id,
+          result.email
+        );
+
+        onUserFound(result, chatId);
+        onHide();
+        setSearchEmail('');
+      } else {
+        toast.error(`No user found with email: ${searchEmail}`);
       }
     } catch (error) {
-      console.error('Search error:', error);
+      consoleError('Search error:', error);
       toast.error('Failed to search for user. Please try again.');
     } finally {
       setIsSearching(false);
@@ -65,24 +82,31 @@ const UserSearch: React.FC<UserSearchProps> = ({
   };
 
   const handleStartChat = async () => {
-    if (!searchResult || !searchResult.isFound || !currentUser) {
-      return;
-    }
+    if (!searchResult) return;
 
+    setIsSearching(true);
     try {
+      const currentUser = unifiedAuthService.getCurrentUserData();
+      if (!currentUser) {
+        throw new Error('No current user found');
+      }
+
       const chatId = await chatService.createOrGetConversation(
-        currentUser.id!,
-        currentUser.email!,
+        currentUser.id,
+        currentUser.email,
         searchResult.id,
         searchResult.email
       );
 
-      toast.success(`Chat started with ${searchResult.displayName}`);
       onUserFound(searchResult, chatId);
-      handleClose();
+      onHide();
+      setSearchEmail('');
+      setSearchResult(null);
     } catch (error) {
-      console.error('Error starting chat:', error);
+      consoleError('Error starting chat:', error);
       toast.error('Failed to start chat. Please try again.');
+    } finally {
+      setIsSearching(false);
     }
   };
 

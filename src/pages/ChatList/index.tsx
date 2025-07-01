@@ -1,6 +1,7 @@
 import LimitationsModal from '@/components/Chat/LimitationsModal';
 import UserSearch from '@/components/Chat/UserSearch';
 import UserSearchDebug from '@/components/Chat/UserSearchDebug';
+import ThemeSettings from '@/components/ThemeSettings';
 import { unifiedAuthService } from '@/services/authService';
 import { UserSearchResult } from '@/services/chatService';
 import { consoleError } from '@/utils/helpers/consoleHelper';
@@ -12,7 +13,7 @@ import { Menu } from 'primereact/menu';
 import { MenuItem } from 'primereact/menuitem';
 import React, { useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FaInfoCircle, FaPlus, FaSearch } from 'react-icons/fa';
+import { FaInfoCircle, FaPalette, FaPlus, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './index.scss';
 
@@ -30,6 +31,7 @@ const ChatList: React.FC = () => {
   const navigate = useNavigate();
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [showLimitations, setShowLimitations] = useState(false);
+  const [showThemeSettings, setShowThemeSettings] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<Menu>(null);
 
@@ -127,7 +129,7 @@ const ChatList: React.FC = () => {
     try {
       setIsLoggingOut(true);
       await unifiedAuthService.signOut();
-      navigate('/auth/login');
+      navigate({ to: '/auth' });
     } catch (error) {
       consoleError('Logout error:', error);
       toast.error('Failed to log out. Please try again.');
@@ -168,7 +170,16 @@ const ChatList: React.FC = () => {
       <div className='chat-list-header'>
         <h2 className='chat-list-title'>Chats</h2>
         <div className='chat-list-actions'>
-          <UserSearchDebug />
+          {/* Only show debug component in development */}
+          {import.meta.env.DEV && <UserSearchDebug />}
+
+          <Button
+            icon={<FaPalette />}
+            className='p-button-text header-btn'
+            tooltip='Theme Settings'
+            tooltipOptions={{ position: 'bottom' }}
+            onClick={() => setShowThemeSettings(true)}
+          />
           <Button
             icon={<FaInfoCircle />}
             className='p-button-text header-btn'
@@ -264,7 +275,11 @@ const ChatList: React.FC = () => {
         onHide={() => setShowLimitations(false)}
       />
 
-      <UserSearchDebug />
+      {/* Theme Settings Modal */}
+      <ThemeSettings
+        visible={showThemeSettings}
+        onHide={() => setShowThemeSettings(false)}
+      />
     </div>
   );
 };
