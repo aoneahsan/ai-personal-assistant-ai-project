@@ -29,12 +29,19 @@
 
       .chat-back-btn {
         color: var(--color-primary) !important;
+        background: transparent !important;
         padding: 10px !important;
         min-width: auto !important;
         border-radius: 50% !important;
+        border: none !important;
 
         &:hover {
           background: var(--color-hover) !important;
+          color: var(--color-primary-hover) !important;
+        }
+
+        .p-button-icon {
+          color: inherit !important;
         }
       }
 
@@ -71,16 +78,20 @@
       .chat-action-btn,
       .chat-menu-btn {
         color: var(--color-primary) !important;
+        background: transparent !important;
         padding: 10px !important;
         min-width: auto !important;
         border-radius: 50% !important;
+        border: none !important;
 
         &:hover {
           background: var(--color-hover) !important;
+          color: var(--color-primary-hover) !important;
         }
 
         .p-button-icon {
           font-size: 18px;
+          color: inherit !important;
         }
       }
 
@@ -260,6 +271,7 @@
 
                   .p-button-icon {
                     font-size: 18px !important;
+                    color: white !important;
                   }
                 }
 
@@ -305,6 +317,7 @@
 
                   .p-button-icon {
                     font-size: 16px !important;
+                    color: inherit !important;
                   }
                 }
               }
@@ -326,6 +339,7 @@
 
                 .p-button-icon {
                   font-size: 18px !important;
+                  color: white !important;
                 }
               }
 
@@ -369,6 +383,7 @@
 
                 .p-button-icon {
                   font-size: 16px !important;
+                  color: inherit !important;
                 }
               }
             }
@@ -465,6 +480,7 @@
 
                       .p-button-icon {
                         font-size: 24px !important;
+                        color: var(--color-primary) !important;
                       }
                     }
                   }
@@ -542,6 +558,7 @@
 
                     .p-button-icon {
                       font-size: 28px !important;
+                      color: var(--color-primary) !important;
                     }
                   }
                 }
@@ -578,6 +595,7 @@
 
                   .p-button-icon {
                     font-size: 14px !important;
+                    color: inherit !important;
                   }
                 }
               }
@@ -670,7 +688,7 @@
       display: flex;
       align-items: flex-end;
       gap: 12px;
-      background: var(--color-background);
+      background: var(--color-surface-light);
       border-radius: 25px;
       padding: 8px 12px;
       border: 2px solid var(--color-border);
@@ -679,6 +697,34 @@
       &:focus-within {
         border-color: var(--color-primary);
         box-shadow: 0 0 0 3px var(--color-focus);
+      }
+
+      .attachment-btn {
+        background: transparent !important;
+        border: none !important;
+        color: var(--color-text-secondary) !important;
+        padding: 8px !important;
+        min-width: auto !important;
+        border-radius: 50% !important;
+        width: 40px !important;
+        height: 40px !important;
+        transition: all 0.2s ease !important;
+
+        &:hover {
+          background: var(--color-hover) !important;
+          color: var(--color-primary) !important;
+        }
+
+        &:disabled {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+        }
+
+        .p-button-icon,
+        svg {
+          font-size: 18px !important;
+          color: inherit !important;
+        }
       }
 
       .message-input-field {
@@ -704,10 +750,12 @@
 
           &::placeholder {
             color: var(--color-text-secondary) !important;
+            opacity: 0.8;
           }
 
           &:focus {
             box-shadow: none !important;
+            color: var(--color-text-primary) !important;
           }
         }
 
@@ -727,8 +775,15 @@
             color: var(--color-primary) !important;
           }
 
-          .p-button-icon {
+          &:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+          }
+
+          .p-button-icon,
+          svg {
             font-size: 18px !important;
+            color: inherit !important;
           }
         }
 
@@ -753,8 +808,10 @@
             cursor: not-allowed !important;
           }
 
-          .p-button-icon {
+          .p-button-icon,
+          svg {
             font-size: 18px !important;
+            color: inherit !important;
           }
         }
       }
@@ -775,8 +832,15 @@
           transform: scale(1.05);
         }
 
-        .p-button-icon {
+        &:disabled {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+        }
+
+        .p-button-icon,
+        svg {
           font-size: 18px !important;
+          color: white !important;
         }
       }
 
@@ -803,8 +867,15 @@
             transform: scale(1.05);
           }
 
-          .p-button-icon {
+          &:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+          }
+
+          .p-button-icon,
+          svg {
             font-size: 18px !important;
+            color: white !important;
           }
         }
 
@@ -828,8 +899,10 @@
               opacity: 0.9;
             }
 
-            .p-button-icon {
+            .p-button-icon,
+            svg {
               font-size: 16px !important;
+              color: white !important;
             }
           }
 
@@ -847,8 +920,10 @@
               opacity: 0.9;
             }
 
-            .p-button-icon {
+            .p-button-icon,
+            svg {
               font-size: 16px !important;
+              color: white !important;
             }
           }
 
@@ -866,8 +941,10 @@
               opacity: 0.9;
             }
 
-            .p-button-icon {
+            .p-button-icon,
+            svg {
               font-size: 18px !important;
+              color: white !important;
             }
           }
         }
@@ -921,6 +998,69 @@
     text-align: center;
     font-size: 14px;
     font-weight: 500;
+  }
+
+  // ADDED: Recording status indicators
+  .recording-status {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 12px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+
+    .recording-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--color-text-primary);
+      font-size: 14px;
+      font-weight: 500;
+
+      span {
+        color: var(--color-text-primary);
+      }
+    }
+  }
+
+  .processing-audio-status {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 16px 24px;
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-width: 90%;
+
+    .processing-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--color-text-primary);
+      font-size: 14px;
+      font-weight: 500;
+
+      .processing-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--color-border);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      span {
+        color: var(--color-text-primary);
+      }
+    }
   }
 
   // Emoji Panel
@@ -1105,6 +1245,7 @@
 
         .p-button-icon {
           font-size: 18px !important;
+          color: white !important;
         }
       }
     }
@@ -1160,6 +1301,7 @@
 
         .p-button-icon {
           margin-right: 8px !important;
+          color: inherit !important;
         }
       }
 
@@ -1211,6 +1353,7 @@
 
         .p-button-icon {
           font-size: 20px !important;
+          color: white !important;
         }
       }
 
@@ -1235,6 +1378,7 @@
 
         .p-button-icon {
           font-size: 28px !important;
+          color: white !important;
         }
       }
     }
@@ -1321,6 +1465,15 @@ body {
   }
   100% {
     box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
