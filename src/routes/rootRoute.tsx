@@ -2,6 +2,7 @@ import AuthStateDebug from '@/components/Auth/AuthStateDebug';
 import AppSwipeHOC from '@/hoc/AppSwipeHOC';
 import { unifiedAuthService } from '@/services/authService';
 import ENV_KEYS from '@/utils/envKeys';
+import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { createRootRoute, Outlet, useRouter } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -12,35 +13,38 @@ const appRootRoute = createRootRoute({
     const router = useRouter();
     const [initError, setInitError] = useState<string | null>(null);
     const [isInitializing, setIsInitializing] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // Initialize authentication services on app start
     useEffect(() => {
-      const initAuth = async () => {
+      const initializeApp = async () => {
         try {
+          consoleLog('🔄 Initializing authentication at root level...');
           setIsInitializing(true);
           setInitError(null);
-          console.log('🔄 Initializing authentication at root level...');
 
           await unifiedAuthService.initialize();
-          console.log('✅ Authentication services initialized at root level');
+          consoleLog('✅ Authentication services initialized at root level');
+          setIsInitialized(true);
 
           // Add small delay to ensure auth state is properly set
           setTimeout(() => {
             setIsInitializing(false);
           }, 200);
         } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : 'Unknown error';
-          console.error(
-            '❌ Failed to initialize authentication services:',
+          consoleError(
+            '❌ Failed to initialize authentication at root level:',
             error
           );
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           setInitError(errorMessage);
+          setIsInitialized(true);
           setIsInitializing(false);
         }
       };
 
-      initAuth();
+      initializeApp();
     }, []);
 
     // Show loading state while initializing

@@ -3,6 +3,7 @@ import UserSearch from '@/components/Chat/UserSearch';
 import UserSearchDebug from '@/components/Chat/UserSearchDebug';
 import { unifiedAuthService } from '@/services/authService';
 import { UserSearchResult } from '@/services/chatService';
+import { consoleError } from '@/utils/helpers/consoleHelper';
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
@@ -123,14 +124,13 @@ const ChatList: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
     try {
+      setIsLoggingOut(true);
       await unifiedAuthService.signOut();
-      toast.success('Logged out successfully');
-      // The auth system will automatically redirect to login page
+      navigate('/auth/login');
     } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Failed to logout. Please try again.');
+      consoleError('Logout error:', error);
+      toast.error('Failed to log out. Please try again.');
     } finally {
       setIsLoggingOut(false);
     }

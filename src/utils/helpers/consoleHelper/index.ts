@@ -1,26 +1,26 @@
 const isProduction = import.meta.env.PROD;
 
-export const consoleError = (data: any) => {
+export const consoleError = (...data: any[]) => {
   if (isProduction) return;
-  console.error(data);
+  console.error(...data);
 };
 
-export const consoleLog = (data: any) => {
+export const consoleLog = (...data: any[]) => {
   if (isProduction) return;
-  console.log(data);
+  console.log(...data);
 };
 
-export const consoleWarn = (data: any) => {
+export const consoleWarn = (...data: any[]) => {
   if (isProduction) return;
-  console.warn(data);
+  console.warn(...data);
 };
 
-export const consoleInfo = (data: any) => {
+export const consoleInfo = (...data: any[]) => {
   if (isProduction) return;
-  console.info(data);
+  console.info(...data);
 };
 
-export const consoleDir = (data: any) => {
+export const consoleDir = (...data: any[]) => {
   if (isProduction) return;
-  console.dir(data);
+  console.dir(...data);
 };

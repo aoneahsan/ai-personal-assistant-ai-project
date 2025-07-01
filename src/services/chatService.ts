@@ -1,5 +1,6 @@
 import { IPCAUser } from '@/types/user';
 import { PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS } from '@/utils/constants/generic/firebase';
+import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   addDoc,
   collection,
@@ -122,7 +123,7 @@ export class ChatService {
   // Send an audio message with transcript
   async sendAudioMessage(options: MediaUploadOptions): Promise<string> {
     try {
-      console.log('🎵 Sending audio message...');
+      consoleLog('🎵 Sending audio message...');
 
       // Upload audio file
       const uploadResult = await fileStorageService.uploadAudio(
@@ -155,7 +156,7 @@ export class ChatService {
         }
       );
     } catch (error) {
-      console.error('❌ Error sending audio message:', error);
+      consoleError('❌ Error sending audio message:', error);
       throw error;
     }
   }
@@ -163,7 +164,7 @@ export class ChatService {
   // Send an image message
   async sendImageMessage(options: MediaUploadOptions): Promise<string> {
     try {
-      console.log('🖼️ Sending image message...');
+      consoleLog('🖼️ Sending image message...');
 
       // Upload image file
       const uploadResult = await fileStorageService.uploadImage(
@@ -195,7 +196,7 @@ export class ChatService {
         }
       );
     } catch (error) {
-      console.error('❌ Error sending image message:', error);
+      consoleError('❌ Error sending image message:', error);
       throw error;
     }
   }
@@ -203,7 +204,7 @@ export class ChatService {
   // Send a video message
   async sendVideoMessage(options: MediaUploadOptions): Promise<string> {
     try {
-      console.log('🎥 Sending video message...');
+      consoleLog('🎥 Sending video message...');
 
       // Upload video file
       const uploadResult = await fileStorageService.uploadVideo(
@@ -235,7 +236,7 @@ export class ChatService {
         }
       );
     } catch (error) {
-      console.error('❌ Error sending video message:', error);
+      consoleError('❌ Error sending video message:', error);
       throw error;
     }
   }
@@ -260,7 +261,7 @@ export class ChatService {
         status: 'sent',
       };
 
-      console.log('💬 Sending message to Firestore:', {
+      consoleLog('💬 Sending message to Firestore:', {
         chatId,
         senderId,
         type: messageData.type,
@@ -288,10 +289,10 @@ export class ChatService {
         senderId
       );
 
-      console.log('✅ Message sent successfully:', docRef.id);
+      consoleLog('✅ Message sent successfully:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('❌ Error sending message:', error);
+      consoleError('❌ Error sending message:', error);
       throw error;
     }
   }
@@ -312,9 +313,9 @@ export class ChatService {
       };
 
       await addDoc(collection(db, this.CLEANUP_JOBS_COLLECTION), cleanupJob);
-      console.log('🗓️ File cleanup scheduled for:', uploadResult.expiresAt);
+      consoleLog('🗓️ File cleanup scheduled for:', uploadResult.expiresAt);
     } catch (error) {
-      console.error('❌ Error scheduling cleanup:', error);
+      consoleError('❌ Error scheduling cleanup:', error);
       // Don't throw - cleanup scheduling failure shouldn't block message sending
     }
   }
@@ -322,7 +323,7 @@ export class ChatService {
   // Process expired file cleanups (this would typically run as a Cloud Function)
   async processExpiredFiles(): Promise<void> {
     try {
-      console.log('🧹 Processing expired files...');
+      consoleLog('🧹 Processing expired files...');
 
       const now = Timestamp.now();
       const q = query(
@@ -332,7 +333,7 @@ export class ChatService {
       );
 
       const querySnapshot = await getDocs(q);
-      console.log(`Found ${querySnapshot.size} files to clean up`);
+      consoleLog(`Found ${querySnapshot.size} files to clean up`);
 
       for (const doc of querySnapshot.docs) {
         const cleanupJob = doc.data();
@@ -346,9 +347,9 @@ export class ChatService {
             completedAt: serverTimestamp(),
           });
 
-          console.log('✅ Cleaned up file:', cleanupJob.fileName);
+          consoleLog('✅ Cleaned up file:', cleanupJob.fileName);
         } catch (error) {
-          console.error(
+          consoleError(
             '❌ Failed to clean up file:',
             cleanupJob.fileName,
             error
@@ -363,7 +364,7 @@ export class ChatService {
         }
       }
     } catch (error) {
-      console.error('❌ Error processing expired files:', error);
+      consoleError('❌ Error processing expired files:', error);
     }
   }
 
@@ -379,9 +380,9 @@ export class ChatService {
         transcript,
         quickTranscript,
       });
-      console.log('✅ Transcript updated for message:', messageId);
+      consoleLog('✅ Transcript updated for message:', messageId);
     } catch (error) {
-      console.error('❌ Error updating transcript:', error);
+      consoleError('❌ Error updating transcript:', error);
       throw error;
     }
   }
@@ -392,7 +393,7 @@ export class ChatService {
     callback: (messages: FirestoreMessage[]) => void
   ): () => void {
     try {
-      console.log('👂 Subscribing to messages for chat:', chatId);
+      consoleLog('👂 Subscribing to messages for chat:', chatId);
 
       const q = query(
         collection(db, this.MESSAGES_COLLECTION),
@@ -408,17 +409,17 @@ export class ChatService {
             messages.push({ id: doc.id, ...doc.data() } as FirestoreMessage);
           });
 
-          console.log('📨 Received messages update:', messages.length);
+          consoleLog('📨 Received messages update:', messages.length);
           callback(messages);
         },
         (error) => {
-          console.error('❌ Error listening to messages:', error);
+          consoleError('❌ Error listening to messages:', error);
         }
       );
 
       return unsubscribe;
     } catch (error) {
-      console.error('❌ Error subscribing to messages:', error);
+      consoleError('❌ Error subscribing to messages:', error);
       throw error;
     }
   }
@@ -428,17 +429,17 @@ export class ChatService {
     try {
       // Normalize the email to lowercase for consistent searching
       const normalizedEmail = email.toLowerCase().trim();
-      console.log('🔍 Searching for user by email:', normalizedEmail);
+      consoleLog('🔍 Searching for user by email:', normalizedEmail);
 
       // Debug: Let's also check what users exist in the database
-      console.log('🔍 Debug: Checking all users in database...');
+      consoleLog('🔍 Debug: Checking all users in database...');
       const allUsersQuery = collection(db, this.USERS_COLLECTION);
       const allUsersSnapshot = await getDocs(allUsersQuery);
 
-      console.log('📊 Total users in database:', allUsersSnapshot.size);
+      consoleLog('📊 Total users in database:', allUsersSnapshot.size);
       allUsersSnapshot.forEach((doc) => {
         const userData = doc.data();
-        console.log('👤 User found:', {
+        consoleLog('👤 User found:', {
           id: doc.id,
           email: userData.email,
           name: userData.name,
@@ -455,10 +456,10 @@ export class ChatService {
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.log('❌ User not found with email:', normalizedEmail);
+        consoleLog('❌ User not found with email:', normalizedEmail);
 
         // Try case-insensitive search by getting all users and filtering
-        console.log('🔍 Attempting case-insensitive search...');
+        consoleLog('🔍 Attempting case-insensitive search...');
         const allUsers = await getDocs(collection(db, this.USERS_COLLECTION));
 
         for (const doc of allUsers.docs) {
@@ -466,7 +467,7 @@ export class ChatService {
           const userEmail = userData.email?.toLowerCase?.() || '';
 
           if (userEmail === normalizedEmail) {
-            console.log(
+            consoleLog(
               '✅ Found user with case-insensitive search:',
               userData.email
             );
@@ -491,7 +492,7 @@ export class ChatService {
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data() as IPCAUser;
 
-      console.log('✅ User found:', userData.email);
+      consoleLog('✅ User found:', userData.email);
       return {
         id: userDoc.id,
         email: userData.email || email,
@@ -500,7 +501,7 @@ export class ChatService {
         isFound: true,
       };
     } catch (error) {
-      console.error('❌ Error finding user by email:', error);
+      consoleError('❌ Error finding user by email:', error);
       throw error;
     }
   }
@@ -513,7 +514,7 @@ export class ChatService {
     targetUserEmail: string
   ): Promise<string> {
     try {
-      console.log(
+      consoleLog(
         '💬 Creating/getting conversation between:',
         currentUserEmail,
         'and',
@@ -532,7 +533,7 @@ export class ChatService {
       for (const doc of querySnapshot.docs) {
         const conversation = doc.data() as ChatConversation;
         if (conversation.participants.includes(targetUserId)) {
-          console.log('✅ Found existing conversation:', doc.id);
+          consoleLog('✅ Found existing conversation:', doc.id);
           return doc.id;
         }
       }
@@ -554,10 +555,10 @@ export class ChatService {
         newConversation
       );
 
-      console.log('✅ Created new conversation:', docRef.id);
+      consoleLog('✅ Created new conversation:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('❌ Error creating/getting conversation:', error);
+      consoleError('❌ Error creating/getting conversation:', error);
       throw error;
     }
   }
@@ -565,7 +566,7 @@ export class ChatService {
   // Get user conversations
   async getUserConversations(userId: string): Promise<ChatConversation[]> {
     try {
-      console.log('📋 Getting conversations for user:', userId);
+      consoleLog('📋 Getting conversations for user:', userId);
 
       const q = query(
         collection(db, this.CONVERSATIONS_COLLECTION),
@@ -580,10 +581,10 @@ export class ChatService {
         conversations.push({ id: doc.id, ...doc.data() } as ChatConversation);
       });
 
-      console.log('✅ Found conversations:', conversations.length);
+      consoleLog('✅ Found conversations:', conversations.length);
       return conversations;
     } catch (error) {
-      console.error('❌ Error getting user conversations:', error);
+      consoleError('❌ Error getting user conversations:', error);
       throw error;
     }
   }
@@ -604,7 +605,7 @@ export class ChatService {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('❌ Error updating conversation:', error);
+      consoleError('❌ Error updating conversation:', error);
       // Don't throw - this is not critical
     }
   }
@@ -612,7 +613,7 @@ export class ChatService {
   // Mark messages as read
   async markMessagesAsRead(chatId: string, userId: string): Promise<void> {
     try {
-      console.log('✅ Marking messages as read for chat:', chatId);
+      consoleLog('✅ Marking messages as read for chat:', chatId);
 
       // Update unread count in conversation
       const conversationRef = doc(db, this.CONVERSATIONS_COLLECTION, chatId);
@@ -629,7 +630,7 @@ export class ChatService {
         });
       }
     } catch (error) {
-      console.error('❌ Error marking messages as read:', error);
+      consoleError('❌ Error marking messages as read:', error);
       // Don't throw - this is not critical
     }
   }

@@ -1,4 +1,9 @@
-import { useIsAuthenticatedZState } from '@/zustandStates/userState';
+import { consoleLog } from '@/utils/helpers/consoleHelper';
+import {
+  useIsAuthenticatedZState,
+  useIsAuthSystemReady,
+  useUserDataZState,
+} from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
@@ -15,8 +20,24 @@ export const useAuthGuard = ({
 }: UseAuthGuardOptions = {}) => {
   const isAuthenticated = useIsAuthenticatedZState();
   const navigate = useNavigate();
+  const userData = useUserDataZState((state) => state.data);
+  const isAuthSystemReady = useIsAuthSystemReady();
 
   useEffect(() => {
+    // Only proceed if auth system is ready
+    if (!isAuthSystemReady) {
+      consoleLog('⏳ Auth system not ready yet, waiting...', {
+        isAuthSystemReady,
+      });
+      return;
+    }
+
+    consoleLog('🔒 Auth guard check:', {
+      userData: userData ? 'present' : 'null',
+      email: userData?.email,
+      isAuthSystemReady,
+    });
+
     // Call the callback if provided
     if (onAuthStateChange) {
       onAuthStateChange(isAuthenticated);
@@ -36,10 +57,20 @@ export const useAuthGuard = ({
       );
       navigate({ to: redirectTo });
     }
-  }, [isAuthenticated, requireAuth, redirectTo, navigate, onAuthStateChange]);
+  }, [
+    userData,
+    isAuthSystemReady,
+    isAuthenticated,
+    requireAuth,
+    redirectTo,
+    navigate,
+    onAuthStateChange,
+  ]);
 
   return {
     isAuthenticated,
+    isAuthSystemReady,
+    userData,
     isLoading: false, // Could be extended to track auth loading state
   };
 };

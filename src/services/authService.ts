@@ -4,6 +4,11 @@ import {
   isGoogleAuthConfigured,
 } from '@/utils/constants/generic/firebase';
 import {
+  consoleError,
+  consoleLog,
+  consoleWarn,
+} from '@/utils/helpers/consoleHelper';
+import {
   useAuthInitializationZState,
   useUserDataZState,
 } from '@/zustandStates/userState';
@@ -45,88 +50,81 @@ export class UnifiedAuthService {
 
   // Initialize authentication services
   async initialize(): Promise<void> {
-    // Prevent multiple initializations
     if (this.isInitialized) {
-      console.log('🔄 Auth services already initialized, skipping...');
+      consoleLog('🔄 Auth services already initialized, skipping...');
       return;
     }
 
     try {
-      console.log('🔄 Starting authentication services initialization...');
-      this.updateAuthInitialization.setInitializing(true);
-      this.updateAuthInitialization.setAuthServicesReady(false);
-      this.updateAuthInitialization.setAuthStateSettled(false);
+      consoleLog('🔄 Starting authentication services initialization...');
 
-      const platform = Capacitor.getPlatform();
-      console.log(
-        `Initializing authentication services for platform: ${platform}`
+      // Initialize Firebase Auth state listener
+      firebaseAuthService.onAuthStateChange(
+        this.handleAuthStateChange.bind(this)
       );
 
       // Check Firebase configuration
-      const configStatus = getFirebaseConfigStatus();
+      const configStatus = await this.checkFirebaseConfiguration();
+      consoleLog(
+        '🔧 Firebase configuration status:',
+        configStatus.isConfigured ? 'Ready' : 'Issues found'
+      );
 
       if (!configStatus.isConfigured) {
-        console.warn('Firebase Configuration Warning:', configStatus.message);
-        console.warn(
-          'Please check your .env file and ensure all required environment variables are set.'
+        consoleWarn('Firebase Configuration Warning:', configStatus.message);
+        consoleWarn(
+          'Some authentication methods may not work properly. Please check your Firebase configuration.'
         );
       }
 
-      // Initialize Google Auth based on platform
-      if (isGoogleAuthConfigured()) {
-        console.log('Google Auth configuration found, initializing...');
+      // Initialize Google Auth if available
+      if (configStatus.googleAuth.isConfigured) {
         try {
+          consoleLog('Google Auth configuration found, initializing...');
           await googleAuthService.initialize();
-          console.log('Google Auth initialized successfully');
+          consoleLog('Google Auth initialized successfully');
         } catch (error) {
-          console.warn('Google Auth initialization failed:', error);
+          consoleWarn('Google Auth initialization failed:', error);
         }
       } else {
-        console.warn(
-          'Google Auth not configured - VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID missing'
+        consoleWarn(
+          'Google Auth not configured. Google sign-in will not be available.'
         );
       }
 
       // Log Apple Auth availability
       const isAppleAvailable = appleAuthService.isAvailable();
-      console.log(
-        `Apple Sign In available: ${isAppleAvailable} (Platform: ${platform})`
+      consoleLog(
+        `Apple Sign In available: ${isAppleAvailable} (Platform: ${this.getPlatformInfo().platform})`
       );
 
-      // Listen to authentication state changes
-      firebaseAuthService.onAuthStateChange(
-        this.handleAuthStateChange.bind(this)
-      );
-
+      // Mark services as ready
+      this.updateAuthInitialization.setAuthServicesReady(true);
       this.isInitialized = true;
-      this.updateAuthInitialization.setAuthServicesReady(true);
-      console.log('✅ Authentication services ready');
 
-      // Shorter timeout to mark auth state as settled if no immediate auth state change occurs
-      this.authStateChangeTimeout = setTimeout(() => {
-        if (!useAuthInitializationZState.getState().isAuthStateSettled) {
-          this.updateAuthInitialization.setAuthStateSettled(true);
-          this.updateAuthInitialization.setInitializing(false);
-          console.log('✅ Auth state settled (timeout - no user found)');
-        }
-      }, 500); // Reduced from 1000ms to 500ms
-
-      console.log(
-        `✅ Authentication services initialized successfully for ${platform}`
+      consoleLog(
+        '🎯 Auth initialization timeout set - will settle in 3 seconds if no user found'
       );
+
+      // Set a timeout to settle auth state if no user is found
+      this.authStateChangeTimeout = setTimeout(() => {
+        this.updateAuthInitialization.setAuthStateSettled(true);
+        this.updateAuthInitialization.setInitializing(false);
+        consoleLog('✅ Auth state settled (timeout - no user found)');
+      }, 3000);
+
+      consoleLog('✅ Authentication services ready');
     } catch (error) {
-      console.error('❌ Error initializing auth services:', error);
-      // Mark as ready even if there were errors to prevent infinite loading
-      this.updateAuthInitialization.setAuthServicesReady(true);
-      this.updateAuthInitialization.setAuthStateSettled(true);
       this.updateAuthInitialization.setInitializing(false);
-      this.isInitialized = true; // Prevent retry loops
+      this.updateAuthInitialization.setAuthServicesReady(false);
+      consoleError('❌ Error initializing auth services:', error);
+      throw error;
     }
   }
 
   // Handle authentication state changes
   private async handleAuthStateChange(user: User | null): Promise<void> {
-    console.log(
+    consoleLog(
       '🔄 Auth state change triggered:',
       user ? user.email : 'signed out'
     );
@@ -140,14 +138,14 @@ export class UnifiedAuthService {
     if (user) {
       // User is signed in
       try {
-        console.log('👤 User signed in:', user.email, 'UID:', user.uid);
+        consoleLog('👤 User signed in:', user.email, 'UID:', user.uid);
 
         // Get user data from Firestore
         let userData = await getUserFromFirestore(user.uid);
 
         // If user doesn't exist in Firestore, save them
         if (!userData) {
-          console.log(
+          consoleLog(
             '📝 Creating new user record in Firestore for:',
             user.email
           );
@@ -158,9 +156,9 @@ export class UnifiedAuthService {
         if (userData) {
           // Update Zustand state
           this.updateUserData(userData);
-          console.log('✅ User data updated in Zustand state:', userData.email);
+          consoleLog('✅ User data updated in Zustand state:', userData.email);
         } else {
-          console.error(
+          consoleError(
             '❌ Failed to get user data from Firestore after saving'
           );
           // Fallback to basic user data
@@ -174,10 +172,10 @@ export class UnifiedAuthService {
             updatedAt: new Date(),
           };
           this.updateUserData(basicUserData as any);
-          console.log('✅ Fallback: Basic user data set in Zustand state');
+          consoleLog('✅ Fallback: Basic user data set in Zustand state');
         }
       } catch (error) {
-        console.error('❌ Error handling auth state change:', error);
+        consoleError('❌ Error handling auth state change:', error);
         // Even if Firestore fails, we can still set basic user data
         const basicUserData = {
           id: user.uid,
@@ -189,18 +187,18 @@ export class UnifiedAuthService {
           updatedAt: new Date(),
         };
         this.updateUserData(basicUserData as any);
-        console.log('✅ Fallback: Basic user data set in Zustand state');
+        consoleLog('✅ Fallback: Basic user data set in Zustand state');
       }
     } else {
       // User is signed out
-      console.log('🔓 User signed out, clearing Zustand state');
+      consoleLog('🔓 User signed out, clearing Zustand state');
       this.updateUserData(null);
     }
 
     // Mark auth state as settled and initialization as complete
     this.updateAuthInitialization.setAuthStateSettled(true);
     this.updateAuthInitialization.setInitializing(false);
-    console.log('✅ Auth state settled');
+    consoleLog('✅ Auth state settled');
   }
 
   // Check if service is properly configured
@@ -234,20 +232,20 @@ export class UnifiedAuthService {
       this.checkConfiguration();
 
       const platform = this.getPlatformInfo();
-      console.log(`Email sign-in attempt on ${platform.platform}`);
+      consoleLog(`Email sign-in attempt on ${platform.platform}`);
 
       const userCredential = await firebaseAuthService.signInWithEmail(
         email,
         password
       );
-      console.log('Email sign-in successful');
+      consoleLog('Email sign-in successful');
 
       return {
         user: userCredential.user,
         provider: AuthProvider.EMAIL,
       };
     } catch (error) {
-      console.error('Error signing in with email:', error);
+      consoleError('Error signing in with email:', error);
       throw error;
     }
   }
@@ -257,14 +255,14 @@ export class UnifiedAuthService {
       this.checkConfiguration();
 
       const platform = this.getPlatformInfo();
-      console.log(`Email sign-up attempt on ${platform.platform}`);
+      consoleLog(`Email sign-up attempt on ${platform.platform}`);
 
       const userCredential = await firebaseAuthService.signUpWithEmail(
         signUpData.email,
         signUpData.password,
         signUpData.displayName
       );
-      console.log('Email sign-up successful');
+      consoleLog('Email sign-up successful');
 
       return {
         user: userCredential.user,
@@ -272,7 +270,7 @@ export class UnifiedAuthService {
         provider: AuthProvider.EMAIL,
       };
     } catch (error) {
-      console.error('Error signing up with email:', error);
+      consoleError('Error signing up with email:', error);
       throw error;
     }
   }
@@ -281,7 +279,7 @@ export class UnifiedAuthService {
   async signInWithGoogle(): Promise<SignInResult> {
     try {
       const platformInfo = this.getPlatformInfo();
-      console.log(`Google sign-in attempt on ${platformInfo.platform}`);
+      consoleLog(`Google sign-in attempt on ${platformInfo.platform}`);
 
       if (!isGoogleAuthConfigured()) {
         throw new Error(
@@ -294,14 +292,14 @@ export class UnifiedAuthService {
       }
 
       const userCredential = await googleAuthService.signIn();
-      console.log(`Google sign-in successful on ${platformInfo.platform}`);
+      consoleLog(`Google sign-in successful on ${platformInfo.platform}`);
 
       return {
         user: userCredential.user,
         provider: AuthProvider.GOOGLE,
       };
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      consoleError('Error signing in with Google:', error);
       throw error;
     }
   }
@@ -310,7 +308,7 @@ export class UnifiedAuthService {
   async signInWithApple(): Promise<SignInResult> {
     try {
       const platformInfo = this.getPlatformInfo();
-      console.log(`Apple sign-in attempt on ${platformInfo.platform}`);
+      consoleLog(`Apple sign-in attempt on ${platformInfo.platform}`);
 
       if (!appleAuthService.isAvailable()) {
         const platform = platformInfo.platform;
@@ -329,14 +327,14 @@ export class UnifiedAuthService {
       }
 
       const userCredential = await appleAuthService.signIn();
-      console.log(`Apple sign-in successful on ${platformInfo.platform}`);
+      consoleLog(`Apple sign-in successful on ${platformInfo.platform}`);
 
       return {
         user: userCredential.user,
         provider: AuthProvider.APPLE,
       };
     } catch (error) {
-      console.error('Error signing in with Apple:', error);
+      consoleError('Error signing in with Apple:', error);
       throw error;
     }
   }
@@ -346,7 +344,7 @@ export class UnifiedAuthService {
     const isAvailable = appleAuthService.isAvailable();
     const platformInfo = this.getPlatformInfo();
 
-    console.log(
+    consoleLog(
       `Apple Sign In availability check - Platform: ${platformInfo.platform}, Available: ${isAvailable}`
     );
 
@@ -357,16 +355,24 @@ export class UnifiedAuthService {
   async signOut(): Promise<void> {
     try {
       const platformInfo = this.getPlatformInfo();
-      console.log(`Sign out attempt on ${platformInfo.platform}`);
+      consoleLog(`🔄 Sign out process starting on ${platformInfo.platform}...`);
 
-      // Sign out from all services
+      // Sign out from all platforms
       await Promise.all([
         firebaseAuthService.signOutUser(),
-        googleAuthService.signOut().catch(() => {}), // Ignore errors if user wasn't signed in with Google
+        platformInfo.isNative
+          ? googleAuthService.signOut().catch(() => {})
+          : Promise.resolve(),
       ]);
-      console.log('Sign out successful');
+
+      consoleLog(`Sign out attempt on ${platformInfo.platform}`);
+
+      // Clear local state
+      this.updateUserData(null);
+
+      consoleLog('Sign out successful');
     } catch (error) {
-      console.error('Error signing out:', error);
+      consoleError('Error signing out:', error);
       throw error;
     }
   }
@@ -376,9 +382,9 @@ export class UnifiedAuthService {
     try {
       this.checkConfiguration();
       await firebaseAuthService.resetPassword(email);
-      console.log('Password reset email sent');
+      consoleLog('Password reset email sent');
     } catch (error) {
-      console.error('Error resetting password:', error);
+      consoleError('Error resetting password:', error);
       throw error;
     }
   }
@@ -392,9 +398,9 @@ export class UnifiedAuthService {
       }
 
       await firebaseAuthService.sendVerificationEmail(user);
-      console.log('Email verification sent');
+      consoleLog('Email verification sent');
     } catch (error) {
-      console.error('Error sending email verification:', error);
+      consoleError('Error sending email verification:', error);
       throw error;
     }
   }
@@ -414,9 +420,9 @@ export class UnifiedAuthService {
 
       // Update Firestore as well
       await saveUserToFirestore(user);
-      console.log('User profile updated');
+      consoleLog('User profile updated');
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      consoleError('Error updating user profile:', error);
       throw error;
     }
   }
@@ -446,6 +452,19 @@ export class UnifiedAuthService {
       google: isGoogleAuthConfigured(),
       apple: appleAuthService.isAvailable(),
       initialized: this.isInitialized,
+    };
+  }
+
+  private async checkFirebaseConfiguration(): Promise<{
+    isConfigured: boolean;
+    message: string;
+    googleAuth: { isConfigured: boolean };
+  }> {
+    const configStatus = getFirebaseConfigStatus();
+    return {
+      isConfigured: configStatus.isConfigured,
+      message: configStatus.message,
+      googleAuth: { isConfigured: isGoogleAuthConfigured() },
     };
   }
 }

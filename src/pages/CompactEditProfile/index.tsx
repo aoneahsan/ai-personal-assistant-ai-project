@@ -1,5 +1,6 @@
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { consoleError } from '@/utils/helpers/consoleHelper';
 import { useUserProfileZState } from '@/zustandStates/userState';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
@@ -14,6 +15,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
 
 // Validation schema
@@ -56,6 +58,7 @@ const CompactEditProfile: React.FC = () => {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number[]>([0]);
   const accordionRef = useRef<Accordion>(null);
+  const [saving, setSaving] = useState(false);
 
   // Define sections for keyboard shortcuts
   const sections = [
@@ -146,10 +149,15 @@ const CompactEditProfile: React.FC = () => {
         },
       };
 
-      updateProfile(updatedProfile);
-      navigate({ to: '/dashboard' });
+      setSaving(true);
+      await updateProfile(updatedProfile);
+      toast.success('Profile updated successfully!');
+      navigate({ to: '/chats' });
     } catch (error) {
-      console.error('Error updating profile:', error);
+      consoleError('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -178,7 +186,7 @@ const CompactEditProfile: React.FC = () => {
   useKeyboardShortcuts({
     onSubmit: () => handleSubmit(onSubmit)(),
     onReset: () => reset(),
-    onCancel: () => navigate({ to: '/dashboard' }),
+    onCancel: () => navigate({ to: '/compact-dashboard' }),
     onShowHelp: () => setShowHelpModal(true),
     onSectionChange: handleSectionChange,
     sections: sections.map((s) => s.name),
@@ -818,7 +826,7 @@ const CompactEditProfile: React.FC = () => {
                     label='Cancel'
                     icon='pi pi-times'
                     className='p-button-outlined p-button-sm'
-                    onClick={() => navigate({ to: '/dashboard' })}
+                    onClick={() => navigate({ to: '/compact-dashboard' })}
                     tooltip='Ctrl+Z'
                   />
                   <Button

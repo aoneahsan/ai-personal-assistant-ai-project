@@ -3,6 +3,7 @@ import {
   FIREBASE_CONFIG,
   PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS,
 } from '@/utils/constants/generic/firebase';
+import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { initializeApp } from 'firebase/app';
 import {
   AuthError,
@@ -17,13 +18,7 @@ import {
   User,
   UserCredential,
 } from 'firebase/auth';
-import {
-  doc,
-  DocumentSnapshot,
-  getDoc,
-  getFirestore,
-  setDoc,
-} from 'firebase/firestore';
+import { doc, getDoc, getFirestore, setDoc } from 'firebase/firestore';
 import {
   deleteObject,
   getDownloadURL,
@@ -189,7 +184,7 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
       type: 'user',
     };
 
-    console.log('💾 Saving user to Firestore:', {
+    consoleLog('💾 Saving user to Firestore:', {
       id: userData.id,
       email: userData.email,
       name: userData.name,
@@ -197,9 +192,9 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
     });
 
     await setDoc(userRef, userData, { merge: true });
-    console.log('✅ User saved to Firestore successfully');
+    consoleLog('✅ User saved to Firestore successfully');
   } catch (error) {
-    console.error('❌ Error saving user to Firestore:', error);
+    consoleError('❌ Error saving user to Firestore:', error);
     throw error;
   }
 };
@@ -213,14 +208,15 @@ export const getUserFromFirestore = async (
       `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_users`,
       uid
     );
-    const userDoc: DocumentSnapshot = await getDoc(userRef);
+    const userSnap = await getDoc(userRef);
 
-    if (userDoc.exists()) {
-      return userDoc.data() as IPCAUser;
+    if (userSnap.exists()) {
+      return userSnap.data() as IPCAUser;
+    } else {
+      return null;
     }
-    return null;
   } catch (error) {
-    console.error('Error getting user from Firestore:', error);
+    consoleError('Error getting user from Firestore:', error);
     return null;
   }
 };
@@ -277,7 +273,7 @@ export class FileStorageService {
       const storagePath = `${this.STORAGE_PREFIX}/audio/${chatId}/${fileName}`;
       const storageRef = ref(storage, storagePath);
 
-      console.log('🎵 Uploading audio file:', fileName);
+      consoleLog('🎵 Uploading audio file:', fileName);
 
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
@@ -287,7 +283,7 @@ export class FileStorageService {
         uploadedAt.getTime() + this.BACKUP_DAYS * 24 * 60 * 60 * 1000
       );
 
-      console.log('✅ Audio uploaded successfully:', downloadURL);
+      consoleLog('✅ Audio uploaded successfully:', downloadURL);
 
       return {
         url: downloadURL,
@@ -298,7 +294,7 @@ export class FileStorageService {
         expiresAt,
       };
     } catch (error) {
-      console.error('❌ Error uploading audio:', error);
+      consoleError('❌ Error uploading audio:', error);
       throw error;
     }
   }
@@ -314,7 +310,7 @@ export class FileStorageService {
       const storagePath = `${this.STORAGE_PREFIX}/images/${chatId}/${fileName}`;
       const storageRef = ref(storage, storagePath);
 
-      console.log('🖼️ Uploading image file:', fileName);
+      consoleLog('🖼️ Uploading image file:', fileName);
 
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
@@ -324,7 +320,7 @@ export class FileStorageService {
         uploadedAt.getTime() + this.BACKUP_DAYS * 24 * 60 * 60 * 1000
       );
 
-      console.log('✅ Image uploaded successfully:', downloadURL);
+      consoleLog('✅ Image uploaded successfully:', downloadURL);
 
       return {
         url: downloadURL,
@@ -335,7 +331,7 @@ export class FileStorageService {
         expiresAt,
       };
     } catch (error) {
-      console.error('❌ Error uploading image:', error);
+      consoleError('❌ Error uploading image:', error);
       throw error;
     }
   }
@@ -351,7 +347,7 @@ export class FileStorageService {
       const storagePath = `${this.STORAGE_PREFIX}/videos/${chatId}/${fileName}`;
       const storageRef = ref(storage, storagePath);
 
-      console.log('🎥 Uploading video file:', fileName);
+      consoleLog('🎥 Uploading video file:', fileName);
 
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
@@ -361,7 +357,7 @@ export class FileStorageService {
         uploadedAt.getTime() + this.BACKUP_DAYS * 24 * 60 * 60 * 1000
       );
 
-      console.log('✅ Video uploaded successfully:', downloadURL);
+      consoleLog('✅ Video uploaded successfully:', downloadURL);
 
       return {
         url: downloadURL,
@@ -372,7 +368,7 @@ export class FileStorageService {
         expiresAt,
       };
     } catch (error) {
-      console.error('❌ Error uploading video:', error);
+      consoleError('❌ Error uploading video:', error);
       throw error;
     }
   }
@@ -382,9 +378,9 @@ export class FileStorageService {
     try {
       const fileRef = ref(storage, filePath);
       await deleteObject(fileRef);
-      console.log('🗑️ File deleted successfully:', filePath);
+      consoleLog('🗑️ File deleted successfully:', filePath);
     } catch (error) {
-      console.error('❌ Error deleting file:', error);
+      consoleError('❌ Error deleting file:', error);
       throw error;
     }
   }

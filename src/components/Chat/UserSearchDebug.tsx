@@ -1,6 +1,7 @@
 import { db } from '@/services/firebase';
 import { IPCAUser } from '@/types/user';
 import { PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS } from '@/utils/constants/generic/firebase';
+import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { collection, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -44,9 +45,9 @@ const UserSearchDebug: React.FC = () => {
       });
 
       setUsers(usersData);
-      console.log('👥 Loaded users for debug:', usersData);
+      consoleLog('👥 Loaded users for debug:', usersData);
     } catch (error) {
-      console.error('❌ Error loading users:', error);
+      consoleError('❌ Error loading users:', error);
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
@@ -63,7 +64,7 @@ const UserSearchDebug: React.FC = () => {
         return;
       }
 
-      console.log(
+      consoleLog(
         '🔧 Fixing email casing for users:',
         usersToFix.map((u) => u.email)
       );
@@ -74,7 +75,7 @@ const UserSearchDebug: React.FC = () => {
           await updateDoc(userRef, {
             email: user.normalizedEmail,
           });
-          console.log(
+          consoleLog(
             `✅ Fixed email casing for user: ${user.email} -> ${user.normalizedEmail}`
           );
         }
@@ -83,7 +84,7 @@ const UserSearchDebug: React.FC = () => {
       toast.success(`Fixed email casing for ${usersToFix.length} users!`);
       await loadUsers(); // Reload to show updated data
     } catch (error) {
-      console.error('❌ Error fixing email casing:', error);
+      consoleError('❌ Error fixing email casing:', error);
       toast.error('Failed to fix email casing');
     } finally {
       setFixing(false);
@@ -129,6 +130,11 @@ const UserSearchDebug: React.FC = () => {
       </div>
     );
   };
+
+  // Only show in development mode
+  if (!import.meta.env.DEV) {
+    return null;
+  }
 
   const emailIssueCount = users.filter((u) => u.hasEmailIssue).length;
 
