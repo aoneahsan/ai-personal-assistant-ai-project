@@ -1198,30 +1198,31 @@
     }
 
     .attachment-options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
       padding: 32px;
       background: var(--color-surface);
+      align-items: center;
 
       .attachment-option-card {
+        width: 100%;
+        max-width: 400px;
         background: white !important;
         border: 2px solid var(--color-border-light) !important;
-        border-radius: 16px !important;
-        padding: 24px !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
         cursor: pointer !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        text-align: center !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
-        min-height: 140px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
+        gap: 20px;
+        min-height: 80px;
 
-        // Subtle background pattern
+        // Gradient background on hover
         &::before {
           content: '';
           position: absolute;
@@ -1229,19 +1230,14 @@
           left: 0;
           right: 0;
           bottom: 0;
-          background: linear-gradient(
-            135deg,
-            transparent 0%,
-            rgba(99, 91, 255, 0.02) 100%
-          );
           opacity: 0;
           transition: opacity 0.3s ease;
+          z-index: 1;
         }
 
         &:hover {
-          border-color: var(--color-primary) !important;
-          transform: translateY(-6px) scale(1.02) !important;
-          box-shadow: 0 12px 32px rgba(99, 91, 255, 0.15) !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
           cursor: pointer !important;
 
           &::before {
@@ -1249,50 +1245,43 @@
           }
 
           .option-illustration .option-emoji {
-            transform: scale(1.2) rotate(5deg);
+            transform: scale(1.15);
           }
 
-          .option-content .option-icon {
-            color: var(--color-primary) !important;
-            transform: scale(1.1);
+          .option-content {
+            .option-title {
+              transform: translateX(4px);
+            }
           }
-
-          .option-title {
-            color: var(--color-primary) !important;
-          }
-
-          .option-description {
-            color: var(--color-text-primary) !important;
-          }
-        }
-
-        &:active {
-          transform: translateY(-3px) scale(1.01) !important;
         }
 
         .option-illustration {
-          margin-bottom: 16px;
+          flex-shrink: 0;
+          width: 60px;
+          height: 60px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           position: relative;
+          z-index: 2;
 
           .option-emoji {
-            font-size: 48px !important;
+            font-size: 32px !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-block;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
           }
         }
 
         .option-content {
+          flex: 1;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 8px;
+          gap: 4px;
+          position: relative;
+          z-index: 2;
 
           .option-icon {
-            color: var(--color-text-secondary) !important;
-            font-size: 28px !important;
-            margin-bottom: 8px !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: none; // Hide since we're using emojis
           }
 
@@ -1301,7 +1290,7 @@
             font-size: 18px !important;
             font-weight: 600 !important;
             color: var(--color-text-primary) !important;
-            transition: color 0.3s ease !important;
+            transition: all 0.3s ease !important;
             line-height: 1.3;
           }
 
@@ -1311,55 +1300,86 @@
             color: var(--color-text-secondary) !important;
             line-height: 1.4 !important;
             transition: color 0.3s ease !important;
-            max-width: 200px;
           }
         }
 
-        // Special styling for different options
+        // CARD 1: Take Photo - Green Theme
         &:nth-child(1) {
-          // Take Photo
+          .option-illustration {
+            background: linear-gradient(135deg, #10b981, #059669);
+          }
+
+          &::before {
+            background: linear-gradient(
+              135deg,
+              rgba(16, 185, 129, 0.08),
+              rgba(5, 150, 105, 0.12)
+            );
+          }
+
           &:hover {
-            border-color: var(--color-accent) !important;
-            box-shadow: 0 12px 32px rgba(0, 196, 150, 0.15) !important;
+            border-color: #10b981 !important;
 
             .option-title {
-              color: var(--color-accent) !important;
+              color: #059669 !important;
             }
 
-            .option-content .option-icon {
-              color: var(--color-accent) !important;
+            .option-description {
+              color: var(--color-text-primary) !important;
             }
           }
         }
 
+        // CARD 2: Choose File - Blue Theme
         &:nth-child(2) {
-          // Choose File
+          .option-illustration {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+          }
+
+          &::before {
+            background: linear-gradient(
+              135deg,
+              rgba(59, 130, 246, 0.08),
+              rgba(37, 99, 235, 0.12)
+            );
+          }
+
           &:hover {
-            border-color: var(--color-info) !important;
-            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15) !important;
+            border-color: #3b82f6 !important;
 
             .option-title {
-              color: var(--color-info) !important;
+              color: #2563eb !important;
             }
 
-            .option-content .option-icon {
-              color: var(--color-info) !important;
+            .option-description {
+              color: var(--color-text-primary) !important;
             }
           }
         }
 
+        // CARD 3: Record Video - Red Theme
         &:nth-child(3) {
-          // Record Video
+          .option-illustration {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+          }
+
+          &::before {
+            background: linear-gradient(
+              135deg,
+              rgba(239, 68, 68, 0.08),
+              rgba(220, 38, 38, 0.12)
+            );
+          }
+
           &:hover {
-            border-color: var(--color-error) !important;
-            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.15) !important;
+            border-color: #ef4444 !important;
 
             .option-title {
-              color: var(--color-error) !important;
+              color: #dc2626 !important;
             }
 
-            .option-content .option-icon {
-              color: var(--color-error) !important;
+            .option-description {
+              color: var(--color-text-primary) !important;
             }
           }
         }
@@ -1367,32 +1387,34 @@
 
       // Processing indicator styling
       .processing-indicator {
-        grid-column: 1 / -1;
+        width: 100%;
+        max-width: 400px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 32px;
+        padding: 24px;
         background: var(--color-primary-light);
-        border-radius: 16px;
+        border-radius: 12px;
         border: 2px dashed var(--color-primary);
-        margin-top: 20px;
+        margin-top: 16px;
 
         .processing-spinner {
-          width: 40px;
-          height: 40px;
+          width: 32px;
+          height: 32px;
           border: 3px solid var(--color-border);
           border-top-color: var(--color-primary);
           border-radius: 50%;
           animation: spin 1s linear infinite;
-          margin-bottom: 16px;
+          margin-bottom: 12px;
         }
 
         p {
           margin: 0;
           color: var(--color-primary);
           font-weight: 500;
-          font-size: 16px;
+          font-size: 14px;
+          text-align: center;
         }
       }
     }
@@ -1405,16 +1427,21 @@
       }
 
       .attachment-options-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        padding: 24px;
+        padding: 24px 20px;
 
         .attachment-option-card {
-          min-height: 120px;
-          padding: 20px;
+          max-width: none;
+          padding: 16px;
+          gap: 16px;
+          min-height: 70px;
 
-          .option-illustration .option-emoji {
-            font-size: 40px !important;
+          .option-illustration {
+            width: 50px;
+            height: 50px;
+
+            .option-emoji {
+              font-size: 28px !important;
+            }
           }
 
           .option-content {
