@@ -3,6 +3,7 @@ import { PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS } from '@/utils/constants/ge
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
@@ -26,6 +27,15 @@ export interface TranscriptSegment {
   speakerId?: string; // for multi-speaker scenarios
 }
 
+// Message edit history entry
+export interface MessageEditHistory {
+  editedAt: any; // Firestore timestamp
+  previousText?: string;
+  editReason?: string;
+  editorId: string;
+  editorEmail: string;
+}
+
 // Enhanced message types with better media support
 export interface FirestoreMessage {
   id?: string;
@@ -36,6 +46,15 @@ export interface FirestoreMessage {
   type: 'text' | 'audio' | 'image' | 'file' | 'video';
   timestamp: any; // Firestore timestamp
   status: 'sent' | 'delivered' | 'read';
+
+  // Message editing and deletion
+  isEdited?: boolean;
+  lastEditedAt?: any; // Firestore timestamp
+  editHistory?: MessageEditHistory[];
+  isDeleted?: boolean;
+  deletedAt?: any; // Firestore timestamp
+  deletedBy?: string; // User ID who deleted
+  deleteReason?: string;
 
   // File data for media messages
   fileData?: {
@@ -632,6 +651,186 @@ export class ChatService {
     } catch (error) {
       consoleError('❌ Error marking messages as read:', error);
       // Don't throw - this is not critical
+    }
+  }
+
+  // Edit a message
+  async editMessage(
+    messageId: string,
+    newText: string,
+    editorId: string,
+    editorEmail: string,
+    editReason?: string
+  ): Promise<void> {
+    try {
+      consoleLog('✏️ Editing message:', messageId);
+
+      const messageRef = doc(db, this.MESSAGES_COLLECTION, messageId);
+      const messageDoc = await getDoc(messageRef);
+
+      if (!messageDoc.exists()) {
+        throw new Error('Message not found');
+      }
+
+      const messageData = messageDoc.data() as FirestoreMessage;
+
+      // Check if user has permission to edit (only sender can edit)
+      if (messageData.senderId !== editorId) {
+        throw new Error('Only the message sender can edit this message');
+      }
+
+      // Create edit history entry
+      const editHistoryEntry: MessageEditHistory = {
+        editedAt: serverTimestamp(),
+        previousText: messageData.text,
+        editReason,
+        editorId,
+        editorEmail,
+      };
+
+      // Update message with new text and edit history
+      await updateDoc(messageRef, {
+        text: newText,
+        isEdited: true,
+        lastEditedAt: serverTimestamp(),
+        editHistory: arrayUnion(editHistoryEntry),
+      });
+
+      consoleLog('✅ Message edited successfully');
+    } catch (error) {
+      consoleError('❌ Error editing message:', error);
+      throw error;
+    }
+  }
+
+  // Delete a message
+  async deleteMessage(
+    messageId: string,
+    deleterId: string,
+    deleteReason?: string
+  ): Promise<void> {
+    try {
+      consoleLog('🗑️ Deleting message:', messageId);
+
+      const messageRef = doc(db, this.MESSAGES_COLLECTION, messageId);
+      const messageDoc = await getDoc(messageRef);
+
+      if (!messageDoc.exists()) {
+        throw new Error('Message not found');
+      }
+
+      const messageData = messageDoc.data() as FirestoreMessage;
+
+      // Check if user has permission to delete (only sender can delete)
+      if (messageData.senderId !== deleterId) {
+        throw new Error('Only the message sender can delete this message');
+      }
+
+      // Mark message as deleted instead of actually deleting
+      await updateDoc(messageRef, {
+        isDeleted: true,
+        deletedAt: serverTimestamp(),
+        deletedBy: deleterId,
+        deleteReason,
+        text: '[This message was deleted]',
+      });
+
+      consoleLog('✅ Message deleted successfully');
+    } catch (error) {
+      consoleError('❌ Error deleting message:', error);
+      throw error;
+    }
+  }
+
+  // Get message edit history
+  async getMessageEditHistory(
+    messageId: string
+  ): Promise<MessageEditHistory[]> {
+    try {
+      consoleLog('📜 Getting edit history for message:', messageId);
+
+      const messageRef = doc(db, this.MESSAGES_COLLECTION, messageId);
+      const messageDoc = await getDoc(messageRef);
+
+      if (!messageDoc.exists()) {
+        throw new Error('Message not found');
+      }
+
+      const messageData = messageDoc.data() as FirestoreMessage;
+      return messageData.editHistory || [];
+    } catch (error) {
+      consoleError('❌ Error getting message edit history:', error);
+      throw error;
+    }
+  }
+
+  // Check if user can edit a specific message
+  canUserEditMessage(message: FirestoreMessage, userId: string): boolean {
+    if (!message || !userId) return false;
+
+    // Only sender can edit their own messages
+    if (message.senderId !== userId) return false;
+
+    // Can't edit deleted messages
+    if (message.isDeleted) return false;
+
+    // Can't edit media messages (only text messages)
+    if (message.type !== 'text') return false;
+
+    // Optional: Add time limit for editing (e.g., 24 hours)
+    const messageTime = message.timestamp?.toDate?.();
+    if (messageTime) {
+      const hoursSinceCreation =
+        (Date.now() - messageTime.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceCreation > 24) return false; // 24 hour edit limit
+    }
+
+    return true;
+  }
+
+  // Check if user can delete a specific message
+  canUserDeleteMessage(message: FirestoreMessage, userId: string): boolean {
+    if (!message || !userId) return false;
+
+    // Only sender can delete their own messages
+    if (message.senderId !== userId) return false;
+
+    // Can't delete already deleted messages
+    if (message.isDeleted) return false;
+
+    return true;
+  }
+
+  // Get message statistics for a user
+  async getMessageStats(userId: string): Promise<{
+    totalMessages: number;
+    editedMessages: number;
+    deletedMessages: number;
+  }> {
+    try {
+      consoleLog('📊 Getting message stats for user:', userId);
+
+      const q = query(
+        collection(db, this.MESSAGES_COLLECTION),
+        where('senderId', '==', userId)
+      );
+
+      const querySnapshot = await getDocs(q);
+      let totalMessages = 0;
+      let editedMessages = 0;
+      let deletedMessages = 0;
+
+      querySnapshot.forEach((doc) => {
+        const message = doc.data() as FirestoreMessage;
+        totalMessages++;
+        if (message.isEdited) editedMessages++;
+        if (message.isDeleted) deletedMessages++;
+      });
+
+      return { totalMessages, editedMessages, deletedMessages };
+    } catch (error) {
+      consoleError('❌ Error getting message stats:', error);
+      throw error;
     }
   }
 
