@@ -5,6 +5,7 @@ import Chat from '@/pages/Chat';
 import ChatList from '@/pages/ChatList';
 import NotFound from '@/pages/NotFound';
 import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
+import React from 'react';
 import rootRoute from './rootRoute';
 
 // Error boundary component with correct props interface
@@ -147,6 +148,36 @@ const notFoundRoute = createRoute({
 //   ),
 // });
 
+// Anonymous chat room route (no authentication required)
+const anonymousRoomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/room',
+  component: () => {
+    const AnonymousRoomPage = React.lazy(() => import('@/pages/AnonymousRoom'));
+    return (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <AnonymousRoomPage />
+      </React.Suspense>
+    );
+  },
+});
+
+// Anonymous chat room with room ID route (no authentication required)
+const anonymousRoomWithIdRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/room/$roomId',
+  component: () => {
+    const AnonymousRoomChatPage = React.lazy(
+      () => import('@/pages/AnonymousRoom/AnonymousRoomChat')
+    );
+    return (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <AnonymousRoomChatPage />
+      </React.Suspense>
+    );
+  },
+});
+
 export const appRouteTree = rootRoute.addChildren([
   indexRoute,
   authRoute,
@@ -159,4 +190,6 @@ export const appRouteTree = rootRoute.addChildren([
   chatListRoute,
   chatRoute,
   notFoundRoute,
+  anonymousRoomRoute,
+  anonymousRoomWithIdRoute,
 ]);

@@ -461,7 +461,7 @@ export class ChatService {
         consoleLog('👤 User found:', {
           id: doc.id,
           email: userData.email,
-          name: userData.name,
+          displayName: userData.displayName,
           type: userData.type,
         });
       });
@@ -493,7 +493,8 @@ export class ChatService {
             return {
               id: doc.id,
               email: userData.email || normalizedEmail,
-              displayName: userData.name || userData.email || 'Unknown User',
+              displayName:
+                userData.displayName || userData.email || 'Unknown User',
               photoURL: undefined,
               isFound: true,
             };
@@ -515,7 +516,7 @@ export class ChatService {
       return {
         id: userDoc.id,
         email: userData.email || email,
-        displayName: userData.name || userData.email || 'Unknown User',
+        displayName: userData.displayName || userData.email || 'Unknown User',
         photoURL: undefined, // Not available in current IPCAUser type
         isFound: true,
       };
@@ -659,7 +660,7 @@ export class ChatService {
     messageId: string,
     newText: string,
     editorId: string,
-    editorEmail: string,
+    editorEmail?: string,
     editReason?: string
   ): Promise<void> {
     try {
@@ -674,8 +675,11 @@ export class ChatService {
 
       const messageData = messageDoc.data() as FirestoreMessage;
 
-      // Check if user has permission to edit (only sender can edit)
-      if (messageData.senderId !== editorId) {
+      // Check if this is a room chat (chatId starts with 'room_')
+      const isRoomChat = messageData.chatId.startsWith('room_');
+
+      // Check if user has permission to edit
+      if (!isRoomChat && messageData.senderId !== editorId) {
         throw new Error('Only the message sender can edit this message');
       }
 
@@ -685,7 +689,7 @@ export class ChatService {
         previousText: messageData.text,
         editReason,
         editorId,
-        editorEmail,
+        editorEmail: editorEmail || editorId, // For room chats, use editorId as fallback
       };
 
       // Update message with new text and edit history
@@ -721,8 +725,11 @@ export class ChatService {
 
       const messageData = messageDoc.data() as FirestoreMessage;
 
-      // Check if user has permission to delete (only sender can delete)
-      if (messageData.senderId !== deleterId) {
+      // Check if this is a room chat (chatId starts with 'room_')
+      const isRoomChat = messageData.chatId.startsWith('room_');
+
+      // Check if user has permission to delete
+      if (!isRoomChat && messageData.senderId !== deleterId) {
         throw new Error('Only the message sender can delete this message');
       }
 
