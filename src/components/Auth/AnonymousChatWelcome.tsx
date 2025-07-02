@@ -1,4 +1,5 @@
 import { AuthProvider, unifiedAuthService } from '@/services/authService';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Divider } from 'primereact/divider';
@@ -17,6 +18,7 @@ const AnonymousChatWelcome: React.FC<AnonymousChatWelcomeProps> = ({
   onShowSignUp,
   onShowLogin,
 }) => {
+  const navigate = useNavigate();
   const [isStartingAnonymous, setIsStartingAnonymous] = useState(false);
   const [socialLoading, setSocialLoading] = useState<AuthProvider | null>(null);
 
@@ -110,13 +112,22 @@ const AnonymousChatWelcome: React.FC<AnonymousChatWelcomeProps> = ({
               </div>
             </div>
 
-            <Button
-              label='Start Anonymous Chat'
-              icon='pi pi-arrow-right'
-              className='p-button-success p-button-lg anonymous-btn'
-              onClick={handleStartAnonymousChat}
-              loading={isStartingAnonymous}
-            />
+            <div className='anonymous-buttons'>
+              <Button
+                label='Personal AI Chat'
+                icon='pi pi-user'
+                className='p-button-success p-button-lg anonymous-btn'
+                onClick={handleStartAnonymousChat}
+                loading={isStartingAnonymous}
+              />
+
+              <Button
+                label='Public Chat Rooms'
+                icon='pi pi-users'
+                className='p-button-outlined p-button-lg rooms-btn'
+                onClick={() => navigate({ to: '/room' })}
+              />
+            </div>
           </div>
 
           <Divider
