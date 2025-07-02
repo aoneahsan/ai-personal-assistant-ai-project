@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "ai-personal-assistant-a1"
-  }
+  },
+  "targets": {
+    "ai-personal-assistant-a1": {
+      "hosting": {
+        "production": [
+          "ai-personal-assistant-a1"
+        ],
+        "staging": [
+          "ai-personal-assistant-a1-staging"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
