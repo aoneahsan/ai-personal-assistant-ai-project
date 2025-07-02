@@ -1,0 +1,55 @@
+{
+  "name": "@feedback/react-module",
+  "version": "1.0.0",
+  "description": "A drag-and-drop feedback widget for React applications with Firebase Firestore integration",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": [
+    "react",
+    "feedback",
+    "widget",
+    "firebase",
+    "firestore",
+    "rating",
+    "emoji",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0",
+    "firebase": ">=9.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^4.9.0"
+  },
+  "files": [
+    "components/",
+    "hooks/",
+    "services/",
+    "types/",
+    "utils/",
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/feedback-module.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/feedback-module/issues"
+  },
+  "homepage": "https://github.com/yourusername/feedback-module#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
