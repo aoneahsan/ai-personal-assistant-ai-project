@@ -42,13 +42,13 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   }, [navigate, redirectTo, onAuthSuccess]);
 
   const handleAnonymousStart = useCallback(() => {
-    consoleLog('🎭 Anonymous chat started, redirecting to:', redirectTo);
+    consoleLog('🎭 Anonymous chat started, redirecting to anonymous chat');
     if (onAuthSuccess) {
       onAuthSuccess();
     } else {
-      navigate({ to: redirectTo });
+      navigate({ to: '/anonymous-chat' });
     }
-  }, [navigate, redirectTo, onAuthSuccess]);
+  }, [navigate, onAuthSuccess]);
 
   const renderAuthForm = () => {
     switch (currentMode) {

@@ -3,6 +3,7 @@ export const AUTH_ROUTES = {
   LOGIN: '/auth',
   SIGNUP: '/auth?mode=signup',
   FORGOT_PASSWORD: '/auth?mode=forgot-password',
+  ANONYMOUS_CHAT: '/anonymous-chat',
 } as const;
 
 // Protected Routes - routes that require authentication (currently active routes only)
@@ -17,13 +18,28 @@ export const COMMENTED_PROTECTED_ROUTES = [
   '/compact-edit-profile',
 ] as const;
 
-// Public Routes - routes accessible without authentication
-export const PUBLIC_ROUTES = ['/auth'] as const;
+// Public Routes - routes that don't require authentication
+export const PUBLIC_ROUTES = ['/auth', '/anonymous-chat'] as const;
+
+// Anonymous Routes - routes that work for anonymous users
+export const ANONYMOUS_ROUTES = ['/anonymous-chat'] as const;
+
+// Feature-limited routes for anonymous users
+export const ANONYMOUS_FEATURE_LIMITATIONS = {
+  '/anonymous-chat': [
+    'No message history saved',
+    'Limited to basic chat features',
+    'No file backup',
+    'No message editing',
+    'Session expires on logout',
+  ],
+} as const;
 
 // Default redirect routes
 export const DEFAULT_ROUTES = {
   AFTER_LOGIN: '/chats',
   AFTER_LOGOUT: '/auth',
+  AFTER_ANONYMOUS_START: '/anonymous-chat',
   UNAUTHORIZED: '/auth',
 } as const;
 
@@ -31,6 +47,9 @@ export const DEFAULT_ROUTES = {
 export const AUTH_MESSAGES = {
   LOGIN_SUCCESS: 'Signed in successfully!',
   LOGOUT_SUCCESS: 'Signed out successfully!',
+  ANONYMOUS_START_SUCCESS: 'Anonymous chat started! Your session is temporary.',
+  ANONYMOUS_CONVERSION_SUCCESS:
+    'Account created! Your chat history has been saved.',
   SIGNUP_SUCCESS:
     'Account created successfully! Please check your email for verification.',
   PASSWORD_RESET_SENT: 'Password reset email sent! Please check your inbox.',
@@ -39,6 +58,8 @@ export const AUTH_MESSAGES = {
   // Error Messages
   SIGNIN_FAILED: 'Failed to sign in. Please try again.',
   SIGNUP_FAILED: 'Failed to create account. Please try again.',
+  ANONYMOUS_FAILED: 'Failed to start anonymous chat. Please try again.',
+  CONVERSION_FAILED: 'Failed to convert anonymous account. Please try again.',
   GOOGLE_SIGNIN_FAILED: 'Failed to sign in with Google. Please try again.',
   APPLE_SIGNIN_FAILED: 'Failed to sign in with Apple. Please try again.',
   PASSWORD_RESET_FAILED: 'Failed to send reset email. Please try again.',
@@ -49,6 +70,13 @@ export const AUTH_MESSAGES = {
   PASSWORD_TOO_SHORT: 'Password must be at least 6 characters.',
   PASSWORDS_DONT_MATCH: "Passwords don't match.",
   TERMS_REQUIRED: 'You must accept the terms and conditions.',
+
+  // Anonymous Messages
+  ANONYMOUS_SESSION_WARNING:
+    'Your anonymous session will expire when you close the browser.',
+  ANONYMOUS_FEATURE_LIMITED: 'This feature requires a permanent account.',
+  ANONYMOUS_CONVERT_PROMPT:
+    'Create an account to save your conversations and unlock all features.',
 
   // Platform Specific
   APPLE_IOS_ONLY: 'Apple Sign In is only available on iOS devices.',

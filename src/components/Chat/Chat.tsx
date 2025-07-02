@@ -1,3 +1,4 @@
+import { unifiedAuthService } from '@/services/authService';
 import { chatService, FirestoreMessage } from '@/services/chatService';
 import { ChatFeatureFlag, SubscriptionPlan } from '@/types/user/subscription';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
@@ -5,6 +6,7 @@ import { useUserDataZState } from '@/zustandStates/userState';
 import { useSearch } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
 import './Chat.scss';
 import ChatHeader from './ChatHeader';
 import MessageEditDialog from './MessageEditDialog';
@@ -484,6 +486,15 @@ const Chat: React.FC<ChatProps> = ({
 
   return (
     <div className='chat-container'>
+      {/* Anonymous User Indicator */}
+      {unifiedAuthService.isAnonymousUser() && (
+        <AnonymousUserIndicator
+          variant='banner'
+          showConversion={true}
+          className='mb-0'
+        />
+      )}
+
       <ChatHeader
         chatUser={currentChatUser}
         onBack={onBack}

@@ -1,3 +1,4 @@
+import AnonymousUserIndicator from '@/components/Auth/AnonymousUserIndicator';
 import LimitationsModal from '@/components/Chat/LimitationsModal';
 import UserSearch from '@/components/Chat/UserSearch';
 import UserSearchDebug from '@/components/Chat/UserSearchDebug';
@@ -109,13 +110,20 @@ const ChatList: React.FC = () => {
   };
 
   const handleChatClick = (contactId: string) => {
-    navigate({ to: '/chat', search: { contactId } });
+    // Navigate to anonymous chat for anonymous users, regular chat for authenticated users
+    const chatPath = unifiedAuthService.isAnonymousUser()
+      ? '/anonymous-chat'
+      : '/chat';
+    navigate({ to: chatPath, search: { contactId } });
   };
 
   const handleUserFound = (user: UserSearchResult, chatId: string) => {
-    // Navigate to the chat with the found user
+    // Navigate to the appropriate chat based on user authentication status
+    const chatPath = unifiedAuthService.isAnonymousUser()
+      ? '/anonymous-chat'
+      : '/chat';
     navigate({
-      to: '/chat',
+      to: chatPath,
       search: {
         chatId,
         userId: user.id,
@@ -157,7 +165,9 @@ const ChatList: React.FC = () => {
       separator: true,
     },
     {
-      label: 'Logout',
+      label: unifiedAuthService.isAnonymousUser()
+        ? 'Exit Anonymous Mode'
+        : 'Logout',
       icon: 'pi pi-sign-out',
       command: handleLogout,
       className: isLoggingOut ? 'p-disabled' : '',
@@ -166,9 +176,20 @@ const ChatList: React.FC = () => {
 
   return (
     <div className='chat-list-container'>
+      {/* Anonymous User Indicator */}
+      {unifiedAuthService.isAnonymousUser() && (
+        <AnonymousUserIndicator
+          variant='banner'
+          showConversion={true}
+          className='mb-0'
+        />
+      )}
+
       {/* Header */}
       <div className='chat-list-header'>
-        <h2 className='chat-list-title'>Chats</h2>
+        <h2 className='chat-list-title'>
+          {unifiedAuthService.isAnonymousUser() ? 'Anonymous Chats' : 'Chats'}
+        </h2>
         <div className='chat-list-actions'>
           {/* Only show debug component in development */}
           {import.meta.env.DEV && <UserSearchDebug />}

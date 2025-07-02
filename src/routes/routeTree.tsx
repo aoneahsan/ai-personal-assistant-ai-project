@@ -58,6 +58,14 @@ const authRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+// Anonymous chat route - allows anonymous access
+const anonymousChatRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/anonymous-chat',
+  component: () => <Chat />,
+  errorComponent: ErrorFallback,
+});
+
 // Chat routes - keeping these active with auth protection
 const chatListRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -142,6 +150,7 @@ const notFoundRoute = createRoute({
 export const appRouteTree = rootRoute.addChildren([
   indexRoute,
   authRoute,
+  anonymousChatRoute,
   // dashboardRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
   // modernDashboardRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
   // compactDashboardRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
