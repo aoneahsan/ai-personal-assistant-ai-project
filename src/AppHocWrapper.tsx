@@ -10,12 +10,19 @@ import SocketIoHOC from './hoc/SocketIoHOC';
 import TanstackQueryHoc from './hoc/Tanstack/QueryHoc';
 import TolgeeHoc from './hoc/TolgeeHoc';
 import useTheme from './hooks/useTheme';
+import { FeedbackModule } from './modules/FeedbackModule';
+import { auth, db } from './services/firebase';
+import { useUserDataZState } from './zustandStates/userState';
 
 import './index.scss';
 
 const AppHocWrapper = () => {
   // Initialize theme system
   useTheme();
+
+  // Get current user for feedback module
+  const currentUser = useUserDataZState((state) => state.data);
+  const firebaseUser = auth.currentUser;
 
   return (
     <>
@@ -33,6 +40,31 @@ const AppHocWrapper = () => {
           <SocketIoHOC />
         </TanstackQueryHoc>
       </PrimeReactHoc>
+
+      {/* Feedback Module */}
+      <FeedbackModule
+        firestore={db}
+        user={firebaseUser}
+        config={{
+          collectionName: 'user_feedback',
+          theme: 'auto',
+          position: 'bottom-right',
+          modalTitle: 'How was your experience?',
+          widgetText: '💬 Feedback',
+          hideAfterSubmit: true,
+          onSubmit: (feedback) => {
+            console.log('Feedback submitted:', feedback);
+            // You can add analytics tracking here
+          },
+          onError: (error) => {
+            console.error('Feedback error:', error);
+          },
+          onSuccess: () => {
+            console.log('Feedback submitted successfully!');
+          },
+        }}
+        autoShow={true}
+      />
 
       {/* Toast Notifications */}
       <ToastContainer
