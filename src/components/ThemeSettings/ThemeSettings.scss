@@ -1,0 +1,206 @@
+.theme-settings-dialog {
+  .p-dialog-header {
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+
+    .p-dialog-header-close {
+      color: inherit;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .p-dialog-content {
+    padding: 1.5rem;
+
+    .theme-settings-content {
+      .theme-option-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        &.selected {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .p-card-body {
+          padding: 1rem;
+        }
+
+        .theme-color-preview {
+          flex-shrink: 0;
+          position: relative;
+
+          &::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            background: linear-gradient(
+              45deg,
+              transparent,
+              rgba(255, 255, 255, 0.3)
+            );
+            z-index: -1;
+          }
+        }
+      }
+
+      .current-theme-info {
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(
+            90deg,
+            var(--color-primary, #635bff),
+            var(--color-accent, #00c896)
+          );
+        }
+      }
+
+      .developer-note {
+        position: relative;
+
+        code {
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// Discord theme specific adjustments
+.theme-settings-dialog[data-theme='discord'] {
+  .p-dialog {
+    background: #313338;
+    border: 1px solid #3f4147;
+  }
+
+  .p-dialog-header {
+    background: #2b2d31;
+    border-bottom: 1px solid #3f4147;
+    color: #f2f3f5;
+  }
+
+  .p-dialog-content {
+    background: #313338;
+    color: #f2f3f5;
+  }
+
+  .theme-option-card {
+    &:hover {
+      box-shadow: 0 4px 12px rgba(88, 101, 242, 0.2);
+    }
+
+    &.selected {
+      box-shadow: 0 6px 20px rgba(88, 101, 242, 0.3);
+    }
+  }
+}
+
+// WhatsApp theme specific adjustments
+.theme-settings-dialog[data-theme='whatsapp'] {
+  .current-theme-info {
+    &::before {
+      background: linear-gradient(90deg, #075e54, #25d366);
+    }
+  }
+}
+
+// Stripe theme specific adjustments
+.theme-settings-dialog[data-theme='stripe'] {
+  .current-theme-info {
+    &::before {
+      background: linear-gradient(90deg, #635bff, #00d4ff);
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .theme-settings-dialog {
+    .p-dialog {
+      width: 95vw !important;
+      margin: 1rem;
+    }
+
+    .p-dialog-content {
+      padding: 1rem;
+    }
+
+    .theme-option-card {
+      .flex {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+
+        .theme-color-preview {
+          align-self: center;
+        }
+      }
+    }
+  }
+}
+
+// Animation improvements
+.theme-settings-dialog {
+  .p-dialog {
+    animation: dialogSlideIn 0.3s ease-out;
+  }
+
+  .theme-option-card {
+    animation: cardFadeIn 0.4s ease-out;
+
+    &:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+  }
+}
+
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
