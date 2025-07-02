@@ -3,12 +3,14 @@ import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import React, { useCallback, useState } from 'react';
+import AnonymousChatWelcome from './AnonymousChatWelcome';
 import AuthDebugInfo from './AuthDebugInfo';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import LoginForm from './LoginForm';
 import SignUpForm from './SignUpForm';
 
 export enum AuthMode {
+  WELCOME = 'welcome',
   LOGIN = 'login',
   SIGNUP = 'signup',
   FORGOT_PASSWORD = 'forgot-password',
@@ -21,7 +23,7 @@ interface AuthContainerProps {
 }
 
 const AuthContainer: React.FC<AuthContainerProps> = ({
-  initialMode = AuthMode.LOGIN,
+  initialMode = AuthMode.WELCOME,
   redirectTo = '/chats',
   onAuthSuccess,
 }) => {
@@ -39,14 +41,32 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
     }
   }, [navigate, redirectTo, onAuthSuccess]);
 
+  const handleAnonymousStart = useCallback(() => {
+    consoleLog('🎭 Anonymous chat started, redirecting to:', redirectTo);
+    if (onAuthSuccess) {
+      onAuthSuccess();
+    } else {
+      navigate({ to: redirectTo });
+    }
+  }, [navigate, redirectTo, onAuthSuccess]);
+
   const renderAuthForm = () => {
     switch (currentMode) {
+      case AuthMode.WELCOME:
+        return (
+          <AnonymousChatWelcome
+            onAnonymousStart={handleAnonymousStart}
+            onShowSignUp={() => setCurrentMode(AuthMode.SIGNUP)}
+            onShowLogin={() => setCurrentMode(AuthMode.LOGIN)}
+          />
+        );
       case AuthMode.LOGIN:
         return (
           <LoginForm
             onSuccess={handleAuthSuccess}
             onSwitchToSignUp={() => setCurrentMode(AuthMode.SIGNUP)}
             onForgotPassword={() => setCurrentMode(AuthMode.FORGOT_PASSWORD)}
+            onBackToWelcome={() => setCurrentMode(AuthMode.WELCOME)}
           />
         );
       case AuthMode.SIGNUP:
@@ -54,6 +74,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
           <SignUpForm
             onSuccess={handleAuthSuccess}
             onSwitchToLogin={() => setCurrentMode(AuthMode.LOGIN)}
+            onBackToWelcome={() => setCurrentMode(AuthMode.WELCOME)}
           />
         );
       case AuthMode.FORGOT_PASSWORD:
@@ -61,6 +82,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
           <ForgotPasswordForm
             onSuccess={() => setCurrentMode(AuthMode.LOGIN)}
             onBackToLogin={() => setCurrentMode(AuthMode.LOGIN)}
+            onBackToWelcome={() => setCurrentMode(AuthMode.WELCOME)}
           />
         );
       default:
@@ -68,33 +90,29 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
     }
   };
 
-  return (
-    <div className='min-h-screen bg-gray-50 flex flex-column'>
-      {/* Main Auth Content */}
-      <div className='flex-1 flex align-items-center justify-content-center p-4'>
-        {renderAuthForm()}
-      </div>
+  // Don't show auth container if user is already authenticated
+  if (isAuthenticated) {
+    return null;
+  }
 
-      {/* Debug Button - only show in development */}
+  return (
+    <div className='auth-container'>
+      {renderAuthForm()}
+
+      {/* Debug Info Toggle - Only show in development */}
       {import.meta.env.DEV && (
-        <div className='fixed bottom-4 right-4 z-5'>
+        <div className='debug-toggle'>
           <Button
             icon='pi pi-cog'
-            tooltip='Debug Authentication'
-            tooltipOptions={{ position: 'left' }}
-            onClick={() => setShowDebugInfo(true)}
-            className='p-button-outlined p-button-secondary p-button-sm'
-            style={{
-              width: '3rem',
-              height: '3rem',
-              borderRadius: '50%',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }}
+            className='p-button-text p-button-sm'
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+            tooltip='Debug Info'
+            tooltipOptions={{ position: 'top' }}
           />
         </div>
       )}
 
-      {/* Debug Modal */}
+      {/* Debug Information */}
       {showDebugInfo && (
         <AuthDebugInfo onClose={() => setShowDebugInfo(false)} />
       )}

@@ -12,6 +12,7 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
+  signInAnonymously,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -48,6 +49,7 @@ export interface AuthService {
     password: string,
     displayName?: string
   ) => Promise<UserCredential>;
+  signInAnonymously: () => Promise<UserCredential>;
   signOutUser: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   sendVerificationEmail: (user: User) => Promise<void>;
@@ -106,6 +108,19 @@ export const authService: AuthService = {
       return userCredential;
     } catch (error) {
       const authError = error as AuthError;
+      throw new Error(getAuthErrorMessage(authError.code));
+    }
+  },
+
+  // Sign in anonymously
+  signInAnonymously: async (): Promise<UserCredential> => {
+    try {
+      const userCredential = await signInAnonymously(auth);
+      consoleLog('Anonymous sign-in successful:', userCredential.user.uid);
+      return userCredential;
+    } catch (error) {
+      const authError = error as AuthError;
+      consoleError('Anonymous sign-in error:', authError);
       throw new Error(getAuthErrorMessage(authError.code));
     }
   },
@@ -180,15 +195,17 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
     const userData: IPCAUser = {
       id: user.uid,
       email: normalizedEmail,
-      name: user.displayName || '',
-      type: 'user',
+      displayName: user.displayName || '',
+      isEmailVerified: user.emailVerified,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
     };
 
     consoleLog('💾 Saving user to Firestore:', {
       id: userData.id,
       email: userData.email,
-      name: userData.name,
-      type: userData.type,
+      displayName: userData.displayName,
+      isEmailVerified: userData.isEmailVerified,
     });
 
     await setDoc(userRef, userData, { merge: true });

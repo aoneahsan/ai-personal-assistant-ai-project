@@ -13,7 +13,7 @@ import {
   useUserDataZState,
 } from '@/zustandStates/userState';
 import { Capacitor } from '@capacitor/core';
-import { User } from 'firebase/auth';
+import { EmailAuthProvider, User, linkWithCredential } from 'firebase/auth';
 import { appleAuthService } from './appleAuth';
 import {
   authService as firebaseAuthService,
@@ -27,6 +27,7 @@ export enum AuthProvider {
   EMAIL = 'email',
   GOOGLE = 'google',
   APPLE = 'apple',
+  ANONYMOUS = 'anonymous',
 }
 
 export interface SignInResult {
@@ -39,6 +40,11 @@ export interface SignUpData {
   email: string;
   password: string;
   displayName?: string;
+}
+
+export interface AnonymousSignInResult extends SignInResult {
+  isAnonymous: true;
+  temporaryId: string;
 }
 
 // Unified Authentication Service
@@ -465,6 +471,122 @@ export class UnifiedAuthService {
       isConfigured: configStatus.isConfigured,
       message: configStatus.message,
       googleAuth: { isConfigured: isGoogleAuthConfigured() },
+    };
+  }
+
+  // Anonymous Authentication
+  async signInAnonymously(): Promise<AnonymousSignInResult> {
+    try {
+      this.checkConfiguration();
+
+      const platform = this.getPlatformInfo();
+      consoleLog(`Anonymous sign-in attempt on ${platform.platform}`);
+
+      const userCredential = await firebaseAuthService.signInAnonymously();
+      consoleLog('Anonymous sign-in successful');
+
+      // Generate a friendly temporary name for anonymous user
+      const anonymousNames = [
+        'Anonymous Panda',
+        'Mystery User',
+        'Guest User',
+        'Friendly Stranger',
+        'Chat Visitor',
+        'Unknown Friend',
+        'Secret Agent',
+        'Incognito User',
+        'Anonymous Hero',
+        'Hidden User',
+        'Ghost Chatter',
+        'Phantom User',
+      ];
+      const randomName =
+        anonymousNames[Math.floor(Math.random() * anonymousNames.length)];
+
+      // Update the user's display name for better UX
+      await firebaseAuthService.updateUserProfile(
+        userCredential.user,
+        randomName
+      );
+
+      return {
+        user: userCredential.user,
+        isNewUser: true,
+        provider: AuthProvider.ANONYMOUS,
+        isAnonymous: true,
+        temporaryId: userCredential.user.uid,
+      };
+    } catch (error) {
+      consoleError('Error signing in anonymously:', error);
+      throw error;
+    }
+  }
+
+  // Convert anonymous user to permanent account
+  async convertAnonymousToEmail(
+    email: string,
+    password: string,
+    displayName?: string
+  ): Promise<SignInResult> {
+    try {
+      const currentUser = this.getCurrentUser();
+      if (!currentUser || !currentUser.isAnonymous) {
+        throw new Error('No anonymous user to convert');
+      }
+
+      consoleLog('Converting anonymous user to email account');
+
+      // Create email credential
+      const credential = EmailAuthProvider.credential(email, password);
+
+      // Link the anonymous account with email/password
+      const userCredential = await linkWithCredential(currentUser, credential);
+
+      // Update profile with display name if provided
+      if (displayName) {
+        await firebaseAuthService.updateUserProfile(
+          userCredential.user,
+          displayName
+        );
+      }
+
+      // Send email verification
+      await firebaseAuthService.sendVerificationEmail(userCredential.user);
+
+      consoleLog('Anonymous user converted to email account successfully');
+
+      return {
+        user: userCredential.user,
+        isNewUser: false, // It's a conversion, not a new user
+        provider: AuthProvider.EMAIL,
+      };
+    } catch (error) {
+      consoleError('Error converting anonymous user:', error);
+      throw error;
+    }
+  }
+
+  // Check if current user is anonymous
+  isAnonymousUser(): boolean {
+    const user = this.getCurrentUser();
+    return Boolean(user?.isAnonymous);
+  }
+
+  // Get anonymous user info
+  getAnonymousUserInfo(): {
+    isAnonymous: boolean;
+    displayName: string;
+    uid: string;
+    signedInAt: Date;
+  } | null {
+    const user = this.getCurrentUser();
+    if (!user || !user.isAnonymous) return null;
+
+    return {
+      isAnonymous: true,
+      displayName: user.displayName || 'Anonymous User',
+      uid: user.uid,
+      signedInAt: new Date(user.metadata.creationTime || Date.now()),
     };
   }
 }
