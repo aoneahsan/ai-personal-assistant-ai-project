@@ -1,5 +1,10 @@
+import { FirestoreMessage } from '@/services/chatService';
+import { featureFlagService } from '@/services/featureFlagService';
+import { ChatFeatureFlag } from '@/types/user/subscription';
+import { useUserDataZState } from '@/zustandStates/userState';
 import { Button } from 'primereact/button';
 import { Menu } from 'primereact/menu';
+import { Tag } from 'primereact/tag';
 import React, { useRef } from 'react';
 import { FaDownload, FaFile, FaVideo } from 'react-icons/fa';
 import AudioPlayer from './AudioPlayer';
@@ -11,6 +16,10 @@ interface MessageBubbleProps {
   playingAudioId: string | null;
   onAudioToggle: (messageId: string, audioUrl: string) => void;
   onShowTranscript: (messageId: string) => void;
+  onEditMessage?: (message: FirestoreMessage) => void;
+  onDeleteMessage?: (message: FirestoreMessage) => void;
+  onViewHistory?: (message: FirestoreMessage) => void;
+  onUpgrade?: (feature: ChatFeatureFlag) => void;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -18,8 +27,49 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   playingAudioId,
   onAudioToggle,
   onShowTranscript,
+  onEditMessage,
+  onDeleteMessage,
+  onViewHistory,
+  onUpgrade,
 }) => {
   const audioMenuRef = useRef<Menu>(null);
+  const contextMenuRef = useRef<Menu>(null);
+  const currentUser = useUserDataZState((state) => state.data);
+
+  // Convert Message to FirestoreMessage for compatibility
+  const firestoreMessage: FirestoreMessage = {
+    id: message.id,
+    chatId: '', // This would be populated in a real scenario
+    senderId: message.sender === 'me' ? currentUser?.id || '' : 'other',
+    senderEmail: message.sender === 'me' ? currentUser?.email || '' : '',
+    text: message.text,
+    type: message.type,
+    timestamp: message.timestamp,
+    status: message.status || 'sent',
+    // Add edit/delete properties if they exist
+    isEdited: (message as any).isEdited,
+    lastEditedAt: (message as any).lastEditedAt,
+    editHistory: (message as any).editHistory,
+    isDeleted: (message as any).isDeleted,
+    deletedAt: (message as any).deletedAt,
+    deletedBy: (message as any).deletedBy,
+    // Media properties with proper typing
+    fileData: message.fileData
+      ? {
+          name: message.fileData.name,
+          size: message.fileData.size,
+          type: message.fileData.type,
+          url: message.fileData.url,
+          uploadedAt: new Date(),
+          expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days
+        }
+      : undefined,
+    audioDuration: message.audioDuration,
+    videoDuration: message.videoDuration,
+    videoThumbnail: message.videoThumbnail,
+    quickTranscript: message.quickTranscript,
+    transcript: message.transcript,
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -56,6 +106,36 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   };
 
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    if (message.sender === 'me') {
+      // For now, show basic context menu options
+      const canEdit = featureFlagService.canEditMessages(currentUser);
+      const canDelete = featureFlagService.canDeleteMessages(currentUser);
+
+      if (
+        canEdit.hasAccess &&
+        message.type === 'text' &&
+        !(message as any).isDeleted
+      ) {
+        onEditMessage?.(firestoreMessage);
+      } else if (canDelete.hasAccess && !(message as any).isDeleted) {
+        onDeleteMessage?.(firestoreMessage);
+      } else {
+        // Show upgrade prompt
+        onUpgrade?.(
+          canEdit.hasAccess
+            ? ChatFeatureFlag.MESSAGE_DELETION
+            : ChatFeatureFlag.MESSAGE_EDITING
+        );
+      }
+    }
+  };
+
+  const handleUpgradeClick = (feature: ChatFeatureFlag) => {
+    onUpgrade?.(feature);
+  };
+
   const getAudioMenuItems = () => [
     {
       label: 'Read Transcript',
@@ -86,9 +166,39 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     },
   ];
 
+  const renderEditIndicator = () => {
+    if (!(message as any).isEdited) return null;
+
+    return (
+      <div className='message-edit-indicator'>
+        <Tag
+          value='edited'
+          severity='info'
+          icon='pi pi-pencil'
+          className='text-xs'
+          style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem' }}
+        />
+      </div>
+    );
+  };
+
   const renderTextMessage = () => (
-    <div className='message-bubble'>
-      <p className='message-text'>{message.text}</p>
+    <div
+      className='message-bubble'
+      onContextMenu={handleContextMenu}
+      style={{ position: 'relative' }}
+    >
+      {(message as any).isDeleted ? (
+        <p className='message-text deleted-message'>
+          <i className='pi pi-trash mr-2'></i>
+          This message was deleted
+        </p>
+      ) : (
+        <p className='message-text'>{message.text}</p>
+      )}
+
+      {renderEditIndicator()}
+
       <div className='message-meta'>
         <span className='message-time'>{formatTime(message.timestamp)}</span>
         {message.sender === 'me' && (
@@ -103,12 +213,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   );
 
   const renderImageMessage = () => (
-    <div className='message-bubble message-media'>
+    <div
+      className='message-bubble message-media'
+      onContextMenu={handleContextMenu}
+    >
       <img
         src={message.fileData?.url}
         alt={message.fileData?.name}
         className='message-image'
       />
+      {renderEditIndicator()}
       <div className='message-meta'>
         <span className='message-time'>{formatTime(message.timestamp)}</span>
         {message.sender === 'me' && (
@@ -232,24 +346,15 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     );
   };
 
-  const renderMessage = () => {
-    switch (message.type) {
-      case 'text':
-        return renderTextMessage();
-      case 'image':
-        return renderImageMessage();
-      case 'video':
-        return renderVideoMessage();
-      case 'audio':
-        return renderAudioMessage();
-      case 'file':
-        return renderFileMessage();
-      default:
-        return renderTextMessage();
-    }
-  };
-
-  return renderMessage();
+  return (
+    <div className={`message ${message.sender}`}>
+      {message.type === 'text' && renderTextMessage()}
+      {message.type === 'image' && renderImageMessage()}
+      {message.type === 'video' && renderVideoMessage()}
+      {message.type === 'audio' && renderAudioMessage()}
+      {message.type === 'file' && renderFileMessage()}
+    </div>
+  );
 };
 
 export default MessageBubble;

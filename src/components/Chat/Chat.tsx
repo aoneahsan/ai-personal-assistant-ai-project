@@ -1,13 +1,17 @@
-import { chatService } from '@/services/chatService';
+import { chatService, FirestoreMessage } from '@/services/chatService';
+import { ChatFeatureFlag, SubscriptionPlan } from '@/types/user/subscription';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useSearch } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import ChatHeader from './ChatHeader';
+import MessageEditDialog from './MessageEditDialog';
+import MessageHistoryDialog from './MessageHistoryDialog';
 import MessageInput from './MessageInput';
 import MessagesList from './MessagesList';
 import TranscriptDialog from './TranscriptDialog';
+import UpgradeModal from './UpgradeModal';
 import { ChatUser, Message } from './types';
 
 interface ChatProps {
@@ -34,6 +38,16 @@ const Chat: React.FC<ChatProps> = ({
   >(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  // State for message editing features
+  const [selectedMessageForEdit, setSelectedMessageForEdit] =
+    useState<FirestoreMessage | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<ChatFeatureFlag | null>(
+    null
+  );
 
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -210,14 +224,11 @@ const Chat: React.FC<ChatProps> = ({
     // If we have a chatId, save to Firestore
     if (chatId) {
       try {
-        await chatService.sendMessage(
+        await chatService.sendTextMessage(
           chatId,
           currentUser.id!,
           currentUser.email!,
-          {
-            text: messageText,
-            type: 'text',
-          }
+          messageText
         );
 
         consoleLog('✅ Message sent to Firestore');
@@ -415,6 +426,61 @@ const Chat: React.FC<ChatProps> = ({
     // Could implement actual mute logic here
   };
 
+  // Message editing handlers
+  const handleEditMessage = (message: FirestoreMessage) => {
+    setSelectedMessageForEdit(message);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteMessage = async (message: FirestoreMessage) => {
+    if (!currentUser?.id || !message.id) return;
+
+    try {
+      await chatService.deleteMessage(message.id, currentUser.id);
+      toast.success('Message deleted successfully');
+    } catch (error) {
+      consoleError('Error deleting message:', error);
+      toast.error('Failed to delete message');
+    }
+  };
+
+  const handleViewHistory = (message: FirestoreMessage) => {
+    setSelectedMessageForEdit(message);
+    setShowHistoryDialog(true);
+  };
+
+  const handleUpgradeFeature = (feature: ChatFeatureFlag) => {
+    setUpgradeFeature(feature);
+    setShowUpgradeModal(true);
+  };
+
+  const handleSaveEdit = async (newText: string, editReason?: string) => {
+    if (!selectedMessageForEdit?.id || !currentUser?.id || !currentUser?.email)
+      return;
+
+    try {
+      await chatService.editMessage(
+        selectedMessageForEdit.id,
+        newText,
+        currentUser.id,
+        currentUser.email,
+        editReason
+      );
+      toast.success('Message updated successfully');
+    } catch (error) {
+      consoleError('Error editing message:', error);
+      toast.error('Failed to update message');
+    }
+  };
+
+  const handleUpgradePlan = (plan: SubscriptionPlan) => {
+    // This would redirect to payment/upgrade page
+    consoleLog('Upgrade to plan:', plan);
+    toast.info(`Redirecting to upgrade to ${plan} plan...`);
+    // TODO: Implement actual upgrade flow
+    setShowUpgradeModal(false);
+  };
+
   return (
     <div className='chat-container'>
       <ChatHeader
@@ -433,6 +499,10 @@ const Chat: React.FC<ChatProps> = ({
         onAudioToggle={toggleAudioPlayback}
         onShowTranscript={showTranscript}
         isLoading={isLoadingMessages}
+        onEditMessage={handleEditMessage}
+        onDeleteMessage={handleDeleteMessage}
+        onViewHistory={handleViewHistory}
+        onUpgrade={handleUpgradeFeature}
       />
 
       <MessageInput
@@ -449,6 +519,29 @@ const Chat: React.FC<ChatProps> = ({
         visible={!!showTranscriptDialog}
         onHide={() => setShowTranscriptDialog(null)}
         message={selectedMessage}
+      />
+
+      {/* Message Edit Dialog */}
+      <MessageEditDialog
+        visible={showEditDialog}
+        message={selectedMessageForEdit}
+        onHide={() => setShowEditDialog(false)}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Message History Dialog */}
+      <MessageHistoryDialog
+        visible={showHistoryDialog}
+        message={selectedMessageForEdit}
+        onHide={() => setShowHistoryDialog(false)}
+      />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        visible={showUpgradeModal}
+        feature={upgradeFeature}
+        onHide={() => setShowUpgradeModal(false)}
+        onUpgrade={handleUpgradePlan}
       />
     </div>
   );

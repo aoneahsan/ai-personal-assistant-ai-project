@@ -1,0 +1,353 @@
+/* Premium Message Features */
+.message-edit-indicator {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.deleted-message {
+  color: #6c757d;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.message-bubble {
+  position: relative;
+
+  &:hover .message-actions {
+    opacity: 1;
+  }
+}
+
+.message-actions {
+  position: absolute;
+  top: -12px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Premium Feature Indicators */
+.premium-feature-badge {
+  background: linear-gradient(45deg, #ff6b6b, #feca57);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.premium-feature-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+
+  &:hover {
+    background: #e9ecef;
+  }
+}
+
+/* Context Menu Styles */
+.message-context-menu {
+  .p-menu-list {
+    .p-menuitem {
+      &.premium-feature {
+        background: linear-gradient(90deg, #ffeaa7, #fab1a0);
+
+        .p-menuitem-link {
+          color: #2d3436;
+
+          &:hover {
+            background: linear-gradient(90deg, #fab1a0, #ffeaa7);
+          }
+        }
+      }
+
+      &.disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+/* Edit Dialog Styles */
+.message-edit-dialog {
+  .p-dialog-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+  }
+
+  .edit-guidelines {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+
+    .guideline-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .original-message {
+    background: #e9ecef;
+    border-left: 4px solid #6c757d;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+}
+
+/* History Dialog Styles */
+.message-history-dialog {
+  .p-dialog-header {
+    background: linear-gradient(135deg, #4834d4, #686de0);
+    color: white;
+  }
+
+  .history-timeline {
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-marker {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #007bff;
+        margin-top: 8px;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          width: 2px;
+          height: 32px;
+          background: #dee2e6;
+          transform: translateX(-50%);
+        }
+
+        &.original {
+          background: #28a745;
+        }
+
+        &.current {
+          background: #dc3545;
+        }
+      }
+
+      &:last-child .timeline-marker::after {
+        display: none;
+      }
+
+      .timeline-content {
+        flex: 1;
+
+        .content-card {
+          background: white;
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 16px;
+
+          .content-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+
+            .version-label {
+              font-weight: 600;
+              color: #495057;
+            }
+
+            .timestamp {
+              font-size: 0.8rem;
+              color: #6c757d;
+            }
+          }
+
+          .content-text {
+            margin-bottom: 8px;
+            line-height: 1.4;
+          }
+
+          .edit-reason {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-style: italic;
+
+            &::before {
+              content: '✏️ ';
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .history-stats {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .stat-label {
+        font-weight: 500;
+        color: #495057;
+      }
+
+      .stat-value {
+        color: #007bff;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+/* Upgrade Modal Styles */
+.upgrade-modal {
+  .p-dialog-header {
+    background: linear-gradient(135deg, #ff6b6b, #feca57);
+    color: white;
+  }
+
+  .upgrade-content {
+    text-align: center;
+    padding: 20px;
+
+    .upgrade-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      background: linear-gradient(45deg, #ff6b6b, #feca57);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .upgrade-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #2d3436;
+    }
+
+    .upgrade-description {
+      color: #636e72;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .plan-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      .plan-button {
+        min-width: 120px;
+
+        &.pro {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border: none;
+
+          &:hover {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+          }
+        }
+
+        &.premium {
+          background: linear-gradient(135deg, #ff6b6b, #feca57);
+          border: none;
+
+          &:hover {
+            background: linear-gradient(135deg, #feca57, #ff6b6b);
+          }
+        }
+
+        &.enterprise {
+          background: linear-gradient(135deg, #2d3436, #636e72);
+          border: none;
+
+          &:hover {
+            background: linear-gradient(135deg, #636e72, #2d3436);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .message-edit-indicator {
+    top: -6px;
+    right: 6px;
+  }
+
+  .message-actions {
+    top: -10px;
+    right: 6px;
+  }
+
+  .premium-feature-badge {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+  }
+
+  .upgrade-modal .upgrade-content {
+    padding: 16px;
+
+    .upgrade-icon {
+      font-size: 3rem;
+    }
+
+    .upgrade-title {
+      font-size: 1.25rem;
+    }
+
+    .plan-buttons {
+      flex-direction: column;
+      align-items: center;
+
+      .plan-button {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
+  }
+}
