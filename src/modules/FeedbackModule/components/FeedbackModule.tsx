@@ -63,6 +63,7 @@ export const FeedbackModule: React.FC<FeedbackModuleProps> = ({
       <FeedbackModal
         config={config}
         state={feedback.state}
+        currentStep={feedback.currentStep}
         selectedRating={feedback.selectedRating}
         message={feedback.message}
         error={feedback.error}
@@ -70,7 +71,9 @@ export const FeedbackModule: React.FC<FeedbackModuleProps> = ({
         onClose={feedback.closeWidget}
         onRatingSelect={feedback.selectRating}
         onMessageChange={feedback.setMessage}
-        onSubmit={feedback.submitFeedback}
+        onNextStep={feedback.nextStep}
+        onPreviousStep={feedback.previousStep}
+        onSkipStep={feedback.skipStep}
       />
     </>
   );

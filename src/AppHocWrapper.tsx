@@ -49,12 +49,39 @@ const AppHocWrapper = () => {
           collectionName: 'user_feedback',
           theme: 'auto',
           position: 'bottom-right',
-          modalTitle: 'How was your experience?',
-          widgetText: '💬 Feedback',
+
+          // Trigger Configuration - only show manually or after 3 minutes
+          trigger: {
+            type: 'time-delay',
+            delay: 3, // Show after 3 minutes
+            exitIntent: false,
+          },
+
+          // Step-specific encouraging text
+          step1Title: 'How was your experience?',
+          step2Title: 'Tell us more',
+          step3Title: 'Thank you!',
+          step1Subtitle: 'Your rating helps us improve',
+          step2Subtitle: 'Share your thoughts with us (optional)',
+          step3Message:
+            'We appreciate your feedback and will use it to make things better!',
+          continueButtonText: 'Continue',
+          nextButtonText: 'Share & Finish',
+          closeButtonText: 'Close',
+          skipButtonText: 'Skip',
+          placeholderText:
+            'What can we do better? Your thoughts matter to us...',
+
+          // Behavior
+          widgetText: '💬 Share Feedback',
           hideAfterSubmit: true,
+          requireMessage: false,
+          showStep2: true,
+
+          // Callbacks
           onSubmit: (feedback) => {
             console.log('Feedback submitted:', feedback);
-            // You can add analytics tracking here
+            // Add analytics tracking here if needed
           },
           onError: (error) => {
             console.error('Feedback error:', error);
@@ -62,8 +89,11 @@ const AppHocWrapper = () => {
           onSuccess: () => {
             console.log('Feedback submitted successfully!');
           },
+          onStepChange: (step) => {
+            console.log('Feedback step changed to:', step);
+          },
         }}
-        autoShow={true}
+        autoShow={false} // Don't auto-show the widget immediately
       />
 
       {/* Toast Notifications */}

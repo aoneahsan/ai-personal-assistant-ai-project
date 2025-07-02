@@ -39,20 +39,46 @@ export interface FeedbackConfig {
     | 'center';
   showWidget?: boolean;
   widgetText?: string;
-  modalTitle?: string;
-  submitButtonText?: string;
-  cancelButtonText?: string;
+
+  // Step-specific text
+  step1Title?: string;
+  step2Title?: string;
+  step3Title?: string;
+  step1Subtitle?: string;
+  step2Subtitle?: string;
+  step3Message?: string;
+  continueButtonText?: string;
+  nextButtonText?: string;
+  closeButtonText?: string;
+  skipButtonText?: string;
   placeholderText?: string;
+
+  // Trigger Configuration
+  trigger?: {
+    type:
+      | 'manual'
+      | 'page-load'
+      | 'time-delay'
+      | 'page-exit'
+      | 'action-count'
+      | 'scroll-percentage';
+    delay?: number; // minutes for time-delay
+    actionCount?: number; // number of actions for action-count
+    scrollPercentage?: number; // percentage for scroll trigger
+    exitIntent?: boolean; // show on exit intent
+  };
 
   // Behavior
   autoHide?: boolean;
   hideAfterSubmit?: boolean;
   requireMessage?: boolean;
+  showStep2?: boolean; // allow skipping text feedback step
 
   // Callbacks
   onSubmit?: (feedback: FeedbackRating) => void;
   onError?: (error: Error) => void;
   onSuccess?: () => void;
+  onStepChange?: (step: number) => void;
 }
 
 export interface FeedbackEmojiData {
@@ -65,14 +91,16 @@ export interface FeedbackEmojiData {
 export type FeedbackWidgetState =
   | 'hidden'
   | 'widget'
-  | 'modal'
+  | 'step1'
+  | 'step2'
+  | 'step3'
   | 'submitting'
-  | 'success'
   | 'error';
 
 export interface UseFeedbackReturn {
   isOpen: boolean;
   state: FeedbackWidgetState;
+  currentStep: number;
   selectedRating: number | null;
   message: string;
   isSubmitting: boolean;
@@ -83,6 +111,13 @@ export interface UseFeedbackReturn {
   closeWidget: () => void;
   selectRating: (rating: number) => void;
   setMessage: (message: string) => void;
+  nextStep: () => void;
+  previousStep: () => void;
+  skipStep: () => void;
   submitFeedback: () => Promise<void>;
   reset: () => void;
+
+  // Trigger actions
+  incrementActionCount: () => void;
+  trackScrollPercentage: (percentage: number) => void;
 }

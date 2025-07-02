@@ -26,17 +26,39 @@ export const DEFAULT_FEEDBACK_CONFIG: Required<FeedbackConfig> = {
   theme: 'auto',
   position: 'bottom-right',
   showWidget: true,
-  widgetText: '💬 Feedback',
-  modalTitle: 'How was your experience?',
-  submitButtonText: 'Submit Feedback',
-  cancelButtonText: 'Cancel',
-  placeholderText: 'Tell us more about your experience... (optional)',
+  widgetText: '💬 Share Feedback',
+
+  // Step-specific text - encouraging language
+  step1Title: 'How was your experience?',
+  step2Title: 'Tell us more',
+  step3Title: 'Thank you!',
+  step1Subtitle: 'Your rating helps us improve',
+  step2Subtitle: 'Share your thoughts with us (optional)',
+  step3Message:
+    'We appreciate your feedback and will use it to make things better!',
+  continueButtonText: 'Continue',
+  nextButtonText: 'Next',
+  closeButtonText: 'Close',
+  skipButtonText: 'Skip',
+  placeholderText: 'What can we do better? Your thoughts matter to us...',
+
+  // Trigger Configuration - default to manual (not auto-show)
+  trigger: {
+    type: 'manual',
+    delay: 5,
+    actionCount: 3,
+    scrollPercentage: 80,
+    exitIntent: false,
+  },
+
   autoHide: false,
   hideAfterSubmit: true,
   requireMessage: false,
+  showStep2: true,
   onSubmit: () => {},
   onError: () => {},
   onSuccess: () => {},
+  onStepChange: () => {},
 };
 
 export const FEEDBACK_WIDGET_ID = 'feedback-widget-module';
