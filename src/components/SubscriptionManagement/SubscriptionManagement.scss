@@ -1,0 +1,365 @@
+.subscription-management-dialog {
+  .p-dialog-content {
+    padding: 0;
+  }
+
+  .subscription-content {
+    padding: 1.5rem;
+
+    .current-subscription-info {
+      .subscription-detail {
+        h4 {
+          color: var(--color-text-primary, #1e293b);
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        .billing-info {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--color-border-light, #f1f5f9);
+        }
+      }
+
+      .subscription-stats {
+        h4 {
+          color: var(--color-text-primary, #1e293b);
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        .stats-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+
+          .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--color-surface-light, #f9fafb);
+            border-radius: 8px;
+            border: 1px solid var(--color-border-light, #f1f5f9);
+
+            i {
+              font-size: 1.5rem;
+              width: 2rem;
+              text-align: center;
+            }
+
+            .stat-value {
+              font-size: 1.25rem;
+              font-weight: 700;
+              color: var(--color-text-primary, #1e293b);
+            }
+
+            .stat-label {
+              font-size: 0.875rem;
+              color: var(--color-text-secondary, #64748b);
+            }
+          }
+        }
+      }
+    }
+
+    .plans-grid {
+      .plan-card {
+        height: 100%;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        &.current-plan {
+          border-color: var(--color-primary, #635bff);
+          box-shadow: 0 8px 16px rgba(99, 91, 255, 0.2);
+        }
+
+        .plan-header {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+
+          .plan-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+          }
+
+          .plan-description {
+            margin: 0.5rem 0 0 0;
+            font-size: 0.875rem;
+          }
+
+          .plan-price {
+            .price-amount {
+              font-size: 2rem;
+              font-weight: 800;
+              line-height: 1;
+            }
+
+            .price-billing {
+              font-size: 0.875rem;
+              margin-top: 0.25rem;
+            }
+          }
+
+          .plan-features {
+            flex: 1;
+
+            h4 {
+              color: var(--color-text-primary, #1e293b);
+              font-weight: 600;
+            }
+
+            .feature-list {
+              .feature-item {
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--color-border-light, #f1f5f9);
+
+                &:last-child {
+                  border-bottom: none;
+                }
+
+                i {
+                  width: 1.25rem;
+                  font-size: 1rem;
+                }
+              }
+            }
+          }
+
+          .plan-actions {
+            margin-top: auto;
+            padding-top: 1rem;
+          }
+        }
+      }
+    }
+
+    .billing-history-table {
+      .p-datatable-thead > tr > th {
+        background: var(--color-surface-light, #f9fafb);
+        border: 1px solid var(--color-border-light, #f1f5f9);
+        color: var(--color-text-primary, #1e293b);
+        font-weight: 600;
+      }
+
+      .p-datatable-tbody > tr > td {
+        border: 1px solid var(--color-border-light, #f1f5f9);
+        color: var(--color-text-secondary, #64748b);
+      }
+
+      .p-datatable-tbody > tr:hover {
+        background: var(--color-hover, rgba(99, 91, 255, 0.05));
+      }
+    }
+  }
+
+  .upgrade-confirmation,
+  .cancel-confirmation {
+    h4 {
+      color: var(--color-text-primary, #1e293b);
+      margin: 1rem 0;
+    }
+
+    p {
+      color: var(--color-text-secondary, #64748b);
+      line-height: 1.6;
+    }
+
+    .plan-change-summary {
+      border: 1px solid var(--color-border-light, #f1f5f9);
+
+      .flex {
+        margin-bottom: 0.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}
+
+// Plan cards responsive design
+@media (max-width: 1200px) {
+  .subscription-management-dialog {
+    .plans-grid .grid .col-xl-3 {
+      width: 50%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .subscription-management-dialog {
+    .p-dialog {
+      width: 95vw !important;
+      height: 95vh !important;
+      margin: 1rem;
+    }
+
+    .subscription-content {
+      padding: 1rem;
+
+      .plans-grid .grid .col-lg-6 {
+        width: 100%;
+      }
+
+      .current-subscription-info .grid {
+        .col-md-6 {
+          width: 100%;
+        }
+      }
+
+      .subscription-stats .stats-grid {
+        .stat-item {
+          padding: 0.75rem;
+
+          .stat-value {
+            font-size: 1.125rem;
+          }
+        }
+      }
+
+      .plan-card {
+        margin-bottom: 1rem;
+
+        .plan-header {
+          .plan-price .price-amount {
+            font-size: 1.5rem;
+          }
+
+          .feature-list .feature-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+
+            .flex-1 {
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animation enhancements
+.subscription-management-dialog {
+  .plan-card {
+    animation: slideInUp 0.4s ease-out;
+  }
+
+  .current-subscription-info .stat-item {
+    animation: fadeInScale 0.5s ease-out;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Theme-specific adjustments
+.subscription-management-dialog[data-theme='discord'] {
+  .plan-card {
+    background: #383a40;
+    border-color: #3f4147;
+    color: #f2f3f5;
+
+    &.current-plan {
+      border-color: #5865f2;
+      box-shadow: 0 8px 16px rgba(88, 101, 242, 0.3);
+    }
+
+    &:hover {
+      background: #404249;
+      box-shadow: 0 12px 24px rgba(88, 101, 242, 0.2);
+    }
+  }
+
+  .current-subscription-info {
+    .stat-item {
+      background: #2b2d31;
+      border-color: #3f4147;
+      color: #f2f3f5;
+    }
+  }
+
+  .plan-change-summary {
+    background: #2b2d31 !important;
+    border-color: #3f4147 !important;
+    color: #f2f3f5;
+  }
+}
+
+.subscription-management-dialog[data-theme='whatsapp'] {
+  .plan-card.current-plan {
+    border-color: #075e54;
+    box-shadow: 0 8px 16px rgba(7, 94, 84, 0.2);
+  }
+}
+
+// Premium indicators
+.premium-feature-badge {
+  background: linear-gradient(45deg, #635bff, #00d4ff);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.current-plan-badge {
+  background: linear-gradient(45deg, #10b981, #34d399);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// Loading states
+.plan-card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+  }
+}

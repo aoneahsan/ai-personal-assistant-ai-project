@@ -1,4 +1,5 @@
 import PWAInstallButton from '@/components/PWAInstallButton';
+import SubscriptionManagement from '@/components/SubscriptionManagement';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import { useUserProfileZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
@@ -22,6 +23,8 @@ const ModernDashboard: React.FC = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [selectedTreeKey, setSelectedTreeKey] = useState<string>('0');
   const [activeSection, setActiveSection] = useState<string>('overview');
+  const [showSubscriptionManagement, setShowSubscriptionManagement] =
+    useState(false);
 
   // Get user profile data from zustand state
   const { profile: userProfileData } = useUserProfileZState();
@@ -124,6 +127,12 @@ const ModernDashboard: React.FC = () => {
       badge: null,
       key: 'analytics',
     },
+    {
+      label: 'Subscription',
+      icon: 'pi pi-credit-card',
+      badge: 'PRO',
+      key: 'subscription',
+    },
     { label: 'Settings', icon: 'pi pi-cog', badge: null, key: 'settings' },
   ];
 
@@ -133,6 +142,11 @@ const ModernDashboard: React.FC = () => {
       label: 'Profile',
       icon: 'pi pi-user',
       command: () => navigate({ to: '/edit-profile' }),
+    },
+    {
+      label: 'Subscription',
+      icon: 'pi pi-credit-card',
+      command: () => setShowSubscriptionManagement(true),
     },
     {
       label: 'Settings',
@@ -153,6 +167,15 @@ const ModernDashboard: React.FC = () => {
 
   const toggleUserMenu = (event: React.MouseEvent) => {
     userMenuRef.current?.toggle(event);
+  };
+
+  const handleSidebarItemClick = (key: string) => {
+    if (key === 'subscription') {
+      setShowSubscriptionManagement(true);
+    } else {
+      setActiveSection(key);
+    }
+    setSidebarVisible(false);
   };
 
   // Enhanced profile card with modern design
@@ -422,14 +445,7 @@ const ModernDashboard: React.FC = () => {
                   ? 'bg-white text-primary shadow-2'
                   : 'text-white hover:bg-black hover:bg-opacity-20 hover:shadow-4'
               }`}
-              onClick={() => {
-                if (item.key === 'chats') {
-                  navigate({ to: '/chats' });
-                  setSidebarVisible(false);
-                } else {
-                  setActiveSection(item.key);
-                }
-              }}
+              onClick={() => handleSidebarItemClick(item.key)}
             >
               <div className='flex align-items-center gap-2 sm:gap-3'>
                 <i className={`${item.icon} text-lg sm:text-xl`}></i>
@@ -512,6 +528,12 @@ const ModernDashboard: React.FC = () => {
                         icon='pi pi-comments'
                         className='p-button-rounded bg-white text-primary border-none hover:shadow-3 p-button-sm sm:p-button-md'
                         onClick={() => navigate({ to: '/chats' })}
+                      />
+                      <Button
+                        label='Subscription'
+                        icon='pi pi-credit-card'
+                        className='p-button-rounded bg-gradient-to-r from-purple-600 to-blue-600 text-white border-none hover:shadow-3 p-button-sm sm:p-button-md'
+                        onClick={() => setShowSubscriptionManagement(true)}
                       />
                       <Button
                         label='Compact'
@@ -642,6 +664,14 @@ const ModernDashboard: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* Subscription Management Modal */}
+      {showSubscriptionManagement && (
+        <SubscriptionManagement
+          visible={showSubscriptionManagement}
+          onHide={() => setShowSubscriptionManagement(false)}
+        />
+      )}
 
       {/* Custom CSS for modern tree */}
       <style>{`
