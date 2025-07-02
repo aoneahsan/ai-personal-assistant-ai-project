@@ -108,28 +108,105 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
-    if (message.sender === 'me') {
-      // For now, show basic context menu options
-      const canEdit = featureFlagService.canEditMessages(currentUser);
-      const canDelete = featureFlagService.canDeleteMessages(currentUser);
+    if (message.sender === 'me' && contextMenuRef.current) {
+      contextMenuRef.current.show(event);
+    }
+  };
 
-      if (
-        canEdit.hasAccess &&
-        message.type === 'text' &&
-        !(message as any).isDeleted
-      ) {
-        onEditMessage?.(firestoreMessage);
-      } else if (canDelete.hasAccess && !(message as any).isDeleted) {
-        onDeleteMessage?.(firestoreMessage);
+  const getContextMenuItems = () => {
+    const canEdit = featureFlagService.canEditMessages(currentUser);
+    const canDelete = featureFlagService.canDeleteMessages(currentUser);
+    const canHistory = featureFlagService.canViewMessageHistory(currentUser);
+
+    const items = [];
+
+    // Copy message option (always available)
+    items.push({
+      label: 'Copy Message',
+      icon: 'pi pi-copy',
+      command: () => {
+        if (message.text) {
+          navigator.clipboard.writeText(message.text);
+        }
+      },
+    });
+
+    // Edit message option
+    if (message.type === 'text' && !(message as any).isDeleted) {
+      if (canEdit.hasAccess) {
+        items.push({
+          label: 'Edit Message',
+          icon: 'pi pi-pencil',
+          command: () => onEditMessage?.(firestoreMessage),
+        });
       } else {
-        // Show upgrade prompt
-        onUpgrade?.(
-          canEdit.hasAccess
-            ? ChatFeatureFlag.MESSAGE_DELETION
-            : ChatFeatureFlag.MESSAGE_EDITING
-        );
+        items.push({
+          label: 'Edit Message',
+          icon: 'pi pi-pencil',
+          className: 'premium-feature',
+          command: () => onUpgrade?.(ChatFeatureFlag.MESSAGE_EDITING),
+          template: (item: any) => (
+            <div className='p-menuitem-link premium-feature'>
+              <i className={item.icon}></i>
+              <span>{item.label}</span>
+              <span className='premium-feature-badge'>PRO</span>
+            </div>
+          ),
+        });
       }
     }
+
+    // Delete message option
+    if (!(message as any).isDeleted) {
+      if (canDelete.hasAccess) {
+        items.push({
+          label: 'Delete Message',
+          icon: 'pi pi-trash',
+          command: () => onDeleteMessage?.(firestoreMessage),
+        });
+      } else {
+        items.push({
+          label: 'Delete Message',
+          icon: 'pi pi-trash',
+          className: 'premium-feature',
+          command: () => onUpgrade?.(ChatFeatureFlag.MESSAGE_DELETION),
+          template: (item: any) => (
+            <div className='p-menuitem-link premium-feature'>
+              <i className={item.icon}></i>
+              <span>{item.label}</span>
+              <span className='premium-feature-badge'>PRO</span>
+            </div>
+          ),
+        });
+      }
+    }
+
+    // View history option (only for edited messages)
+    if ((message as any).isEdited) {
+      if (canHistory.hasAccess) {
+        items.push({
+          label: 'View Edit History',
+          icon: 'pi pi-history',
+          command: () => onViewHistory?.(firestoreMessage),
+        });
+      } else {
+        items.push({
+          label: 'View Edit History',
+          icon: 'pi pi-history',
+          className: 'premium-feature',
+          command: () => onUpgrade?.(ChatFeatureFlag.MESSAGE_HISTORY),
+          template: (item: any) => (
+            <div className='p-menuitem-link premium-feature'>
+              <i className={item.icon}></i>
+              <span>{item.label}</span>
+              <span className='premium-feature-badge'>PRO</span>
+            </div>
+          ),
+        });
+      }
+    }
+
+    return items;
   };
 
   const handleUpgradeClick = (feature: ChatFeatureFlag) => {
@@ -237,13 +314,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   );
 
   const renderVideoMessage = () => (
-    <div className='message-bubble message-video'>
+    <div
+      className='message-bubble message-video'
+      onContextMenu={handleContextMenu}
+    >
       <VideoPlayer
         videoUrl={message.fileData?.url || ''}
         thumbnail={message.videoThumbnail}
         duration={message.videoDuration || 0}
         fileName={message.fileData?.name}
       />
+      {renderEditIndicator()}
       <div className='message-meta'>
         <span className='message-time'>{formatTime(message.timestamp)}</span>
         {message.sender === 'me' && (
@@ -258,7 +339,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   );
 
   const renderAudioMessage = () => (
-    <div className='message-bubble message-audio'>
+    <div
+      className='message-bubble message-audio'
+      onContextMenu={handleContextMenu}
+    >
       <div className='audio-message'>
         <AudioPlayer
           audioUrl={message.fileData?.url || ''}
@@ -296,6 +380,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       )}
 
+      {renderEditIndicator()}
       <div className='message-meta'>
         <span className='message-time'>{formatTime(message.timestamp)}</span>
         {message.sender === 'me' && (
@@ -317,7 +402,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     };
 
     return (
-      <div className='message-bubble message-file'>
+      <div
+        className='message-bubble message-file'
+        onContextMenu={handleContextMenu}
+      >
         <div className='file-message'>
           <div className='file-icon'>{getFileIcon()}</div>
           <div className='file-info'>
@@ -332,6 +420,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             size='small'
           />
         </div>
+        {renderEditIndicator()}
         <div className='message-meta'>
           <span className='message-time'>{formatTime(message.timestamp)}</span>
           {message.sender === 'me' && (
@@ -346,6 +435,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     );
   };
 
+  // At the end of the component, add the context menu
+  const renderContextMenu = () => (
+    <Menu
+      ref={contextMenuRef}
+      model={getContextMenuItems()}
+      popup
+      className='message-context-menu'
+    />
+  );
+
   return (
     <div className={`message ${message.sender}`}>
       {message.type === 'text' && renderTextMessage()}
@@ -353,6 +452,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       {message.type === 'video' && renderVideoMessage()}
       {message.type === 'audio' && renderAudioMessage()}
       {message.type === 'file' && renderFileMessage()}
+
+      {/* Context Menu */}
+      {message.sender === 'me' && renderContextMenu()}
     </div>
   );
 };
