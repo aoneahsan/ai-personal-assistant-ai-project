@@ -1,5 +1,9 @@
 import { IPCAUser } from '@/types/user';
 import {
+  SUBSCRIPTION_FEATURES,
+  SubscriptionPlan,
+} from '@/types/user/subscription';
+import {
   FIREBASE_CONFIG,
   PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS,
 } from '@/utils/constants/generic/firebase';
@@ -190,22 +194,36 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
     );
 
     // Normalize email to lowercase for consistent storage and searching
+    // Anonymous users won't have an email, so we handle that case
     const normalizedEmail = user.email?.toLowerCase?.() || '';
+
+    // Determine if this is an anonymous user
+    const isAnonymous = user.isAnonymous;
 
     const userData: IPCAUser = {
       id: user.uid,
       email: normalizedEmail,
-      displayName: user.displayName || '',
+      displayName: user.displayName || (isAnonymous ? 'Anonymous User' : ''),
       isEmailVerified: user.emailVerified,
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
+      // Add subscription for anonymous users (limited features)
+      ...(isAnonymous && {
+        subscription: {
+          plan: SubscriptionPlan.FREE,
+          isActive: true,
+          startDate: new Date(),
+          features: SUBSCRIPTION_FEATURES[SubscriptionPlan.FREE],
+        },
+      }),
     };
 
     consoleLog('💾 Saving user to Firestore:', {
       id: userData.id,
-      email: userData.email,
+      email: userData.email || 'anonymous',
       displayName: userData.displayName,
       isEmailVerified: userData.isEmailVerified,
+      isAnonymous: isAnonymous,
     });
 
     await setDoc(userRef, userData, { merge: true });

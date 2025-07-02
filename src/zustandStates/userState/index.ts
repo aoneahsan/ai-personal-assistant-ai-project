@@ -47,8 +47,10 @@ export const useAuthInitializationZState = create<AuthInitializationState>(
 export const useIsAuthenticatedZState = () => {
   const userData = useUserDataZState((state) => state.data);
 
-  // First check Zustand store for user data
-  const hasUserData = Boolean(userData?.id && userData?.email);
+  // Check Zustand store for user data - handle both regular and anonymous users
+  const hasUserData = Boolean(
+    userData?.id && (userData?.email || userData?.id)
+  );
 
   // Fallback to Firebase auth state for immediate checks (only if Zustand is empty)
   const hasFirebaseAuth = !hasUserData && Boolean(auth.currentUser);
@@ -65,6 +67,7 @@ export const useIsAuthenticatedZState = () => {
       isAuthenticated,
       userDataId: userData?.id || 'none',
       firebaseUserId: auth.currentUser?.uid || 'none',
+      isAnonymous: auth.currentUser?.isAnonymous || false,
     });
   }
 
