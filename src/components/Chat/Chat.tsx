@@ -5,6 +5,7 @@ import { useUserDataZState } from '@/zustandStates/userState';
 import { useSearch } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import './Chat.scss';
 import ChatHeader from './ChatHeader';
 import MessageEditDialog from './MessageEditDialog';
 import MessageHistoryDialog from './MessageHistoryDialog';

@@ -42,6 +42,16 @@ const MessageEditDialog: React.FC<MessageEditDialogProps> = ({
       return;
     }
 
+    if (editedText.length > 1000) {
+      toastRef.current?.show({
+        severity: 'warn',
+        summary: 'Validation Error',
+        detail: 'Message cannot exceed 1000 characters',
+        life: 3000,
+      });
+      return;
+    }
+
     if (editedText.trim() === message?.text?.trim()) {
       toastRef.current?.show({
         severity: 'info',
@@ -63,6 +73,9 @@ const MessageEditDialog: React.FC<MessageEditDialogProps> = ({
         life: 3000,
       });
 
+      // Reset form and close dialog
+      setEditedText('');
+      setEditReason('');
       onHide();
     } catch (error) {
       toastRef.current?.show({
