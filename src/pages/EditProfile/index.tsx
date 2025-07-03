@@ -7,6 +7,7 @@ import {
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import {
   UserProfileData,
@@ -110,7 +111,7 @@ const EditProfile: React.FC = () => {
     if (profile) {
       reset(profile);
     }
-    navigate({ to: '/' });
+    navigate({ to: ROUTES.DASHBOARD });
   };
 
   // Handle section navigation
@@ -181,7 +182,7 @@ const EditProfile: React.FC = () => {
       });
 
       // Navigate back to dashboard
-      navigate({ to: '/' });
+      navigate({ to: ROUTES.DASHBOARD });
     } catch (error) {
       await copyToClipboardWithToast({
         value: 'Error updating profile',

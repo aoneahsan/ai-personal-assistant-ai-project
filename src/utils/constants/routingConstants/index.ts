@@ -12,3 +12,78 @@ export const appRoutes = {
   profile: '/profile',
   logout: '/logout',
 } as const;
+
+// Named Routes Constants
+// Use these constants throughout the app for consistent navigation
+
+export const ROUTES = {
+  // Authentication
+  AUTH: '/auth',
+
+  // Main Routes
+  ROOT: '/',
+  DASHBOARD: '/dashboard',
+  EDIT_PROFILE: '/edit-profile',
+
+  // Chat Routes
+  CHATS: '/chats',
+  CHAT: '/chat',
+  ANONYMOUS_CHAT: '/anonymous-chat',
+
+  // Anonymous Room Routes
+  ANONYMOUS_ROOM: '/room',
+  ANONYMOUS_ROOM_WITH_ID: '/room/$roomId',
+
+  // Demo Routes
+  EMBED_DEMO: '/embed-demo',
+
+  // Error Routes
+  NOT_FOUND: '*',
+} as const;
+
+// Route Labels for Display
+export const ROUTE_LABELS = {
+  [ROUTES.ROOT]: 'Home',
+  [ROUTES.DASHBOARD]: 'Dashboard',
+  [ROUTES.EDIT_PROFILE]: 'Edit Profile',
+  [ROUTES.CHATS]: 'Chats',
+  [ROUTES.CHAT]: 'Chat',
+  [ROUTES.ANONYMOUS_CHAT]: 'Anonymous Chat',
+  [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',
+  [ROUTES.EMBED_DEMO]: 'Embed Demo',
+  [ROUTES.AUTH]: 'Authentication',
+} as const;
+
+// Navigation Helper Type
+export type RouteKey = keyof typeof ROUTES;
+export type RoutePath = (typeof ROUTES)[RouteKey];
+
+// Navigation Items for Menus
+export const NAVIGATION_ITEMS = [
+  {
+    key: 'dashboard',
+    label: 'Dashboard',
+    icon: 'pi pi-home',
+    route: ROUTES.DASHBOARD,
+  },
+  {
+    key: 'chats',
+    label: 'Chats',
+    icon: 'pi pi-comments',
+    route: ROUTES.CHATS,
+  },
+  {
+    key: 'profile',
+    label: 'Profile',
+    icon: 'pi pi-user',
+    route: ROUTES.EDIT_PROFILE,
+  },
+  {
+    key: 'embed-demo',
+    label: 'Embed Demo',
+    icon: 'pi pi-code',
+    route: ROUTES.EMBED_DEMO,
+  },
+] as const;
+
+export default ROUTES;
