@@ -26,10 +26,10 @@ export const ROUTES = {
   EDIT_PROFILE: '/edit-profile',
 
   // Dashboard Sections
-  DASHBOARD_CHATS: '/chats',
-  DASHBOARD_CHAT_VIEW: '/chats/view/$chatId',
-  DASHBOARD_CHAT_EMBEDS: '/chat-embeds',
-  DASHBOARD_ACCOUNT: '/account',
+  DASHBOARD_CHATS: '/dashboard/chats',
+  DASHBOARD_CHAT_VIEW: '/dashboard/chats/view/$chatId',
+  DASHBOARD_CHAT_EMBEDS: '/dashboard/chat-embeds',
+  DASHBOARD_ACCOUNT: '/dashboard/account',
 
   // Chat Routes
   CHATS: '/chats',
