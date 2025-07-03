@@ -1,11 +1,19 @@
+import UserSearch from '@/components/Chat/UserSearch';
 import PWAInstallButton from '@/components/PWAInstallButton';
 import SubscriptionManagement from '@/components/SubscriptionManagement';
 import { useTheme } from '@/hooks/useTheme';
-import { ChatConversation, ChatService } from '@/services/chatService';
+import {
+  ChatConversation,
+  ChatService,
+  UserSearchResult,
+} from '@/services/chatService';
 import { EmbedConfig, EmbedService } from '@/services/embedService';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
-import { useUserProfileZState } from '@/zustandStates/userState';
+import {
+  useUserDataZState,
+  useUserProfileZState,
+} from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
@@ -29,9 +37,11 @@ const Dashboard: React.FC = () => {
   const [userChats, setUserChats] = useState<ChatConversation[]>([]);
   const [userEmbeds, setUserEmbeds] = useState<EmbedConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUserSearch, setShowUserSearch] = useState(false);
 
   // Get user profile data from zustand state
   const { profile: userProfileData } = useUserProfileZState();
+  const userData = useUserDataZState((state) => state.data);
 
   // Services
   const chatService = new ChatService();
@@ -39,21 +49,23 @@ const Dashboard: React.FC = () => {
 
   // Load user data
   useEffect(() => {
-    if (userProfileData) {
+    if (userData?.id) {
       loadUserData();
     }
-  }, [userProfileData]);
+  }, [userData]);
 
   const loadUserData = async () => {
+    if (!userData?.id) return;
+
     try {
       setLoading(true);
 
       // Load user chats
-      const chats = await chatService.getUserConversations(userProfileData.id);
+      const chats = await chatService.getUserConversations(userData.id);
       setUserChats(chats);
 
       // Load user embeds
-      const embeds = await embedService.getUserEmbedConfigs(userProfileData.id);
+      const embeds = await embedService.getUserEmbedConfigs(userData.id);
       setUserEmbeds(embeds);
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -63,7 +75,7 @@ const Dashboard: React.FC = () => {
   };
 
   // If no profile data, show loading state
-  if (!userProfileData) {
+  if (!userProfileData || !userData) {
     return (
       <div
         className='min-h-screen'
@@ -159,6 +171,18 @@ const Dashboard: React.FC = () => {
       setActiveSection(key);
     }
     setSidebarVisible(false);
+  };
+
+  const handleUserFound = (user: UserSearchResult, chatId: string) => {
+    navigate({
+      to: ROUTES.CHAT,
+      search: {
+        chatId,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.displayName,
+      },
+    });
   };
 
   // Stats card renderer
@@ -261,6 +285,7 @@ const Dashboard: React.FC = () => {
                     }
                     style={{ background: theme.primary, color: 'white' }}
                     shape='circle'
+                    size='normal'
                   />
                   <div>
                     <div
@@ -379,7 +404,7 @@ const Dashboard: React.FC = () => {
           label='Start New Chat'
           icon='pi pi-plus'
           className='p-button-rounded'
-          onClick={() => navigate({ to: ROUTES.CHATS })}
+          onClick={() => setShowUserSearch(true)}
           style={{ background: theme.primary }}
         />
       </div>
@@ -403,7 +428,7 @@ const Dashboard: React.FC = () => {
                   }
                   style={{ background: theme.primary, color: 'white' }}
                   shape='circle'
-                  size='small'
+                  size='normal'
                 />
                 <span>{chat.participantEmails.join(', ')}</span>
               </div>
@@ -427,7 +452,7 @@ const Dashboard: React.FC = () => {
             header='Unread'
             body={(chat) => (
               <Chip
-                label={chat.unreadCount?.[userProfileData.id] || 0}
+                label={chat.unreadCount?.[userData?.id || ''] || 0}
                 className='border-round-2xl'
                 style={{ background: theme.primary, color: 'white' }}
               />
@@ -941,7 +966,7 @@ const Dashboard: React.FC = () => {
                 <div className='flex flex-column lg:flex-row align-items-start lg:align-items-center justify-content-between relative z-2 gap-4'>
                   <div className='flex-1'>
                     <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-white m-0 mb-2'>
-                      Welcome back, {userProfileData.name.split(' ')[0]}! ���
+                      Welcome back, {userProfileData.name.split(' ')[0]}!
                     </h1>
                     <p className='text-white opacity-90 text-sm sm:text-base lg:text-lg m-0 mb-3 sm:mb-4'>
                       Here's your account overview and recent activity.
@@ -987,6 +1012,13 @@ const Dashboard: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* User Search Modal */}
+      <UserSearch
+        visible={showUserSearch}
+        onHide={() => setShowUserSearch(false)}
+        onUserFound={handleUserFound}
+      />
     </div>
   );
 };
