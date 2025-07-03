@@ -14,7 +14,14 @@ import { Menu } from 'primereact/menu';
 import { MenuItem } from 'primereact/menuitem';
 import React, { useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FaInfoCircle, FaPalette, FaPlus, FaSearch } from 'react-icons/fa';
+import {
+  FaInfoCircle,
+  FaPalette,
+  FaPlus,
+  FaSearch,
+  FaUserSecret,
+} from 'react-icons/fa';
+import { HiUserGroup } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import './index.scss';
 
@@ -155,6 +162,26 @@ const ChatList: React.FC = () => {
       },
     },
     {
+      separator: true,
+    },
+    {
+      label: 'Anonymous Chat',
+      icon: 'pi pi-eye-slash',
+      command: () => {
+        navigate({ to: '/anonymous-chat' });
+      },
+    },
+    {
+      label: 'Anonymous Rooms',
+      icon: 'pi pi-comments',
+      command: () => {
+        navigate({ to: '/room' });
+      },
+    },
+    {
+      separator: true,
+    },
+    {
       label: 'Settings',
       icon: 'pi pi-cog',
       command: () => {
@@ -226,6 +253,69 @@ const ChatList: React.FC = () => {
       </div>
 
       <Divider className='m-0' />
+
+      {/* Anonymous Chat Quick Access Section */}
+      {!unifiedAuthService.isAnonymousUser() && (
+        <>
+          <div className='anonymous-quick-access'>
+            <h3 className='section-title'>Anonymous Features</h3>
+            <p className='section-description'>
+              Chat without revealing your identity. No registration required!
+            </p>
+            <div className='quick-access-buttons'>
+              <Button
+                icon={<FaUserSecret />}
+                label='Anonymous Chat'
+                className='p-button-outlined quick-access-btn'
+                tooltip='Start private anonymous chat'
+                tooltipOptions={{ position: 'bottom' }}
+                onClick={() => navigate({ to: '/anonymous-chat' })}
+              />
+              <Button
+                icon={<HiUserGroup />}
+                label='Anonymous Rooms'
+                className='p-button-outlined quick-access-btn'
+                tooltip='Join or create anonymous chat rooms'
+                tooltipOptions={{ position: 'bottom' }}
+                onClick={() => navigate({ to: '/room' })}
+              />
+            </div>
+          </div>
+          <Divider className='m-0' />
+        </>
+      )}
+
+      {/* Anonymous User Quick Actions */}
+      {unifiedAuthService.isAnonymousUser() && (
+        <>
+          <div className='anonymous-quick-access'>
+            <h3 className='section-title'>Anonymous Options</h3>
+            <p className='section-description'>
+              You're in anonymous mode. Explore different anonymous chat
+              options!
+            </p>
+            <div className='quick-access-buttons'>
+              <Button
+                icon={<FaUserSecret />}
+                label='Private Chat'
+                className='p-button-outlined quick-access-btn'
+                tooltip='Continue with private anonymous chat'
+                tooltipOptions={{ position: 'bottom' }}
+                onClick={() => navigate({ to: '/anonymous-chat' })}
+              />
+              <Button
+                icon={<HiUserGroup />}
+                label='Join Rooms'
+                className='p-button-outlined quick-access-btn'
+                tooltip='Join or create public anonymous rooms'
+                tooltipOptions={{ position: 'bottom' }}
+                onClick={() => navigate({ to: '/room' })}
+              />
+            </div>
+          </div>
+          <Divider className='m-0' />
+        </>
+      )}
 
       {/* Chat List */}
       <div className='chat-list-content'>
