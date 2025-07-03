@@ -1,3 +1,7 @@
+import { FeedbackButton } from '@/modules/FeedbackModule/components/FeedbackButton';
+import { FeedbackModule } from '@/modules/FeedbackModule/components/FeedbackModule';
+import { db } from '@/services/firebaseConfig';
+import { useUserDataZState } from '@/zustandStates/userState';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog';
@@ -27,9 +31,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onBlockUser,
   onMuteNotifications,
 }) => {
+  const currentUser = useUserDataZState((state) => state.data);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<string>('');
   const [isMuted, setIsMuted] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const menuRef = useRef<Menu>(null);
 
   const formatTime = (date: Date) => {
@@ -85,6 +91,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     toast.success(
       newMuteState ? 'Notifications muted' : 'Notifications unmuted'
     );
+  };
+
+  const handleFeedbackClick = () => {
+    setShowFeedbackModal(true);
   };
 
   const menuItems: MenuItem[] = [
@@ -207,6 +217,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         </div>
         <div className='chat-header-right'>
+          <FeedbackButton
+            onClick={handleFeedbackClick}
+            variant='icon'
+            className='chat-action-btn'
+            tooltip='Share Feedback'
+          />
           <Button
             icon={<FaVideo />}
             className='p-button-text chat-action-btn'
@@ -259,6 +275,33 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           confirmAction === 'block' ? 'p-button-danger' : 'p-button-primary'
         }
       />
+
+      {/* Feedback Module for Header */}
+      {showFeedbackModal && (
+        <FeedbackModule
+          firestore={db}
+          user={currentUser}
+          config={{
+            collectionName: 'user_feedback',
+            theme: 'auto',
+            position: 'center',
+            hideAfterSubmit: true,
+            requireMessage: false,
+            showStep2: true,
+            onSuccess: () => {
+              setShowFeedbackModal(false);
+              toast.success('Thank you for your feedback!');
+            },
+            onError: (error) => {
+              console.error('Feedback error:', error);
+              toast.error('Failed to submit feedback. Please try again.');
+            },
+          }}
+          customPosition='header'
+          autoShow={true}
+          showDismissButton={false}
+        />
+      )}
     </>
   );
 };

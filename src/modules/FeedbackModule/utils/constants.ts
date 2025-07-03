@@ -65,7 +65,7 @@ export const FEEDBACK_WIDGET_ID = 'feedback-widget-module';
 export const FEEDBACK_MODAL_ID = 'feedback-modal-module';
 
 export const WIDGET_POSITIONS = {
-  'bottom-right': { bottom: '28px', right: '180px' },
+  'bottom-right': { bottom: '28px', right: '20px' },
   'bottom-left': { bottom: '20px', left: '20px' },
   'top-right': { top: '20px', right: '20px' },
   'top-left': { top: '20px', left: '20px' },
@@ -76,6 +76,15 @@ export const STORAGE_KEYS = {
   SESSION_ID: 'feedback_session_id',
   WIDGET_HIDDEN: 'feedback_widget_hidden',
   LAST_FEEDBACK: 'feedback_last_submission',
+  WIDGET_DISMISSED: 'feedback_widget_dismissed',
+  WIDGET_DISMISSED_TIME: 'feedback_widget_dismissed_time',
+};
+
+// Feedback dismissal configuration
+export const FEEDBACK_DISMISSAL_CONFIG = {
+  DEFAULT_DISMISS_HOURS: 24, // Default dismissal time in hours
+  MIN_DISMISS_HOURS: 1, // Minimum dismissal time
+  MAX_DISMISS_HOURS: 168, // Maximum dismissal time (1 week)
 };
 
 // Generate unique session ID

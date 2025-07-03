@@ -10,13 +10,17 @@ import './FeedbackWidget.scss';
 interface FeedbackWidgetProps {
   config?: FeedbackConfig;
   onClick: () => void;
+  onDismiss?: () => void;
   isVisible: boolean;
+  showDismissButton?: boolean;
 }
 
 export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   config = {},
   onClick,
+  onDismiss,
   isVisible,
+  showDismissButton = true,
 }) => {
   const mergedConfig = { ...DEFAULT_FEEDBACK_CONFIG, ...config };
   const position = WIDGET_POSITIONS[mergedConfig.position];
@@ -24,6 +28,13 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   if (!isVisible || !mergedConfig.showWidget) {
     return null;
   }
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDismiss) {
+      onDismiss();
+    }
+  };
 
   return (
     <div
@@ -43,6 +54,16 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
     >
       <div className='feedback-widget__icon'>💬</div>
       <div className='feedback-widget__text'>{mergedConfig.widgetText}</div>
+      {showDismissButton && (
+        <button
+          className='feedback-widget__dismiss'
+          onClick={handleDismiss}
+          aria-label='Dismiss feedback widget'
+          title='Hide feedback widget'
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 };

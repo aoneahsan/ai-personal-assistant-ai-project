@@ -61,6 +61,35 @@
     max-width: 120px;
   }
 
+  &__dismiss {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: scale(1.1);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
   // Animation for entrance
   animation: feedbackWidgetEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -142,7 +171,7 @@
     }
 
     &[style*='right'] {
-      right: 90px !important; // Position to the left of mobile FAB button
+      right: 16px !important; // Back to right edge on mobile
     }
 
     &[style*='left'] {
@@ -166,7 +195,7 @@
 
     // Adjust position for very small screens to avoid FAB overlap
     &[style*='right'] {
-      right: 80px !important; // Position to the left of smaller mobile FAB button
+      right: 16px !important; // Back to right edge on very small screens
     }
   }
 }

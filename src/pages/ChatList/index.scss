@@ -175,7 +175,7 @@
   .fab-button {
     position: fixed !important;
     bottom: 28px;
-    right: 100px; // Move away from feedback widget
+    right: 96px; // Position to the left of feedback widget but closer to right edge
     width: 64px !important;
     height: 64px !important;
     background: var(--color-primary) !important;
@@ -201,14 +201,14 @@
 
     // Mobile responsive positioning
     @media (max-width: 768px) {
-      right: 80px; // Adjust for mobile to avoid overlap
+      right: 84px; // Adjust for mobile to avoid overlap but stay closer to right
       bottom: 20px;
       width: 56px !important;
       height: 56px !important;
     }
 
     @media (max-width: 480px) {
-      right: 70px; // Further adjust for very small screens
+      right: 76px; // Further adjust for very small screens
       bottom: 16px;
       width: 50px !important;
       height: 50px !important;
