@@ -43,6 +43,12 @@ export const ROUTES = {
   // Demo Routes
   EMBED_DEMO: '/embed-demo',
 
+  // Policy Routes
+  PRIVACY_POLICY: '/privacy-policy',
+  TERMS_OF_SERVICE: '/terms-of-service',
+  DATA_DELETION_POLICY: '/data-deletion-policy',
+  COOKIE_POLICY: '/cookie-policy',
+
   // Error Routes
   NOT_FOUND: '*',
 } as const;
@@ -61,6 +67,10 @@ export const ROUTE_LABELS = {
   [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',
   [ROUTES.EMBED_DEMO]: 'Embed Demo',
   [ROUTES.AUTH]: 'Authentication',
+  [ROUTES.PRIVACY_POLICY]: 'Privacy Policy',
+  [ROUTES.TERMS_OF_SERVICE]: 'Terms of Service',
+  [ROUTES.DATA_DELETION_POLICY]: 'Data Deletion Policy',
+  [ROUTES.COOKIE_POLICY]: 'Cookie Policy',
 } as const;
 
 // Navigation Helper Type

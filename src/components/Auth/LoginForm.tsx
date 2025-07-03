@@ -1,5 +1,7 @@
 import { AuthProvider, unifiedAuthService } from '@/services/authService';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Divider } from 'primereact/divider';
@@ -31,6 +33,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onForgotPassword,
   onBackToWelcome,
 }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<AuthProvider | null>(null);
   const [isAppleAvailable] = useState(
@@ -321,6 +324,38 @@ const LoginForm: React.FC<LoginFormProps> = ({
               className='p-0 text-primary-500 hover:text-primary-600 font-semibold'
               disabled={isAnyLoading}
             />
+          </div>
+
+          {/* Policy Links */}
+          <div className='text-center mt-4 pt-4 border-top-1 border-200'>
+            <p className='text-xs text-600 mb-3'>
+              By signing in, you agree to our policies:
+            </p>
+            <div className='flex flex-wrap justify-content-center gap-3 text-xs'>
+              <Button
+                type='button'
+                link
+                label='Privacy Policy'
+                onClick={() => navigate({ to: ROUTES.PRIVACY_POLICY })}
+                className='p-0 text-500 hover:text-600 text-xs'
+              />
+              <span className='text-400'>•</span>
+              <Button
+                type='button'
+                link
+                label='Terms of Service'
+                onClick={() => navigate({ to: ROUTES.TERMS_OF_SERVICE })}
+                className='p-0 text-500 hover:text-600 text-xs'
+              />
+              <span className='text-400'>•</span>
+              <Button
+                type='button'
+                link
+                label='Cookie Policy'
+                onClick={() => navigate({ to: ROUTES.COOKIE_POLICY })}
+                className='p-0 text-500 hover:text-600 text-xs'
+              />
+            </div>
           </div>
         </div>
       </Card>

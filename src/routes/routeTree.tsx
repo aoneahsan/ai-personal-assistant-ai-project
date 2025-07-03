@@ -31,6 +31,14 @@ const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
 const ChatView = lazy(() => import('@/components/Chat/ChatView'));
 
+// Policy page components
+const PrivacyPolicy = lazy(() => import('@/pages/Policy/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('@/pages/Policy/TermsOfService'));
+const DataDeletionPolicy = lazy(
+  () => import('@/pages/Policy/DataDeletionPolicy')
+);
+const CookiePolicy = lazy(() => import('@/pages/Policy/CookiePolicy'));
+
 // Error boundary component with correct props interface
 const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
   <div
@@ -288,6 +296,51 @@ const embedDemoRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+// Policy routes - public access
+const privacyPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.PRIVACY_POLICY,
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <PrivacyPolicy />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const termsOfServiceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.TERMS_OF_SERVICE,
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <TermsOfService />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const dataDeletionPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.DATA_DELETION_POLICY,
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <DataDeletionPolicy />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const cookiePolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.COOKIE_POLICY,
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <CookiePolicy />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 // 404 route
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -340,6 +393,12 @@ export const appRouteTree = rootRoute.addChildren([
   embedDemoRoute,
   chatListRoute,
   chatRoute,
+  // Policy routes
+  privacyPolicyRoute,
+  termsOfServiceRoute,
+  dataDeletionPolicyRoute,
+  cookiePolicyRoute,
+  // Other routes
   notFoundRoute,
   anonymousRoomRoute,
   anonymousRoomWithIdRoute,
