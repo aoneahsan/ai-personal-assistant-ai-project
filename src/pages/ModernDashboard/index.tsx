@@ -1,3 +1,4 @@
+import EmbedManager from '@/components/EmbeddableWidget/EmbedManager';
 import PWAInstallButton from '@/components/PWAInstallButton';
 import SubscriptionManagement from '@/components/SubscriptionManagement';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
@@ -681,6 +682,12 @@ const ModernDashboard: React.FC = () => {
           onHide={() => setShowSubscriptionManagement(false)}
         />
       )}
+
+      {/* Embed Manager Modal */}
+      <EmbedManager
+        visible={showEmbedManager}
+        onHide={() => setShowEmbedManager(false)}
+      />
 
       {/* Custom CSS for modern tree */}
       <style>{`
