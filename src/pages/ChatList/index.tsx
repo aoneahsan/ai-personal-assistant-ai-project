@@ -217,7 +217,7 @@ const ChatList: React.FC = () => {
         </h2>
       </div>
 
-      {/* Content Header with Actions */}
+      {/* Main Chat Content */}
       <div className={styles.clContent}>
         <div className={styles.clContentHeader}>
           <h3 className={styles.clContentTitle}>Messages</h3>
@@ -264,7 +264,9 @@ const ChatList: React.FC = () => {
               className={styles.clChatItem}
               onClick={() => handleChatClick(contact.id)}
             >
-              <div className={styles.clChatAvatar}>
+              <div
+                className={`${styles.clChatAvatar} ${contact.isOnline ? styles.online : ''}`}
+              >
                 {contact.avatar ? (
                   <img
                     src={contact.avatar}
@@ -273,7 +275,6 @@ const ChatList: React.FC = () => {
                 ) : (
                   contact.name.charAt(0)
                 )}
-                {contact.isOnline && <div className='online-indicator' />}
               </div>
 
               <div className={styles.clChatContent}>
