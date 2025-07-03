@@ -49,6 +49,19 @@ service cloud.firestore {
       allow delete: if false;
     }
     
+    // Feedback collection - allow authenticated users to create feedback
+    match /user_feedback/{feedbackId} {
+      // Allow authenticated users to create feedback
+      allow create: if request.auth != null;
+      
+      // Allow users to read their own feedback
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Admins or system can read all feedback (you can add admin role check here)
+      // For now, we'll keep it simple and only allow creation
+    }
+    
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;
