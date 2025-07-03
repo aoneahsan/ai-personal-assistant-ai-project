@@ -49,6 +49,59 @@ service cloud.firestore {
       allow delete: if false;
     }
     
+    // Embed configurations - only embed owners can manage their embeds
+    match /pca_embeds/{embedId} {
+      // Allow reading embed configs for validation (needed for widget)
+      allow read: if true;
+      
+      // Allow creating embeds if user is authenticated and is the owner
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+        
+      // Allow updating embeds if user is the owner
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+        
+      // Allow deleting embeds if user is the owner
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // Embed conversations - allow embed owners and visitors to access
+    match /pca_embed_conversations/{conversationId} {
+      // Allow reading if user is the embed owner
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.ownerUserId;
+        
+      // Allow creating conversations for embed widgets (no auth required for visitors)
+      allow create: if true;
+        
+      // Allow updating conversations for both owners and visitors
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.ownerUserId;
+        
+      // Don't allow deleting conversations for data integrity
+      allow delete: if false;
+    }
+    
+    // Embed messages - allow embed owners and visitors to send/receive messages
+    match /pca_embed_messages/{messageId} {
+      // Allow reading messages if user is the embed owner or in the conversation
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == get(/databases/$(database)/documents/pca_embed_conversations/$(resource.data.chatId)).data.ownerUserId);
+      
+      // Allow creating messages for embed conversations (no auth required for visitors)
+      allow create: if true;
+        
+      // Allow updating messages if user is the sender
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.senderId;
+        
+      // Don't allow deleting messages for data integrity
+      allow delete: if false;
+    }
+    
     // Feedback collection - allow authenticated users to create feedback
     match /user_feedback/{feedbackId} {
       // Allow authenticated users to create feedback

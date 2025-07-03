@@ -76,17 +76,19 @@ export interface EmbeddedChatConversation {
   updatedAt: any;
 }
 
-// Device Fingerprint Data
+// Device fingerprint interface
 export interface DeviceFingerprint {
-  id: string;
   userAgent: string;
-  screenResolution: string;
-  timezone: string;
   language: string;
   platform: string;
-  cookiesEnabled: boolean;
-  doNotTrack: boolean;
-  canvas?: string;
+  screen: {
+    width: number;
+    height: number;
+    colorDepth: number;
+  };
+  timezone: string;
+  cookieEnabled: boolean;
+  canvasFingerprint: string;
   hash: string;
 }
 
@@ -94,6 +96,11 @@ export class EmbedService {
   private readonly EMBEDS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_embeds`;
   private readonly EMBED_CONVERSATIONS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_embed_conversations`;
   private readonly EMBED_MESSAGES_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_embed_messages`;
+
+  // Cache for embed configs to reduce Firebase calls
+  private embedConfigCache = new Map<string, EmbedConfig>();
+  private cacheExpiry = new Map<string, number>();
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   // Generate a new embed configuration
   async createEmbedConfig(
@@ -183,18 +190,34 @@ export class EmbedService {
 </script>`;
   }
 
-  // Get embed configuration by ID
+  // Get embed configuration by ID with caching
   async getEmbedConfig(embedId: string): Promise<EmbedConfig | null> {
     try {
+      // Check cache first
+      const cached = this.embedConfigCache.get(embedId);
+      const expiry = this.cacheExpiry.get(embedId);
+
+      if (cached && expiry && Date.now() < expiry) {
+        consoleLog('📋 Using cached embed config:', embedId);
+        return cached;
+      }
+
+      consoleLog('🔍 Fetching embed config from Firebase:', embedId);
       const docRef = doc(db, this.EMBEDS_COLLECTION, embedId);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as EmbedConfig;
+        const config = { id: docSnap.id, ...docSnap.data() } as EmbedConfig;
+
+        // Cache the result
+        this.embedConfigCache.set(embedId, config);
+        this.cacheExpiry.set(embedId, Date.now() + this.CACHE_DURATION);
+
+        return config;
       }
       return null;
     } catch (error) {
-      consoleError('Error getting embed configuration:', error);
+      consoleError('❌ Error getting embed configuration:', error);
       return null;
     }
   }
@@ -237,13 +260,17 @@ export class EmbedService {
     }
   }
 
-  // Validate embed request
+  // Enhanced validation with better error messages
   async validateEmbedRequest(
     embedId: string,
     websiteUrl: string,
     origin: string
   ): Promise<{ isValid: boolean; config?: EmbedConfig; error?: string }> {
     try {
+      if (!embedId || !websiteUrl || !origin) {
+        return { isValid: false, error: 'Missing required parameters' };
+      }
+
       const config = await this.getEmbedConfig(embedId);
 
       if (!config) {
@@ -254,25 +281,37 @@ export class EmbedService {
         return { isValid: false, error: 'Embed is deactivated' };
       }
 
-      // Check if the origin is allowed
-      const originDomain = new URL(origin).hostname.toLowerCase();
-      const isAllowed = config.allowedDomains.some((domain) => {
-        // Allow exact match or subdomain
-        return originDomain === domain || originDomain.endsWith(`.${domain}`);
-      });
+      // Validate origin
+      try {
+        const originDomain = new URL(origin).hostname.toLowerCase();
+        const isAllowed = config.allowedDomains.some((domain) => {
+          const domainLower = domain.toLowerCase();
+          return (
+            originDomain === domainLower ||
+            originDomain.endsWith(`.${domainLower}`)
+          );
+        });
 
-      if (!isAllowed) {
-        return { isValid: false, error: 'Domain not authorized' };
+        if (!isAllowed) {
+          consoleError(
+            `❌ Domain not authorized: ${originDomain}. Allowed domains:`,
+            config.allowedDomains
+          );
+          return { isValid: false, error: 'Domain not authorized' };
+        }
+      } catch (urlError) {
+        consoleError('❌ Invalid origin URL:', origin);
+        return { isValid: false, error: 'Invalid origin URL' };
       }
 
       return { isValid: true, config };
     } catch (error) {
-      consoleError('Error validating embed request:', error);
+      consoleError('❌ Error validating embed request:', error);
       return { isValid: false, error: 'Validation failed' };
     }
   }
 
-  // Create or get embedded chat conversation
+  // Enhanced conversation creation with better error handling
   async createOrGetEmbeddedConversation(
     embedId: string,
     websiteUrl: string,
@@ -282,6 +321,19 @@ export class EmbedService {
     visitorMetadata?: EmbeddedChatConversation['visitorMetadata']
   ): Promise<string> {
     try {
+      if (!embedId || !websiteUrl || !visitorId || !ownerUserId) {
+        throw new Error(
+          'Missing required parameters for conversation creation'
+        );
+      }
+
+      consoleLog('🔄 Creating/getting embedded conversation:', {
+        embedId,
+        websiteUrl,
+        visitorId,
+        ownerUserId,
+      });
+
       // Check if conversation already exists
       const q = query(
         collection(db, this.EMBED_CONVERSATIONS_COLLECTION),
@@ -293,8 +345,9 @@ export class EmbedService {
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // Return existing conversation
-        return querySnapshot.docs[0].id;
+        const existingConversation = querySnapshot.docs[0];
+        consoleLog('✅ Found existing conversation:', existingConversation.id);
+        return existingConversation.id;
       }
 
       // Create new conversation
@@ -302,10 +355,14 @@ export class EmbedService {
         embedId,
         websiteUrl,
         visitorId,
-        visitorMetadata,
+        visitorMetadata: {
+          ...visitorMetadata,
+          timestamp: serverTimestamp(),
+        },
         ownerUserId,
         ownerEmail,
         isActive: true,
+        unreadCount: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -315,11 +372,13 @@ export class EmbedService {
         conversation
       );
 
-      consoleLog('✅ Embedded conversation created:', docRef.id);
+      consoleLog('✅ Created new embedded conversation:', docRef.id);
       return docRef.id;
     } catch (error) {
       consoleError('❌ Error creating embedded conversation:', error);
-      throw error;
+      throw new Error(
+        `Failed to create conversation: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -378,54 +437,104 @@ export class EmbedService {
     });
   }
 
-  // Generate device fingerprint
+  // Enhanced device fingerprinting with fallback
   generateDeviceFingerprint(): DeviceFingerprint {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillText('Device fingerprint', 2, 2);
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Generate canvas fingerprint
+      let canvasFingerprint = '';
+      if (ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Device fingerprint', 2, 2);
+        canvasFingerprint = canvas.toDataURL();
+      }
+
+      const fingerprint: DeviceFingerprint = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screen: {
+          width: screen.width,
+          height: screen.height,
+          colorDepth: screen.colorDepth,
+        },
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        cookieEnabled: navigator.cookieEnabled,
+        canvasFingerprint,
+        hash: '',
+      };
+
+      // Create a simple hash from the fingerprint data
+      const dataString = JSON.stringify(fingerprint);
+      fingerprint.hash = this.simpleHash(dataString);
+
+      return fingerprint;
+    } catch (error) {
+      consoleError('❌ Error generating device fingerprint:', error);
+      // Fallback fingerprint
+      return {
+        userAgent: navigator.userAgent || 'unknown',
+        language: navigator.language || 'en',
+        platform: navigator.platform || 'unknown',
+        screen: {
+          width: screen.width || 1920,
+          height: screen.height || 1080,
+          colorDepth: screen.colorDepth || 24,
+        },
+        timezone: 'UTC',
+        cookieEnabled: navigator.cookieEnabled || false,
+        canvasFingerprint: '',
+        hash: this.simpleHash(Date.now().toString()),
+      };
     }
-
-    const fingerprint: DeviceFingerprint = {
-      id: nanoid(16),
-      userAgent: navigator.userAgent,
-      screenResolution: `${screen.width}x${screen.height}`,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      language: navigator.language,
-      platform: navigator.platform,
-      cookiesEnabled: navigator.cookieEnabled,
-      doNotTrack: navigator.doNotTrack === '1',
-      canvas: canvas.toDataURL(),
-      hash: '',
-    };
-
-    // Create a hash from the fingerprint data
-    const fingerprintString = JSON.stringify(fingerprint);
-    fingerprint.hash = btoa(fingerprintString).slice(0, 32);
-
-    return fingerprint;
   }
 
-  // Get or create visitor ID
+  // Simple hash function for fingerprinting
+  private simpleHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  // Enhanced visitor ID generation with better persistence
   getVisitorId(providedUserId?: string): string {
-    if (providedUserId) {
-      return providedUserId;
+    try {
+      if (providedUserId) {
+        return providedUserId;
+      }
+
+      // Check if we have a stored visitor ID
+      const storedVisitorId = localStorage.getItem('ai-chat-visitor-id');
+      if (storedVisitorId) {
+        return storedVisitorId;
+      }
+
+      // Generate new visitor ID based on device fingerprint
+      const fingerprint = this.generateDeviceFingerprint();
+      const visitorId = `visitor_${fingerprint.hash}_${nanoid(8)}`;
+
+      // Store visitor ID with error handling
+      try {
+        localStorage.setItem('ai-chat-visitor-id', visitorId);
+        localStorage.setItem('ai-chat-visitor-created', Date.now().toString());
+      } catch (storageError) {
+        consoleError('❌ Error storing visitor ID:', storageError);
+        // Continue without storage - visitor ID will be regenerated on refresh
+      }
+
+      return visitorId;
+    } catch (error) {
+      consoleError('❌ Error generating visitor ID:', error);
+      // Fallback to simple random ID
+      return `visitor_fallback_${nanoid(12)}`;
     }
-
-    // Check if we have a stored visitor ID
-    const storedVisitorId = localStorage.getItem('ai-chat-visitor-id');
-    if (storedVisitorId) {
-      return storedVisitorId;
-    }
-
-    // Generate new visitor ID based on device fingerprint
-    const fingerprint = this.generateDeviceFingerprint();
-    const visitorId = `visitor_${fingerprint.hash}`;
-
-    localStorage.setItem('ai-chat-visitor-id', visitorId);
-    return visitorId;
   }
 
   // Delete embed configuration
@@ -441,6 +550,18 @@ export class EmbedService {
       consoleError('❌ Error deleting embed configuration:', error);
       throw error;
     }
+  }
+
+  // Clear cache for a specific embed
+  clearEmbedCache(embedId: string): void {
+    this.embedConfigCache.delete(embedId);
+    this.cacheExpiry.delete(embedId);
+  }
+
+  // Clear all cache
+  clearAllCache(): void {
+    this.embedConfigCache.clear();
+    this.cacheExpiry.clear();
   }
 }
 

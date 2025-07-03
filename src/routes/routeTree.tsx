@@ -5,7 +5,7 @@ import Chat from '@/pages/Chat';
 import ChatList from '@/pages/ChatList';
 import NotFound from '@/pages/NotFound';
 import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
-import React from 'react';
+import React, { lazy } from 'react';
 import { z } from 'zod';
 import rootRoute from './rootRoute';
 
@@ -18,8 +18,19 @@ const chatSearchSchema = z
     userName: z.string().optional(),
     userAvatar: z.string().optional(),
     contactId: z.string().optional(),
+    roomId: z.string().optional(),
+    mode: z.enum(['normal', 'anonymous']).optional(),
+    clearHistory: z.boolean().optional(),
   })
   .optional();
+
+// Lazy load dashboard components
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const ModernDashboard = lazy(() => import('@/pages/ModernDashboard'));
+const CompactDashboard = lazy(() => import('@/pages/CompactDashboard'));
+const EditProfile = lazy(() => import('@/pages/EditProfile'));
+const CompactEditProfile = lazy(() => import('@/pages/CompactEditProfile'));
+const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
 
 // Error boundary component with correct props interface
 const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
@@ -180,63 +191,91 @@ const chatRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+// Dashboard routes - now active
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dashboard',
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <Dashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const modernDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/modern-dashboard',
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <ModernDashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const compactDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/compact-dashboard',
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <CompactDashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const editProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/edit-profile',
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <EditProfile />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const compactEditProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/compact-edit-profile',
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <CompactEditProfile />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const embedDemoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/embed-demo',
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <EmbedDemo />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 // 404 route
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '*',
   component: NotFound,
 });
-
-// DEVELOPER NOTE: Commented out routes - will uncomment when needed
-// const dashboardRoute = createRoute({
-//   getParentRoute: () => rootRoute,
-//   path: '/dashboard',
-//   component: () => (
-//     <ProtectedRoute>
-//       <Dashboard />
-//     </ProtectedRoute>
-//   ),
-// });
-
-// const modernDashboardRoute = createRoute({
-//   getParentRoute: () => rootRoute,
-//   path: '/modern-dashboard',
-//   component: () => (
-//     <ProtectedRoute>
-//       <ModernDashboard />
-//     </ProtectedRoute>
-//   ),
-// });
-
-// const compactDashboardRoute = createRoute({
-//   getParentRoute: () => rootRoute,
-//   path: '/compact-dashboard',
-//   component: () => (
-//     <ProtectedRoute>
-//       <CompactDashboard />
-//     </ProtectedRoute>
-//   ),
-// });
-
-// const editProfileRoute = createRoute({
-//   getParentRoute: () => rootRoute,
-//   path: '/edit-profile',
-//   component: () => (
-//     <ProtectedRoute>
-//       <EditProfile />
-//     </ProtectedRoute>
-//   ),
-// });
-
-// const compactEditProfileRoute = createRoute({
-//   getParentRoute: () => rootRoute,
-//   path: '/compact-edit-profile',
-//   component: () => (
-//     <ProtectedRoute>
-//       <CompactEditProfile />
-//     </ProtectedRoute>
-//   ),
-// });
 
 // Anonymous chat room route (no authentication required)
 const anonymousRoomRoute = createRoute({
@@ -274,11 +313,12 @@ export const appRouteTree = rootRoute.addChildren([
   indexRoute,
   authRoute,
   anonymousChatRoute,
-  // dashboardRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
-  // modernDashboardRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
-  // compactDashboardRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
-  // editProfileRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
-  // compactEditProfileRoute, // DEVELOPER NOTE: Commented out - will uncomment when needed
+  dashboardRoute,
+  modernDashboardRoute,
+  compactDashboardRoute,
+  editProfileRoute,
+  compactEditProfileRoute,
+  embedDemoRoute,
   chatListRoute,
   chatRoute,
   notFoundRoute,
