@@ -12,7 +12,6 @@ import React, { useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { FaArrowLeft, FaPhone, FaVideo } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import './ChatHeader.scss';
 import { ChatUser } from './types';
 
 interface ChatHeaderProps {
