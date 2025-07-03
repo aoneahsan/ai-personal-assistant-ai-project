@@ -6,6 +6,7 @@ import {
 } from '@/components/FormComponents';
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useTheme } from '@/hooks/useTheme';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import {
   UserProfileData,
@@ -62,6 +63,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { profile, updateProfile, loadProfileFromStorage } =
     useUserProfileZState();
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -192,25 +194,40 @@ const EditProfile: React.FC = () => {
   // Loading state
   if (!profile) {
     return (
-      <div className='flex align-items-center justify-content-center min-h-screen'>
+      <div
+        className='flex align-items-center justify-content-center min-h-screen'
+        style={{ background: theme.background }}
+      >
         <div className='text-center'>
-          <i className='pi pi-spin pi-spinner text-4xl text-primary mb-3'></i>
-          <p className='text-color-secondary'>Loading profile...</p>
+          <i
+            className='pi pi-spin pi-spinner text-4xl mb-3'
+            style={{ color: theme.primary }}
+          ></i>
+          <p style={{ color: theme.textSecondary }}>Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 p-2 sm:p-3 lg:p-4'>
+    <div
+      className='min-h-screen p-2 sm:p-3 lg:p-4'
+      style={{ background: theme.background }}
+    >
       <div className='max-w-full lg:max-w-6xl mx-auto'>
         {/* Header */}
         <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between mb-3 sm:mb-4 gap-3'>
           <div>
-            <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-color m-0'>
+            <h1
+              className='text-xl sm:text-2xl lg:text-3xl font-bold m-0'
+              style={{ color: theme.textPrimary }}
+            >
               Edit Profile
             </h1>
-            <p className='text-color-secondary mt-1 sm:mt-2 mb-0 text-sm sm:text-base'>
+            <p
+              className='mt-1 sm:mt-2 mb-0 text-sm sm:text-base'
+              style={{ color: theme.textSecondary }}
+            >
               Update your personal information
             </p>
           </div>
@@ -238,17 +255,32 @@ const EditProfile: React.FC = () => {
         </div>
 
         {/* Keyboard Shortcuts Promotion Banner */}
-        <div className='mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-round border-1 border-indigo-200'>
+        <div
+          className='mb-3 sm:mb-4 p-3 sm:p-4 border-round border-1'
+          style={{ background: theme.primaryLight, borderColor: theme.primary }}
+        >
           <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between gap-3'>
             <div className='flex align-items-center gap-2 sm:gap-3'>
-              <div className='bg-indigo-100 p-2 border-round'>
-                <i className='pi pi-keyboard text-indigo-600 text-lg sm:text-xl'></i>
+              <div
+                className='p-2 border-round'
+                style={{ background: theme.surface }}
+              >
+                <i
+                  className='pi pi-keyboard text-lg sm:text-xl'
+                  style={{ color: theme.primary }}
+                ></i>
               </div>
               <div>
-                <h3 className='text-base sm:text-lg font-bold text-indigo-800 m-0'>
+                <h3
+                  className='text-base sm:text-lg font-bold m-0'
+                  style={{ color: theme.textPrimary }}
+                >
                   ⚡ Supercharge Your Editing!
                 </h3>
-                <p className='text-xs sm:text-sm text-indigo-600 m-0 mt-1'>
+                <p
+                  className='text-xs sm:text-sm m-0 mt-1'
+                  style={{ color: theme.textSecondary }}
+                >
                   Use powerful keyboard shortcuts to edit faster than ever
                 </p>
               </div>
@@ -256,16 +288,33 @@ const EditProfile: React.FC = () => {
             <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center gap-2 sm:gap-3'>
               <div className='flex flex-column sm:text-right gap-1'>
                 <div className='flex align-items-center gap-1 sm:gap-2'>
-                  <kbd className='bg-green-100 text-green-800 px-1 sm:px-2 py-1 border-round text-xs font-mono'>
+                  <kbd
+                    className='px-1 sm:px-2 py-1 border-round text-xs font-mono'
+                    style={{
+                      background: theme.success + '20',
+                      color: theme.success,
+                    }}
+                  >
                     F2
                   </kbd>
-                  <span className='text-xs text-indigo-600'>Save</span>
+                  <span
+                    className='text-xs'
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Save
+                  </span>
                 </div>
                 <div className='flex align-items-center gap-1 sm:gap-2'>
-                  <kbd className='bg-blue-100 text-blue-800 px-1 sm:px-2 py-1 border-round text-xs font-mono'>
+                  <kbd
+                    className='px-1 sm:px-2 py-1 border-round text-xs font-mono'
+                    style={{ background: theme.info + '20', color: theme.info }}
+                  >
                     Ctrl+1-5
                   </kbd>
-                  <span className='text-xs text-indigo-600'>
+                  <span
+                    className='text-xs'
+                    style={{ color: theme.textSecondary }}
+                  >
                     Jump to sections
                   </span>
                 </div>
