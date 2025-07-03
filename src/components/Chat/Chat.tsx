@@ -3,7 +3,7 @@ import { chatService, FirestoreMessage } from '@/services/chatService';
 import { ChatFeatureFlag, SubscriptionPlan } from '@/types/user/subscription';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
-import { useSearch } from '@tanstack/react-router';
+import { useLocation } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
@@ -29,7 +29,27 @@ const Chat: React.FC<ChatProps> = ({
   onBack,
 }) => {
   const currentUser = useUserDataZState((state) => state.data);
-  const search = useSearch({ from: '/chat' }) as any;
+  const location = useLocation();
+
+  // Get search params safely from URL
+  const getSearchParams = () => {
+    try {
+      const urlParams = new URLSearchParams(location.search);
+      return {
+        chatId: urlParams.get('chatId'),
+        userId: urlParams.get('userId'),
+        userEmail: urlParams.get('userEmail'),
+        userName: urlParams.get('userName'),
+        userAvatar: urlParams.get('userAvatar'),
+        contactId: urlParams.get('contactId'),
+      };
+    } catch (error) {
+      console.warn('Failed to parse search params:', error);
+      return {};
+    }
+  };
+
+  const search = getSearchParams();
 
   // State for messages and chat
   const [messages, setMessages] = useState<Message[]>(initialMessages);
