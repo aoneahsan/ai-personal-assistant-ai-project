@@ -12,10 +12,7 @@ export const PROTECTED_ROUTES = ['/chats', '/chat'] as const;
 // Commented Protected Routes - routes that will require authentication when uncommented
 export const COMMENTED_PROTECTED_ROUTES = [
   '/dashboard',
-  '/modern-dashboard',
-  '/compact-dashboard',
   '/edit-profile',
-  '/compact-edit-profile',
 ] as const;
 
 // Public Routes - routes that don't require authentication

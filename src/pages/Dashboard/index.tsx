@@ -1,7 +1,8 @@
-import EmbedManager from '@/components/EmbeddableWidget/EmbedManager';
 import PWAInstallButton from '@/components/PWAInstallButton';
 import SubscriptionManagement from '@/components/SubscriptionManagement';
 import { useTheme } from '@/hooks/useTheme';
+import { ChatConversation, ChatService } from '@/services/chatService';
+import { EmbedConfig, EmbedService } from '@/services/embedService';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import { useUserProfileZState } from '@/zustandStates/userState';
@@ -10,28 +11,56 @@ import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Chip } from 'primereact/chip';
+import { Column } from 'primereact/column';
+import { DataTable } from 'primereact/datatable';
 import { Divider } from 'primereact/divider';
 import { MenuItem } from 'primereact/menuitem';
 import { OverlayPanel } from 'primereact/overlaypanel';
-import { Panel } from 'primereact/panel';
 import { Sidebar } from 'primereact/sidebar';
 import { Skeleton } from 'primereact/skeleton';
-import { Tree } from 'primereact/tree';
-import { TreeNode } from 'primereact/treenode';
-import React, { useState } from 'react';
+import { Tag } from 'primereact/tag';
+import React, { useEffect, useState } from 'react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [selectedTreeKey, setSelectedTreeKey] = useState<string>('0');
   const [activeSection, setActiveSection] = useState<string>('overview');
-  const [showSubscriptionManagement, setShowSubscriptionManagement] =
-    useState(false);
-  const [showEmbedManager, setShowEmbedManager] = useState(false);
+  const [userChats, setUserChats] = useState<ChatConversation[]>([]);
+  const [userEmbeds, setUserEmbeds] = useState<EmbedConfig[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Get user profile data from zustand state
   const { profile: userProfileData } = useUserProfileZState();
+
+  // Services
+  const chatService = new ChatService();
+  const embedService = new EmbedService();
+
+  // Load user data
+  useEffect(() => {
+    if (userProfileData) {
+      loadUserData();
+    }
+  }, [userProfileData]);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+
+      // Load user chats
+      const chats = await chatService.getUserConversations(userProfileData.id);
+      setUserChats(chats);
+
+      // Load user embeds
+      const embeds = await embedService.getUserEmbedConfigs(userProfileData.id);
+      setUserEmbeds(embeds);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // If no profile data, show loading state
   if (!userProfileData) {
@@ -76,95 +105,36 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Tree structure menu data
-  const treeNodes: TreeNode[] = [
-    {
-      key: '0',
-      label: 'Profile Overview',
-      icon: 'pi pi-user',
-      children: [
-        {
-          key: '0-0',
-          label: 'General Information',
-          icon: 'pi pi-info-circle',
-        },
-        {
-          key: '0-1',
-          label: 'Work Details',
-          icon: 'pi pi-briefcase',
-        },
-        {
-          key: '0-2',
-          label: 'Personal Info',
-          icon: 'pi pi-id-card',
-        },
-      ],
-    },
-    {
-      key: '1',
-      label: 'Analytics',
-      icon: 'pi pi-chart-line',
-      children: [
-        {
-          key: '1-0',
-          label: 'Performance',
-          icon: 'pi pi-chart-bar',
-        },
-        {
-          key: '1-1',
-          label: 'Activity',
-          icon: 'pi pi-clock',
-        },
-      ],
-    },
-  ];
-
-  // Main sidebar menu items
+  // Single sidebar menu items
   const sidebarMenuItems = [
-    { label: 'Overview', icon: 'pi pi-home', badge: null, key: 'overview' },
-    { label: 'Profile', icon: 'pi pi-user', badge: null, key: 'profile' },
-    { label: 'Chats', icon: 'pi pi-comments', badge: '5', key: 'chats' },
+    { label: 'Overview', icon: 'pi pi-home', key: 'overview' },
+    {
+      label: 'Chats',
+      icon: 'pi pi-comments',
+      key: 'chats',
+      badge: userChats.length.toString(),
+    },
     {
       label: 'Chat Embeds',
       icon: 'pi pi-code',
-      badge: 'NEW',
-      key: 'embed-manager',
+      key: 'embeds',
+      badge: userEmbeds.length.toString(),
     },
-    { label: 'Projects', icon: 'pi pi-folder', badge: '3', key: 'projects' },
-    { label: 'Tasks', icon: 'pi pi-check-square', badge: '12', key: 'tasks' },
-    { label: 'Messages', icon: 'pi pi-envelope', badge: '5', key: 'messages' },
-    { label: 'Calendar', icon: 'pi pi-calendar', badge: null, key: 'calendar' },
-    {
-      label: 'Analytics',
-      icon: 'pi pi-chart-bar',
-      badge: null,
-      key: 'analytics',
-    },
-    {
-      label: 'Subscription',
-      icon: 'pi pi-credit-card',
-      badge: 'PRO',
-      key: 'subscription',
-    },
-    { label: 'Settings', icon: 'pi pi-cog', badge: null, key: 'settings' },
+    { label: 'Profile', icon: 'pi pi-user', key: 'profile' },
+    { label: 'Account', icon: 'pi pi-cog', key: 'account' },
   ];
 
   // User menu items for dropdown
   const userMenuItems: MenuItem[] = [
     {
-      label: 'Profile',
+      label: 'Edit Profile',
       icon: 'pi pi-user',
       command: () => navigate({ to: ROUTES.EDIT_PROFILE }),
     },
     {
-      label: 'Subscription',
-      icon: 'pi pi-credit-card',
-      command: () => setShowSubscriptionManagement(true),
-    },
-    {
       label: 'Settings',
       icon: 'pi pi-cog',
-      command: () => setActiveSection('settings'),
+      command: () => setActiveSection('account'),
     },
     {
       separator: true,
@@ -183,83 +153,12 @@ const Dashboard: React.FC = () => {
   };
 
   const handleSidebarItemClick = (key: string) => {
-    if (key === 'subscription') {
-      setShowSubscriptionManagement(true);
-    } else if (key === 'embed-manager') {
-      setShowEmbedManager(true);
-    } else if (key === 'chats') {
-      navigate({ to: ROUTES.CHATS });
-    } else if (key === 'profile') {
+    if (key === 'profile') {
       navigate({ to: ROUTES.EDIT_PROFILE });
     } else {
       setActiveSection(key);
     }
     setSidebarVisible(false);
-  };
-
-  // Enhanced profile card with modern design
-  const renderModernProfileCard = (
-    title: string,
-    data: any,
-    icon: string,
-    gradient: string,
-    textColor: string
-  ) => {
-    return (
-      <Panel
-        header={
-          <div className='flex align-items-center gap-2'>
-            <i className={`${icon} ${textColor}`}></i>
-            <span className={textColor}>{title}</span>
-          </div>
-        }
-        className='mb-4 shadow-3 border-round-2xl overflow-hidden'
-        style={{ background: gradient }}
-      >
-        <div className='grid'>
-          {Object.entries(data).map(([key, value]) => (
-            <div
-              key={key}
-              className='col-12 md:col-6 lg:col-4 mb-3'
-            >
-              <div className='flex flex-column gap-2'>
-                <span className={`text-sm font-medium ${textColor} opacity-80`}>
-                  {key
-                    .replace(/([A-Z])/g, ' $1')
-                    .replace(/^./, (str) => str.toUpperCase())}
-                </span>
-                <div className='flex align-items-center justify-content-between gap-2'>
-                  <span className={`${textColor} font-semibold flex-1`}>
-                    {value as string}
-                  </span>
-                  <Button
-                    icon='pi pi-copy'
-                    className='p-button-text p-button-rounded p-button-sm'
-                    style={{
-                      color: textColor.includes('white')
-                        ? 'white'
-                        : theme.textPrimary,
-                    }}
-                    tooltip='Copy to clipboard'
-                    tooltipOptions={{ position: 'top' }}
-                    onClick={() =>
-                      copyToClipboardWithToast({
-                        value: value as string,
-                        successMessage: `${key
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, (str) =>
-                            str.toUpperCase()
-                          )} copied to clipboard!`,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Panel>
-    );
   };
 
   // Stats card renderer
@@ -291,6 +190,576 @@ const Dashboard: React.FC = () => {
         </div>
       </Card>
     );
+  };
+
+  // Render overview section
+  const renderOverview = () => (
+    <div>
+      {/* Stats Cards */}
+      <div className='grid mb-6'>
+        <div className='col-12 md:col-6 lg:col-3'>
+          {renderStatsCard(
+            'Active Chats',
+            userChats.length.toString(),
+            'pi pi-comments',
+            `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`
+          )}
+        </div>
+        <div className='col-12 md:col-6 lg:col-3'>
+          {renderStatsCard(
+            'Chat Embeds',
+            userEmbeds.length.toString(),
+            'pi pi-code',
+            `linear-gradient(135deg, ${theme.success} 0%, #059669 100%)`
+          )}
+        </div>
+        <div className='col-12 md:col-6 lg:col-3'>
+          {renderStatsCard(
+            'Active Embeds',
+            userEmbeds.filter((e) => e.isActive).length.toString(),
+            'pi pi-check-circle',
+            `linear-gradient(135deg, ${theme.secondary} 0%, #0891B2 100%)`
+          )}
+        </div>
+        <div className='col-12 md:col-6 lg:col-3'>
+          {renderStatsCard(
+            'Account Status',
+            'Active',
+            'pi pi-user',
+            `linear-gradient(135deg, ${theme.accent} 0%, #059669 100%)`
+          )}
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className='grid'>
+        <div className='col-12 lg:col-6'>
+          <Card className='shadow-3 border-round-2xl h-full'>
+            <div className='flex align-items-center justify-content-between mb-4'>
+              <h3
+                className='text-xl font-bold m-0'
+                style={{ color: theme.textPrimary }}
+              >
+                Recent Chats
+              </h3>
+              <Button
+                label='View All'
+                className='p-button-text p-button-sm'
+                onClick={() => setActiveSection('chats')}
+                style={{ color: theme.primary }}
+              />
+            </div>
+            {userChats.slice(0, 3).map((chat, index) => (
+              <div
+                key={chat.id}
+                className='flex align-items-center justify-content-between py-3 border-bottom-1 border-300'
+              >
+                <div className='flex align-items-center gap-3'>
+                  <Avatar
+                    label={
+                      chat.participantEmails[0]?.charAt(0).toUpperCase() || 'U'
+                    }
+                    style={{ background: theme.primary, color: 'white' }}
+                    shape='circle'
+                  />
+                  <div>
+                    <div
+                      className='font-semibold'
+                      style={{ color: theme.textPrimary }}
+                    >
+                      {chat.participantEmails[0] || 'Unknown User'}
+                    </div>
+                    <div
+                      className='text-sm'
+                      style={{ color: theme.textSecondary }}
+                    >
+                      {chat.lastMessage || 'No messages yet'}
+                    </div>
+                  </div>
+                </div>
+                <div className='text-right'>
+                  <div
+                    className='text-sm'
+                    style={{ color: theme.textSecondary }}
+                  >
+                    {chat.lastMessageTime
+                      ? new Date(
+                          chat.lastMessageTime.toDate()
+                        ).toLocaleDateString()
+                      : 'N/A'}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {userChats.length === 0 && (
+              <div
+                className='text-center py-4'
+                style={{ color: theme.textSecondary }}
+              >
+                No chats yet. Start a conversation!
+              </div>
+            )}
+          </Card>
+        </div>
+        <div className='col-12 lg:col-6'>
+          <Card className='shadow-3 border-round-2xl h-full'>
+            <div className='flex align-items-center justify-content-between mb-4'>
+              <h3
+                className='text-xl font-bold m-0'
+                style={{ color: theme.textPrimary }}
+              >
+                Chat Embeds
+              </h3>
+              <Button
+                label='View All'
+                className='p-button-text p-button-sm'
+                onClick={() => setActiveSection('embeds')}
+                style={{ color: theme.primary }}
+              />
+            </div>
+            {userEmbeds.slice(0, 3).map((embed, index) => (
+              <div
+                key={embed.id}
+                className='flex align-items-center justify-content-between py-3 border-bottom-1 border-300'
+              >
+                <div className='flex align-items-center gap-3'>
+                  <i
+                    className='pi pi-code text-2xl'
+                    style={{ color: theme.primary }}
+                  ></i>
+                  <div>
+                    <div
+                      className='font-semibold'
+                      style={{ color: theme.textPrimary }}
+                    >
+                      {embed.title}
+                    </div>
+                    <div
+                      className='text-sm'
+                      style={{ color: theme.textSecondary }}
+                    >
+                      {embed.allowedDomains.join(', ')}
+                    </div>
+                  </div>
+                </div>
+                <div className='text-right'>
+                  <Tag
+                    value={embed.isActive ? 'Active' : 'Inactive'}
+                    severity={embed.isActive ? 'success' : 'warning'}
+                    className='border-round-2xl'
+                  />
+                </div>
+              </div>
+            ))}
+            {userEmbeds.length === 0 && (
+              <div
+                className='text-center py-4'
+                style={{ color: theme.textSecondary }}
+              >
+                No embeds created yet. Create your first embed!
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render chats section
+  const renderChats = () => (
+    <div>
+      <div className='flex align-items-center justify-content-between mb-4'>
+        <h2
+          className='text-2xl font-bold m-0'
+          style={{ color: theme.textPrimary }}
+        >
+          Your Chats
+        </h2>
+        <Button
+          label='Start New Chat'
+          icon='pi pi-plus'
+          className='p-button-rounded'
+          onClick={() => navigate({ to: ROUTES.CHATS })}
+          style={{ background: theme.primary }}
+        />
+      </div>
+
+      <Card className='shadow-3 border-round-2xl'>
+        <DataTable
+          value={userChats}
+          emptyMessage='No chats found. Start a conversation!'
+          className='p-datatable-striped'
+          paginator
+          rows={10}
+        >
+          <Column
+            field='participantEmails'
+            header='Participants'
+            body={(chat) => (
+              <div className='flex align-items-center gap-2'>
+                <Avatar
+                  label={
+                    chat.participantEmails[0]?.charAt(0).toUpperCase() || 'U'
+                  }
+                  style={{ background: theme.primary, color: 'white' }}
+                  shape='circle'
+                  size='small'
+                />
+                <span>{chat.participantEmails.join(', ')}</span>
+              </div>
+            )}
+          />
+          <Column
+            field='lastMessage'
+            header='Last Message'
+          />
+          <Column
+            field='lastMessageTime'
+            header='Last Activity'
+            body={(chat) =>
+              chat.lastMessageTime
+                ? new Date(chat.lastMessageTime.toDate()).toLocaleDateString()
+                : 'N/A'
+            }
+          />
+          <Column
+            field='unreadCount'
+            header='Unread'
+            body={(chat) => (
+              <Chip
+                label={chat.unreadCount?.[userProfileData.id] || 0}
+                className='border-round-2xl'
+                style={{ background: theme.primary, color: 'white' }}
+              />
+            )}
+          />
+          <Column
+            header='Actions'
+            body={(chat) => (
+              <Button
+                icon='pi pi-arrow-right'
+                className='p-button-rounded p-button-text'
+                onClick={() =>
+                  navigate({ to: ROUTES.CHATS, search: { chatId: chat.id } })
+                }
+                tooltip='Open Chat'
+              />
+            )}
+          />
+        </DataTable>
+      </Card>
+    </div>
+  );
+
+  // Render embeds section
+  const renderEmbeds = () => (
+    <div>
+      <div className='flex align-items-center justify-content-between mb-4'>
+        <h2
+          className='text-2xl font-bold m-0'
+          style={{ color: theme.textPrimary }}
+        >
+          Chat Embeds
+        </h2>
+        <Button
+          label='Create New Embed'
+          icon='pi pi-plus'
+          className='p-button-rounded'
+          onClick={() => navigate({ to: ROUTES.EMBED_DEMO })}
+          style={{ background: theme.primary }}
+        />
+      </div>
+
+      <Card className='shadow-3 border-round-2xl'>
+        <DataTable
+          value={userEmbeds}
+          emptyMessage='No embeds created yet. Create your first embed!'
+          className='p-datatable-striped'
+          paginator
+          rows={10}
+        >
+          <Column
+            field='title'
+            header='Title'
+          />
+          <Column
+            field='description'
+            header='Description'
+          />
+          <Column
+            field='allowedDomains'
+            header='Allowed Domains'
+            body={(embed) => embed.allowedDomains.join(', ')}
+          />
+          <Column
+            field='isActive'
+            header='Status'
+            body={(embed) => (
+              <Tag
+                value={embed.isActive ? 'Active' : 'Inactive'}
+                severity={embed.isActive ? 'success' : 'warning'}
+                className='border-round-2xl'
+              />
+            )}
+          />
+          <Column
+            field='createdAt'
+            header='Created'
+            body={(embed) =>
+              embed.createdAt
+                ? new Date(embed.createdAt.toDate()).toLocaleDateString()
+                : 'N/A'
+            }
+          />
+          <Column
+            header='Actions'
+            body={(embed) => (
+              <div className='flex gap-2'>
+                <Button
+                  icon='pi pi-copy'
+                  className='p-button-rounded p-button-text'
+                  onClick={() =>
+                    copyToClipboardWithToast({
+                      value: embed.embedCode,
+                      successMessage: 'Embed code copied to clipboard!',
+                    })
+                  }
+                  tooltip='Copy Embed Code'
+                />
+                <Button
+                  icon='pi pi-external-link'
+                  className='p-button-rounded p-button-text'
+                  onClick={() => navigate({ to: ROUTES.EMBED_DEMO })}
+                  tooltip='View Demo'
+                />
+              </div>
+            )}
+          />
+        </DataTable>
+      </Card>
+    </div>
+  );
+
+  // Render account section
+  const renderAccount = () => (
+    <div>
+      <h2
+        className='text-2xl font-bold mb-4'
+        style={{ color: theme.textPrimary }}
+      >
+        Account Information
+      </h2>
+
+      <div className='grid'>
+        <div className='col-12 lg:col-6'>
+          <Card className='shadow-3 border-round-2xl h-full'>
+            <h3
+              className='text-xl font-bold mb-4'
+              style={{ color: theme.textPrimary }}
+            >
+              Profile Information
+            </h3>
+            <div className='flex flex-column gap-3'>
+              <div>
+                <label
+                  className='block text-sm font-medium mb-1'
+                  style={{ color: theme.textSecondary }}
+                >
+                  Name
+                </label>
+                <div
+                  className='p-3 border-round-lg'
+                  style={{ background: theme.hover }}
+                >
+                  {userProfileData.name}
+                </div>
+              </div>
+              <div>
+                <label
+                  className='block text-sm font-medium mb-1'
+                  style={{ color: theme.textSecondary }}
+                >
+                  Email
+                </label>
+                <div
+                  className='p-3 border-round-lg'
+                  style={{ background: theme.hover }}
+                >
+                  {userProfileData.email}
+                </div>
+              </div>
+              <div>
+                <label
+                  className='block text-sm font-medium mb-1'
+                  style={{ color: theme.textSecondary }}
+                >
+                  User ID
+                </label>
+                <div className='flex align-items-center gap-2'>
+                  <div
+                    className='p-3 border-round-lg flex-1'
+                    style={{ background: theme.hover }}
+                  >
+                    {userProfileData.id}
+                  </div>
+                  <Button
+                    icon='pi pi-copy'
+                    className='p-button-rounded p-button-text'
+                    onClick={() =>
+                      copyToClipboardWithToast({
+                        value: userProfileData.id,
+                        successMessage: 'User ID copied to clipboard!',
+                      })
+                    }
+                    tooltip='Copy User ID'
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+        <div className='col-12 lg:col-6'>
+          <Card className='shadow-3 border-round-2xl h-full'>
+            <h3
+              className='text-xl font-bold mb-4'
+              style={{ color: theme.textPrimary }}
+            >
+              Account Actions
+            </h3>
+            <div className='flex flex-column gap-3'>
+              <Button
+                label='Edit Profile'
+                icon='pi pi-user-edit'
+                className='p-button-outlined justify-content-start'
+                onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
+              />
+              <Button
+                label='Manage Subscription'
+                icon='pi pi-credit-card'
+                className='p-button-outlined justify-content-start'
+                onClick={() => {
+                  // Show subscription management in main content
+                  setActiveSection('subscription');
+                }}
+              />
+              <Button
+                label='View Analytics'
+                icon='pi pi-chart-line'
+                className='p-button-outlined justify-content-start'
+                onClick={() => setActiveSection('analytics')}
+              />
+              <Divider />
+              <Button
+                label='Sign Out'
+                icon='pi pi-sign-out'
+                className='p-button-outlined justify-content-start'
+                severity='danger'
+                onClick={() => navigate({ to: ROUTES.AUTH })}
+              />
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render subscription section
+  const renderSubscription = () => (
+    <div>
+      <h2
+        className='text-2xl font-bold mb-4'
+        style={{ color: theme.textPrimary }}
+      >
+        Subscription Management
+      </h2>
+      <Card className='shadow-3 border-round-2xl'>
+        <SubscriptionManagement
+          visible={true}
+          onHide={() => setActiveSection('overview')}
+        />
+      </Card>
+    </div>
+  );
+
+  // Render analytics section
+  const renderAnalytics = () => (
+    <div>
+      <h2
+        className='text-2xl font-bold mb-4'
+        style={{ color: theme.textPrimary }}
+      >
+        Analytics
+      </h2>
+      <Card className='shadow-3 border-round-2xl'>
+        <div
+          className='text-center py-6'
+          style={{ color: theme.textSecondary }}
+        >
+          <i
+            className='pi pi-chart-line text-6xl mb-3'
+            style={{ color: theme.primary }}
+          ></i>
+          <h3
+            className='text-xl font-bold mb-2'
+            style={{ color: theme.textPrimary }}
+          >
+            Analytics Dashboard
+          </h3>
+          <p className='text-lg'>Detailed analytics coming soon!</p>
+        </div>
+      </Card>
+    </div>
+  );
+
+  // Render main content based on active section
+  const renderMainContent = () => {
+    if (loading) {
+      return (
+        <div className='grid'>
+          <div className='col-12 md:col-6 lg:col-3'>
+            <Skeleton
+              height='8rem'
+              className='mb-3'
+            />
+          </div>
+          <div className='col-12 md:col-6 lg:col-3'>
+            <Skeleton
+              height='8rem'
+              className='mb-3'
+            />
+          </div>
+          <div className='col-12 md:col-6 lg:col-3'>
+            <Skeleton
+              height='8rem'
+              className='mb-3'
+            />
+          </div>
+          <div className='col-12 md:col-6 lg:col-3'>
+            <Skeleton
+              height='8rem'
+              className='mb-3'
+            />
+          </div>
+        </div>
+      );
+    }
+
+    switch (activeSection) {
+      case 'overview':
+        return renderOverview();
+      case 'chats':
+        return renderChats();
+      case 'embeds':
+        return renderEmbeds();
+      case 'account':
+        return renderAccount();
+      case 'subscription':
+        return renderSubscription();
+      case 'analytics':
+        return renderAnalytics();
+      default:
+        return renderOverview();
+    }
   };
 
   return (
@@ -396,7 +865,7 @@ const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      {/* Sidebar */}
+      {/* Mobile Sidebar */}
       <Sidebar
         visible={sidebarVisible}
         onHide={() => setSidebarVisible(false)}
@@ -417,15 +886,11 @@ const Dashboard: React.FC = () => {
               key={index}
               label={item.label}
               icon={item.icon}
-              className='p-button-text justify-content-start'
+              className={`p-button-text justify-content-start ${
+                activeSection === item.key ? 'p-button-outlined' : ''
+              }`}
               badge={item.badge}
-              badgeClassName={
-                item.badge === 'NEW'
-                  ? 'p-badge-success'
-                  : item.badge === 'PRO'
-                    ? 'p-badge-warning'
-                    : 'p-badge-info'
-              }
+              badgeClassName='p-badge-info'
               onClick={() => handleSidebarItemClick(item.key)}
             />
           ))}
@@ -436,39 +901,25 @@ const Dashboard: React.FC = () => {
       <div className='flex min-h-screen'>
         {/* Desktop Sidebar */}
         <aside
-          className='hidden lg:block w-20rem border-right-1 sticky top-0 h-screen overflow-y-auto'
+          className='hidden lg:block w-18rem border-right-1 sticky top-0 h-screen overflow-y-auto'
           style={{
             background: theme.surface,
             borderColor: theme.border,
-            marginTop: '4rem', // Account for header height
+            marginTop: '4rem',
           }}
         >
           <div className='p-4'>
-            <div className='mb-4'>
-              <Tree
-                value={treeNodes}
-                selectionMode='single'
-                selectionKeys={selectedTreeKey}
-                onSelectionChange={(e) => setSelectedTreeKey(e.value)}
-                className='tree-modern'
-              />
-            </div>
-            <Divider />
-            <div className='flex flex-column gap-2 mt-4'>
-              {sidebarMenuItems.slice(0, 6).map((item, index) => (
+            <div className='flex flex-column gap-2'>
+              {sidebarMenuItems.map((item, index) => (
                 <Button
                   key={index}
                   label={item.label}
                   icon={item.icon}
-                  className='p-button-text justify-content-start'
+                  className={`p-button-text justify-content-start ${
+                    activeSection === item.key ? 'p-button-outlined' : ''
+                  }`}
                   badge={item.badge}
-                  badgeClassName={
-                    item.badge === 'NEW'
-                      ? 'p-badge-success'
-                      : item.badge === 'PRO'
-                        ? 'p-badge-warning'
-                        : 'p-badge-info'
-                  }
+                  badgeClassName='p-badge-info'
                   onClick={() => handleSidebarItemClick(item.key)}
                 />
               ))}
@@ -490,49 +941,25 @@ const Dashboard: React.FC = () => {
                 <div className='flex flex-column lg:flex-row align-items-start lg:align-items-center justify-content-between relative z-2 gap-4'>
                   <div className='flex-1'>
                     <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-white m-0 mb-2'>
-                      Welcome back, {userProfileData.name.split(' ')[0]}! 👋
+                      Welcome back, {userProfileData.name.split(' ')[0]}! ���
                     </h1>
                     <p className='text-white opacity-90 text-sm sm:text-base lg:text-lg m-0 mb-3 sm:mb-4'>
-                      Here's what's happening with your account today.
+                      Here's your account overview and recent activity.
                     </p>
                     <div className='flex flex-wrap gap-2'>
                       <Button
-                        label='Edit Profile'
-                        icon='pi pi-pencil'
-                        className='p-button-rounded bg-white border-none hover:shadow-3 p-button-sm sm:p-button-md'
-                        style={{ color: theme.primary }}
-                        onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
-                      />
-                      <Button
-                        label='Chats'
+                        label='New Chat'
                         icon='pi pi-comments'
                         className='p-button-rounded bg-white border-none hover:shadow-3 p-button-sm sm:p-button-md'
                         style={{ color: theme.primary }}
                         onClick={() => navigate({ to: ROUTES.CHATS })}
                       />
                       <Button
-                        label='Subscription'
-                        icon='pi pi-credit-card'
-                        className='p-button-rounded border-none hover:shadow-3 p-button-sm sm:p-button-md'
-                        style={{
-                          background: `linear-gradient(45deg, ${theme.accent}, ${theme.secondary})`,
-                          color: 'white',
-                        }}
-                        onClick={() => setShowSubscriptionManagement(true)}
-                      />
-                      <Button
-                        label='Embed Demo'
+                        label='Create Embed'
                         icon='pi pi-code'
-                        className='p-button-rounded p-button-outlined border-white text-white hover:bg-white p-button-sm sm:p-button-md'
-                        style={{ borderColor: 'white' }}
+                        className='p-button-rounded bg-white border-none hover:shadow-3 p-button-sm sm:p-button-md'
+                        style={{ color: theme.primary }}
                         onClick={() => navigate({ to: ROUTES.EMBED_DEMO })}
-                      />
-                      <Button
-                        label='Analytics'
-                        icon='pi pi-chart-line'
-                        className='p-button-rounded p-button-outlined border-white text-white hover:bg-white p-button-sm sm:p-button-md hidden sm:inline-flex'
-                        style={{ borderColor: 'white' }}
-                        onClick={() => setActiveSection('analytics')}
                       />
                     </div>
                   </div>
@@ -549,128 +976,17 @@ const Dashboard: React.FC = () => {
                     />
                   </div>
                 </div>
-                {/* Background decoration */}
                 <div className='absolute top-0 right-0 opacity-10'>
                   <i className='pi pi-shield text-8xl sm:text-9xl lg:text-10xl'></i>
                 </div>
               </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className='grid mb-6'>
-              <div className='col-12 md:col-6 lg:col-3'>
-                {renderStatsCard(
-                  'Active Projects',
-                  '24',
-                  'pi pi-folder',
-                  `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
-                  '+12%'
-                )}
-              </div>
-              <div className='col-12 md:col-6 lg:col-3'>
-                {renderStatsCard(
-                  'Completion Rate',
-                  '89%',
-                  'pi pi-check-circle',
-                  `linear-gradient(135deg, ${theme.success} 0%, #059669 100%)`,
-                  '+5%'
-                )}
-              </div>
-              <div className='col-12 md:col-6 lg:col-3'>
-                {renderStatsCard(
-                  'Total Tasks',
-                  '156',
-                  'pi pi-check-square',
-                  `linear-gradient(135deg, ${theme.secondary} 0%, #0891B2 100%)`,
-                  '+8%'
-                )}
-              </div>
-              <div className='col-12 md:col-6 lg:col-3'>
-                {renderStatsCard(
-                  'Performance',
-                  '4.8/5',
-                  'pi pi-star-fill',
-                  `linear-gradient(135deg, ${theme.accent} 0%, #059669 100%)`,
-                  '+0.2'
-                )}
-              </div>
-            </div>
-
-            {/* Profile Information Sections */}
-            <div className='grid'>
-              <div className='col-12'>
-                {renderModernProfileCard(
-                  'General Information',
-                  userProfileData.generalInfo,
-                  'pi pi-user',
-                  `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
-                  'text-white'
-                )}
-              </div>
-
-              <div className='col-12 lg:col-6'>
-                {renderModernProfileCard(
-                  'Work Information',
-                  userProfileData.workInfo,
-                  'pi pi-briefcase',
-                  `linear-gradient(135deg, ${theme.success} 0%, #059669 100%)`,
-                  'text-white'
-                )}
-              </div>
-
-              <div className='col-12 lg:col-6'>
-                {renderModernProfileCard(
-                  'Location & Birth Info',
-                  userProfileData.birthInfo,
-                  'pi pi-map-marker',
-                  `linear-gradient(135deg, ${theme.secondary} 0%, #0891B2 100%)`,
-                  'text-white'
-                )}
-              </div>
-
-              <div className='col-12'>
-                {renderModernProfileCard(
-                  'Preferences & Settings',
-                  userProfileData.preferences,
-                  'pi pi-cog',
-                  `linear-gradient(135deg, ${theme.accent} 0%, #059669 100%)`,
-                  'text-white'
-                )}
-              </div>
-            </div>
+            {/* Main Content */}
+            {renderMainContent()}
           </div>
         </main>
       </div>
-
-      {/* Subscription Management Modal */}
-      {showSubscriptionManagement && (
-        <SubscriptionManagement
-          visible={showSubscriptionManagement}
-          onHide={() => setShowSubscriptionManagement(false)}
-        />
-      )}
-
-      {/* Embed Manager Modal */}
-      <EmbedManager
-        visible={showEmbedManager}
-        onHide={() => setShowEmbedManager(false)}
-      />
-
-      {/* Custom CSS for modern tree */}
-      <style>{`
-        .tree-modern .p-tree-node-content {
-          border-radius: 0.75rem;
-          transition: all 0.3s ease;
-        }
-        .tree-modern .p-tree-node-content:hover {
-          background: ${theme.hover};
-          color: ${theme.primary};
-        }
-        .tree-modern .p-tree-node-content.p-tree-node-selectable.p-highlight {
-          background: ${theme.primary};
-          color: white;
-        }
-      `}</style>
     </div>
   );
 };
