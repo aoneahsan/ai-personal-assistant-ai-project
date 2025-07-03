@@ -1,6 +1,14 @@
 # AI Personal Assistant - Documentation
 
+**Copyright © 2024 Zaions. All rights reserved.**  
+**Developed by Ahsan Mahmood** ([aoneahsan.com](https://aoneahsan.com))  
+**Company:** Zaions ([zaions.com](https://zaions.com))
+
 This directory contains all the documentation for the AI Personal Assistant project, organized into logical categories for easy navigation.
+
+## ⚠️ Important License Information
+
+This project is proprietary software owned by **Zaions**. For production or commercial use, a commercial license is required. See [LICENSE.md](../LICENSE.md) for full licensing terms and conditions.
 
 ## 📁 Documentation Structure
 
@@ -97,6 +105,27 @@ When adding new documentation:
 - **Project Root**: Main project files and configuration
 - **Source Code**: `/src` directory contains all application code
 - **Configuration**: Root level config files (Firebase, Capacitor, etc.)
+
+---
+
+## 📞 Contact & Support
+
+**Developer:** Ahsan Mahmood
+
+- Website: https://aoneahsan.com
+- LinkedIn: https://linkedin.com/in/aoneahsan
+
+**Company:** Zaions
+
+- Website: https://zaions.com
+- YouTube: https://youtube.com/@zaionsofficial
+
+## Copyright
+
+**© 2024 Zaions. All rights reserved.**  
+**Developed by Ahsan Mahmood**
+
+_This software is protected by copyright law. Unauthorized use, reproduction, or distribution is prohibited. For licensing inquiries, please contact Zaions._
 
 ---
 
