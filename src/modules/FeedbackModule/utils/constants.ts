@@ -26,7 +26,7 @@ export const DEFAULT_FEEDBACK_CONFIG: Required<FeedbackConfig> = {
   theme: 'auto',
   position: 'bottom-right',
   showWidget: true,
-  widgetText: '💬 Share Feedback',
+  widgetText: 'Share Feedback',
 
   // Step-specific text - encouraging language
   step1Title: 'How was your experience?',
