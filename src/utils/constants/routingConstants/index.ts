@@ -25,6 +25,12 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   EDIT_PROFILE: '/edit-profile',
 
+  // Dashboard Sections
+  DASHBOARD_CHATS: '/chats',
+  DASHBOARD_CHAT_VIEW: '/chats/view/$chatId',
+  DASHBOARD_CHAT_EMBEDS: '/chat-embeds',
+  DASHBOARD_ACCOUNT: '/account',
+
   // Chat Routes
   CHATS: '/chats',
   CHAT: '/chat',
@@ -46,7 +52,10 @@ export const ROUTE_LABELS = {
   [ROUTES.ROOT]: 'Home',
   [ROUTES.DASHBOARD]: 'Dashboard',
   [ROUTES.EDIT_PROFILE]: 'Edit Profile',
-  [ROUTES.CHATS]: 'Chats',
+  [ROUTES.DASHBOARD_CHATS]: 'Chats',
+  [ROUTES.DASHBOARD_CHAT_VIEW]: 'Chat View',
+  [ROUTES.DASHBOARD_CHAT_EMBEDS]: 'Chat Embeds',
+  [ROUTES.DASHBOARD_ACCOUNT]: 'Account',
   [ROUTES.CHAT]: 'Chat',
   [ROUTES.ANONYMOUS_CHAT]: 'Anonymous Chat',
   [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',

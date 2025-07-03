@@ -29,6 +29,7 @@ const chatSearchSchema = z
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
+const ChatView = lazy(() => import('@/components/Chat/ChatView'));
 
 // Error boundary component with correct props interface
 const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
@@ -203,6 +204,62 @@ const dashboardRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+// Dashboard Chats route
+const dashboardChatsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.DASHBOARD_CHATS,
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <Dashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Dashboard Chat Embeds route
+const dashboardChatEmbedsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.DASHBOARD_CHAT_EMBEDS,
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <Dashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Dashboard Account route
+const dashboardAccountRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.DASHBOARD_ACCOUNT,
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <Dashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Individual Chat View route
+const chatViewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.DASHBOARD_CHAT_VIEW,
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <Dashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 // Profile route
 const editProfileRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -275,6 +332,10 @@ export const appRouteTree = rootRoute.addChildren([
   authRoute,
   anonymousChatRoute,
   dashboardRoute,
+  dashboardChatsRoute,
+  dashboardChatEmbedsRoute,
+  dashboardAccountRoute,
+  chatViewRoute,
   editProfileRoute,
   embedDemoRoute,
   chatListRoute,

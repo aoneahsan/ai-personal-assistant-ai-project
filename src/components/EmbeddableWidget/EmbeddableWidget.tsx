@@ -8,7 +8,6 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useRef, useState } from 'react';
 import { BsChatDots } from 'react-icons/bs';
 import { FaPaperPlane, FaTimes } from 'react-icons/fa';
-import { IoMdMinimize } from 'react-icons/io';
 import './EmbeddableWidget.scss';
 
 interface EmbeddableWidgetProps {
