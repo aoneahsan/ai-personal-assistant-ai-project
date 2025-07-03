@@ -28,10 +28,10 @@
     "gen:assets": "yarn gen:android:assets && yarn gen:ios:assets",
     "deploy:web": "npm run build && firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage:rules",
-    "deploy:staging": "capacitor-assets generate --web",
+    "deploy:staging": "npm run build:staging && firebase deploy --only hosting:staging",
     "deploy:production": "npm run build:production && firebase deploy --only hosting:production",
-    "build:staging": "vite build --mode staging",
-    "build:production": "vite build --mode production",
+    "build:staging": "npm run deploy:rules && vite build --mode staging",
+    "build:production": "npm run deploy:rules && vite build --mode production",
     "gen:web:assets": "capacitor-assets generate --web"
   },
   "dependencies": {
