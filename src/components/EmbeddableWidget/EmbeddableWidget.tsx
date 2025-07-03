@@ -8,6 +8,7 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useRef, useState } from 'react';
 import { BsChatDots } from 'react-icons/bs';
 import { FaPaperPlane, FaTimes } from 'react-icons/fa';
+import { IoMdRemove } from 'react-icons/io';
 import './EmbeddableWidget.scss';
 
 interface EmbeddableWidgetProps {
@@ -311,7 +312,7 @@ const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
             </div>
             <div className='chat-header-right'>
               <Button
-                icon={<IoMdMinimize />}
+                icon={<IoMdRemove />}
                 className='p-button-text header-button'
                 onClick={minimizeWidget}
                 tooltip='Minimize'
