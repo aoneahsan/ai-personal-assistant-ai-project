@@ -7,9 +7,7 @@ import { unifiedAuthService } from '@/services/authService';
 import { UserSearchResult } from '@/services/chatService';
 import { consoleError } from '@/utils/helpers/consoleHelper';
 import { useNavigate } from '@tanstack/react-router';
-import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
-import { Divider } from 'primereact/divider';
 import { Menu } from 'primereact/menu';
 import { MenuItem } from 'primereact/menuitem';
 import React, { useRef, useState } from 'react';
@@ -23,7 +21,7 @@ import {
 } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { toast } from 'react-toastify';
-import './index.scss';
+import styles from './ChatList.module.scss';
 
 interface ChatContact {
   id: string;
@@ -202,7 +200,7 @@ const ChatList: React.FC = () => {
   ];
 
   return (
-    <div className='chat-list-container'>
+    <div className={styles.clContainer}>
       {/* Anonymous User Indicator */}
       {unifiedAuthService.isAnonymousUser() && (
         <AnonymousUserIndicator
@@ -213,164 +211,169 @@ const ChatList: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className='chat-list-header'>
-        <h2 className='chat-list-title'>
+      <div className={styles.clHeader}>
+        <h2 className={styles.clTitle}>
           {unifiedAuthService.isAnonymousUser() ? 'Anonymous Chats' : 'Chats'}
         </h2>
-        <div className='chat-list-actions'>
-          {/* Only show debug component in development */}
-          {import.meta.env.DEV && <UserSearchDebug />}
+      </div>
 
-          <Button
-            icon={<FaPalette />}
-            className='p-button-text header-btn'
-            tooltip='Theme Settings'
-            tooltipOptions={{ position: 'bottom' }}
-            onClick={() => setShowThemeSettings(true)}
-          />
-          <Button
-            icon={<FaInfoCircle />}
-            className='p-button-text header-btn'
-            tooltip='Current Limitations'
-            tooltipOptions={{ position: 'bottom' }}
-            onClick={() => setShowLimitations(true)}
-          />
-          <Button
-            icon={<FaSearch />}
-            className='p-button-text header-btn'
-            tooltip='Find User'
-            tooltipOptions={{ position: 'bottom' }}
-            onClick={() => setShowUserSearch(true)}
-          />
-          <Button
-            icon={<BsThreeDotsVertical />}
-            className='p-button-text header-btn'
-            tooltip='Menu'
-            tooltipOptions={{ position: 'bottom' }}
-            onClick={(e) => menuRef.current?.toggle(e)}
-          />
+      {/* Content Header with Actions */}
+      <div className={styles.clContent}>
+        <div className={styles.clContentHeader}>
+          <h3 className={styles.clContentTitle}>Messages</h3>
+          <div className='flex gap-2'>
+            {/* Only show debug component in development */}
+            {import.meta.env.DEV && <UserSearchDebug />}
+
+            <Button
+              icon={<FaPalette />}
+              className='p-button-text'
+              tooltip='Theme Settings'
+              tooltipOptions={{ position: 'bottom' }}
+              onClick={() => setShowThemeSettings(true)}
+            />
+            <Button
+              icon={<FaInfoCircle />}
+              className='p-button-text'
+              tooltip='Current Limitations'
+              tooltipOptions={{ position: 'bottom' }}
+              onClick={() => setShowLimitations(true)}
+            />
+            <Button
+              icon={<FaSearch />}
+              className='p-button-text'
+              tooltip='Find User'
+              tooltipOptions={{ position: 'bottom' }}
+              onClick={() => setShowUserSearch(true)}
+            />
+            <Button
+              icon={<BsThreeDotsVertical />}
+              className={`p-button-text ${styles.clMenuButton}`}
+              tooltip='Menu'
+              tooltipOptions={{ position: 'bottom' }}
+              onClick={(e) => menuRef.current?.toggle(e)}
+            />
+          </div>
+        </div>
+
+        {/* Chat List */}
+        <div className={styles.clChatsList}>
+          {contacts.map((contact) => (
+            <div
+              key={contact.id}
+              className={styles.clChatItem}
+              onClick={() => handleChatClick(contact.id)}
+            >
+              <div className={styles.clChatAvatar}>
+                {contact.avatar ? (
+                  <img
+                    src={contact.avatar}
+                    alt={contact.name}
+                  />
+                ) : (
+                  contact.name.charAt(0)
+                )}
+                {contact.isOnline && <div className='online-indicator' />}
+              </div>
+
+              <div className={styles.clChatContent}>
+                <div className={styles.clChatName}>{contact.name}</div>
+                <div className={styles.clChatPreview}>
+                  {contact.lastMessage}
+                </div>
+              </div>
+
+              <div className={styles.clChatMeta}>
+                <span className={styles.clChatTime}>
+                  {formatTime(contact.lastMessageTime)}
+                </span>
+                {contact.unreadCount > 0 && (
+                  <span className={styles.clChatBadge}>
+                    {contact.unreadCount}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <Divider className='m-0' />
-
       {/* Anonymous Chat Quick Access Section */}
       {!unifiedAuthService.isAnonymousUser() && (
-        <>
-          <div className='anonymous-quick-access'>
-            <h3 className='section-title'>Anonymous Features</h3>
-            <p className='section-description'>
-              Chat without revealing your identity. No registration required!
-            </p>
-            <div className='quick-access-buttons'>
-              <Button
-                icon={<FaUserSecret />}
-                label='Anonymous Chat'
-                className='p-button-outlined quick-access-btn'
-                tooltip='Start private anonymous chat'
-                tooltipOptions={{ position: 'bottom' }}
-                onClick={() => navigate({ to: '/anonymous-chat' })}
-              />
-              <Button
-                icon={<HiUserGroup />}
-                label='Anonymous Rooms'
-                className='p-button-outlined quick-access-btn'
-                tooltip='Join or create anonymous chat rooms'
-                tooltipOptions={{ position: 'bottom' }}
-                onClick={() => navigate({ to: '/room' })}
-              />
+        <div className={styles.clQuickAccess}>
+          <div className={styles.clQuickAccessHeader}>
+            <div className={styles.clQuickAccessIcon}>
+              <i className='pi pi-eye-slash' />
             </div>
+            <h3 className={styles.clQuickAccessTitle}>Anonymous Features</h3>
           </div>
-          <Divider className='m-0' />
-        </>
+          <p className={styles.clQuickAccessDescription}>
+            Chat without revealing your identity. No registration required!
+          </p>
+          <div className={styles.clQuickAccessButtons}>
+            <button
+              className={styles.clQuickAccessButton}
+              onClick={() => navigate({ to: '/anonymous-chat' })}
+            >
+              <FaUserSecret />
+              Anonymous Chat
+            </button>
+            <button
+              className={styles.clQuickAccessButton}
+              onClick={() => navigate({ to: '/room' })}
+            >
+              <HiUserGroup />
+              Anonymous Rooms
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Anonymous User Quick Actions */}
       {unifiedAuthService.isAnonymousUser() && (
-        <>
-          <div className='anonymous-quick-access'>
-            <h3 className='section-title'>Anonymous Options</h3>
-            <p className='section-description'>
-              You're in anonymous mode. Explore different anonymous chat
-              options!
-            </p>
-            <div className='quick-access-buttons'>
-              <Button
-                icon={<FaUserSecret />}
-                label='Private Chat'
-                className='p-button-outlined quick-access-btn'
-                tooltip='Continue with private anonymous chat'
-                tooltipOptions={{ position: 'bottom' }}
-                onClick={() => navigate({ to: '/anonymous-chat' })}
-              />
-              <Button
-                icon={<HiUserGroup />}
-                label='Join Rooms'
-                className='p-button-outlined quick-access-btn'
-                tooltip='Join or create public anonymous rooms'
-                tooltipOptions={{ position: 'bottom' }}
-                onClick={() => navigate({ to: '/room' })}
-              />
+        <div className={styles.clQuickAccess}>
+          <div className={styles.clQuickAccessHeader}>
+            <div className={styles.clQuickAccessIcon}>
+              <i className='pi pi-eye-slash' />
             </div>
+            <h3 className={styles.clQuickAccessTitle}>Anonymous Options</h3>
           </div>
-          <Divider className='m-0' />
-        </>
+          <p className={styles.clQuickAccessDescription}>
+            You're in anonymous mode. Explore different anonymous chat options!
+          </p>
+          <div className={styles.clQuickAccessButtons}>
+            <button
+              className={styles.clQuickAccessButton}
+              onClick={() => navigate({ to: '/anonymous-chat' })}
+            >
+              <FaUserSecret />
+              Private Chat
+            </button>
+            <button
+              className={styles.clQuickAccessButton}
+              onClick={() => navigate({ to: '/room' })}
+            >
+              <HiUserGroup />
+              Join Rooms
+            </button>
+          </div>
+        </div>
       )}
 
-      {/* Chat List */}
-      <div className='chat-list-content'>
-        {contacts.map((contact) => (
-          <div
-            key={contact.id}
-            className='chat-item'
-            onClick={() => handleChatClick(contact.id)}
-          >
-            <div className='chat-item-avatar'>
-              <Avatar
-                image={contact.avatar}
-                label={contact.name.charAt(0)}
-                size='large'
-                shape='circle'
-                className='contact-avatar'
-              />
-              {contact.isOnline && <div className='online-indicator' />}
-            </div>
-
-            <div className='chat-item-content'>
-              <div className='chat-item-header'>
-                <h4 className='contact-name'>{contact.name}</h4>
-                <span className='last-message-time'>
-                  {formatTime(contact.lastMessageTime)}
-                </span>
-              </div>
-
-              <div className='chat-item-footer'>
-                <p className='last-message'>{contact.lastMessage}</p>
-                {contact.unreadCount > 0 && (
-                  <span className='unread-badge'>{contact.unreadCount}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Floating Action Button */}
-      <Button
-        icon={<FaPlus />}
-        className='fab-button'
-        rounded
-        tooltip='Start New Chat'
-        tooltipOptions={{ position: 'top' }}
+      <button
+        className={styles.clFabButton}
         onClick={() => setShowUserSearch(true)}
-      />
+        title='Start New Chat'
+      >
+        <FaPlus />
+      </button>
 
       {/* Header Menu */}
       <Menu
         ref={menuRef}
         model={menuItems}
         popup
-        className='chat-list-menu'
       />
 
       {/* User Search Modal */}

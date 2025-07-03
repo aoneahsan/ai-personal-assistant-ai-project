@@ -17,6 +17,223 @@ html {
   );
 }
 
+// ========================================
+// COMMON UTILITY CLASSES
+// ========================================
+
+// Layout utilities
+.full-height {
+  min-height: 100vh;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+}
+
+// Common gradients
+.gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary, #635bff) 0%,
+    var(--color-primary-dark, #4b47cc) 100%
+  );
+}
+
+.gradient-success {
+  background: linear-gradient(
+    135deg,
+    var(--color-success, #10b981) 0%,
+    var(--color-success-dark, #059669) 100%
+  );
+}
+
+.gradient-background {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+// Common shadows
+.shadow-light {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.shadow-heavy {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+}
+
+// Common borders
+.border-light {
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.border-radius-large {
+  border-radius: 16px;
+}
+
+.border-radius-medium {
+  border-radius: 12px;
+}
+
+.border-radius-small {
+  border-radius: 8px;
+}
+
+// Text utilities
+.text-primary {
+  color: var(--color-text-primary, #1e293b);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary, #64748b);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary, #94a3b8);
+}
+
+// Button utilities
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary, #635bff) 0%,
+    var(--color-primary-dark, #4b47cc) 100%
+  );
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 91, 255, 0.3);
+  }
+}
+
+.btn-success {
+  background: linear-gradient(
+    135deg,
+    var(--color-success, #10b981) 0%,
+    var(--color-success-dark, #059669) 100%
+  );
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+  }
+}
+
+// Animation utilities
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Loading state
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+
+  .p-progress-spinner {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+// Message/notification styles
+.info-banner {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+
+  .p-message {
+    margin: 0;
+    border: none;
+    background: transparent;
+
+    .p-message-wrapper {
+      background: transparent;
+      color: inherit;
+      font-weight: 500;
+    }
+  }
+}
+
+.error-banner {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.success-banner {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+// ========================================
+// END COMMON UTILITY CLASSES
+// ========================================
+
 // Global PrimeReact Theme Overrides for Better Contrast and Visibility
 // These ensure that all PrimeReact components use our theme variables properly
 
@@ -69,64 +286,57 @@ html {
       color: inherit !important;
     }
   }
+
+  // Secondary button styling
+  &.p-button-secondary {
+    background: var(--color-secondary) !important;
+    border-color: var(--color-secondary) !important;
+    color: white !important;
+
+    &:hover {
+      background: var(--color-secondary-hover) !important;
+      border-color: var(--color-secondary-hover) !important;
+    }
+
+    .p-button-icon {
+      color: white !important;
+    }
+  }
+
+  // Success button styling
+  &.p-button-success {
+    background: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+
+    .p-button-icon {
+      color: white !important;
+    }
+  }
+
+  // Danger button styling
+  &.p-button-danger {
+    background: var(--color-error) !important;
+    border-color: var(--color-error) !important;
+
+    .p-button-icon {
+      color: white !important;
+    }
+  }
 }
 
 // InputText overrides
 .p-inputtext {
   background: var(--color-surface) !important;
-  color: var(--color-text-primary) !important;
   border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
 
   &:focus {
     border-color: var(--color-primary) !important;
-    box-shadow: 0 0 0 2px var(--color-focus) !important;
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 99, 91, 255), 0.1) !important;
   }
 
   &::placeholder {
-    color: var(--color-text-secondary) !important;
-    opacity: 0.8;
-  }
-}
-
-// ADDED: Specific overrides for message input field
-.message-input-container {
-  .p-inputtext {
-    background: transparent !important;
-    color: var(--color-text-primary) !important;
-    border: none !important;
-    font-size: 16px !important;
-    font-weight: 400 !important;
-
-    &::placeholder {
-      color: var(--color-text-secondary) !important;
-      opacity: 0.8 !important;
-      font-weight: 400 !important;
-    }
-
-    &:focus {
-      border: none !important;
-      box-shadow: none !important;
-      outline: none !important;
-      color: var(--color-text-primary) !important;
-    }
-
-    &:disabled {
-      opacity: 0.6 !important;
-      background: transparent !important;
-      color: var(--color-text-secondary) !important;
-    }
-  }
-}
-
-// ADDED: Force visibility for all React Icons in message input
-.message-input-container {
-  svg {
-    color: inherit !important;
-    fill: currentColor !important;
-  }
-
-  .p-button-icon {
-    color: inherit !important;
+    color: var(--color-text-tertiary) !important;
   }
 }
 
@@ -134,7 +344,6 @@ html {
 .p-dialog {
   background: var(--color-surface) !important;
   border: 1px solid var(--color-border) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
 
   .p-dialog-header {
     background: var(--color-surface) !important;

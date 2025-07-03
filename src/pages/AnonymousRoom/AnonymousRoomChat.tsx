@@ -9,7 +9,7 @@ import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import './AnonymousRoomChat.scss';
+import styles from './AnonymousRoomChat.module.scss';
 
 interface RoomMessage extends FirestoreMessage {
   senderName: string;
@@ -171,13 +171,16 @@ const AnonymousRoomChat: React.FC = () => {
     }
   };
 
-  const handleSaveEdit = async (
-    messageId: string,
-    newText: string,
-    reason?: string
-  ) => {
+  const handleSaveEdit = async (newText: string, editReason?: string) => {
+    if (!selectedMessage?.id) return;
+
     try {
-      await chatService.editMessage(messageId, newText, senderName, reason);
+      await chatService.editMessage(
+        selectedMessage.id,
+        newText,
+        senderName,
+        editReason
+      );
       toast.success('Message updated');
       setShowEditDialog(false);
       setSelectedMessage(null);
@@ -229,20 +232,20 @@ const AnonymousRoomChat: React.FC = () => {
 
   // Name entry dialog
   const nameDialogFooter = (
-    <div className='name-dialog-footer'>
+    <div className={styles.arcNameDialogFooter}>
       <Button
         label='Join Room'
         icon='pi pi-sign-in'
         onClick={handleJoinRoom}
         disabled={!senderName.trim()}
-        className='join-room-button'
+        className={styles.arcJoinButton}
       />
     </div>
   );
 
   if (!roomId) {
     return (
-      <div className='room-error'>
+      <div className={styles.arcError}>
         <h2>Invalid Room</h2>
         <Button
           label='Back to Room List'
@@ -253,15 +256,15 @@ const AnonymousRoomChat: React.FC = () => {
   }
 
   return (
-    <div className='anonymous-room-chat-container'>
+    <div className={styles.arcContainer}>
       {/* Room Header */}
-      <div className='room-header'>
-        <div className='room-info'>
-          <h2 className='room-title'>
+      <div className={styles.arcHeader}>
+        <div className={styles.arcRoomInfo}>
+          <h2 className={styles.arcRoomTitle}>
             <i className='pi pi-comments mr-2'></i>
             Room: {roomId}
           </h2>
-          <div className='room-details'>
+          <div className={styles.arcRoomDetails}>
             <Tag
               value={`${onlineUsers.length} online`}
               severity='success'
@@ -274,7 +277,7 @@ const AnonymousRoomChat: React.FC = () => {
             />
           </div>
         </div>
-        <div className='room-actions'>
+        <div className={styles.arcRoomActions}>
           <Button
             label='Leave Room'
             icon='pi pi-sign-out'
@@ -285,7 +288,7 @@ const AnonymousRoomChat: React.FC = () => {
       </div>
 
       {/* Info Banner */}
-      <div className='room-info-banner'>
+      <div className={styles.arcInfoBanner}>
         <Message
           severity='info'
           content='🔓 Open Room: Anyone can join, edit, or delete messages. Messages are temporary and not permanently stored.'
@@ -293,9 +296,9 @@ const AnonymousRoomChat: React.FC = () => {
       </div>
 
       {/* Messages Area */}
-      <div className='messages-container'>
+      <div className={styles.arcMessagesContainer}>
         {messages.length === 0 ? (
-          <div className='empty-messages'>
+          <div className={styles.arcEmptyMessages}>
             <i
               className='pi pi-comments'
               style={{ fontSize: '3rem', color: '#ccc' }}
@@ -303,36 +306,38 @@ const AnonymousRoomChat: React.FC = () => {
             <p>No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          <div className='messages-list'>
+          <div className={styles.arcMessagesList}>
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`message-bubble ${message.senderName === senderName ? 'own-message' : 'other-message'}`}
+                className={`${styles.arcMessageBubble} ${message.senderName === senderName ? styles.arcOwnMessage : styles.arcOtherMessage}`}
                 onContextMenu={(e) => handleRightClick(e, message)}
               >
-                <div className='message-header'>
-                  <span className='sender-name'>{message.senderName}</span>
-                  <span className='message-time'>
+                <div className={styles.arcMessageHeader}>
+                  <span className={styles.arcSenderName}>
+                    {message.senderName}
+                  </span>
+                  <span className={styles.arcMessageTime}>
                     {formatTime(message.timestamp)}
                   </span>
                   {message.isEdited && (
                     <Tag
                       value='edited'
-                      className='edited-tag'
+                      className={styles.arcEditedTag}
                       severity='secondary'
                     />
                   )}
                 </div>
-                <div className='message-content'>
+                <div className={styles.arcMessageContent}>
                   {message.isDeleted ? (
-                    <em className='deleted-message'>
+                    <em className={styles.arcDeletedMessage}>
                       This message was deleted
                     </em>
                   ) : (
                     message.text
                   )}
                 </div>
-                <div className='message-actions'>
+                <div className={styles.arcMessageActions}>
                   <Button
                     icon='pi pi-pencil'
                     className='p-button-text p-button-sm'
@@ -355,22 +360,21 @@ const AnonymousRoomChat: React.FC = () => {
 
       {/* Message Input */}
       {isConnected && (
-        <div className='message-input-container'>
-          <div className='input-wrapper'>
+        <div className={styles.arcMessageInput}>
+          <div className={styles.arcMessageInputField}>
             <InputText
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder='Type your message...'
-              className='message-input'
-            />
-            <Button
-              icon='pi pi-send'
-              onClick={handleSendMessage}
-              disabled={!currentMessage.trim()}
-              className='send-button'
             />
           </div>
+          <Button
+            icon='pi pi-send'
+            onClick={handleSendMessage}
+            disabled={!currentMessage.trim()}
+            className={styles.arcSendButton}
+          />
         </div>
       )}
 
@@ -382,35 +386,35 @@ const AnonymousRoomChat: React.FC = () => {
         footer={nameDialogFooter}
         closable={false}
         modal
-        className='name-entry-dialog'
+        className={styles.arcNameDialog}
+        onHide={() => setShowNameDialog(false)}
       >
-        <div className='name-entry-content'>
-          <div className='entry-icon'>
-            <i className='pi pi-user'></i>
-          </div>
+        <div className={styles.arcNameDialogContent}>
           <p>Enter your name to join this chat room:</p>
-          <InputText
-            value={senderName}
-            onChange={(e) => setSenderName(e.target.value)}
-            placeholder='Your display name'
-            className='name-input'
-            maxLength={20}
-            autoFocus
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleJoinRoom();
-              }
-            }}
-          />
-          <small className='name-help'>{senderName.length}/20 characters</small>
-          <div className='random-name-section'>
-            <Button
-              label='Use Random Name'
-              icon='pi pi-refresh'
-              className='p-button-text'
-              onClick={() => setSenderName(generateRandomName())}
+          <div className={styles.arcNameInputContainer}>
+            <label>Your display name</label>
+            <InputText
+              value={senderName}
+              onChange={(e) => setSenderName(e.target.value)}
+              placeholder='Your display name'
+              maxLength={20}
+              autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleJoinRoom();
+                }
+              }}
             />
+            <small className={styles.arcCharacterCount}>
+              {senderName.length}/20 characters
+            </small>
           </div>
+          <button
+            className={styles.arcRandomNameButton}
+            onClick={() => setSenderName(generateRandomName())}
+          >
+            🎲 Use Random Name
+          </button>
         </div>
       </Dialog>
 

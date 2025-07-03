@@ -1,0 +1,489 @@
+// AnonymousRoom CSS Module
+// Using "ar-" prefix (AnonymousRoom) to avoid conflicts
+
+.arPage {
+  min-height: 100vh;
+  background: var(--color-background, #f8f9fa);
+  display: flex;
+  flex-direction: column;
+
+  .arPageHeader {
+    background: var(--color-surface, white);
+    border-bottom: 1px solid var(--color-border, #e9ecef);
+    padding: 60px 0 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .arHeaderContent {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+
+      .arHeaderIcon {
+        width: 80px;
+        height: 80px;
+        background: var(--color-primary, #667eea);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+
+        i {
+          font-size: 2rem;
+          color: white;
+        }
+      }
+
+      .arPageTitle {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--color-text-primary, #2c3e50);
+        margin: 0 0 12px;
+        letter-spacing: -0.02em;
+      }
+
+      .arPageSubtitle {
+        font-size: 1.2rem;
+        color: var(--color-text-secondary, #6c757d);
+        margin: 0;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  .arPageContent {
+    flex: 1;
+    padding: 40px 0;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .arActionCards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+
+      .arActionCard {
+        background: var(--color-surface, white);
+        border: 1px solid var(--color-border, #e9ecef);
+        border-radius: 16px;
+        padding: 0;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        &.arCreateCard {
+          .arCardHeader {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+            .arCardIcon {
+              background: rgba(255, 255, 255, 0.2);
+              color: white;
+            }
+
+            h3 {
+              color: white;
+            }
+          }
+        }
+
+        &.arJoinCard {
+          .arCardHeader {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+
+            .arCardIcon {
+              background: rgba(255, 255, 255, 0.2);
+              color: white;
+            }
+
+            h3 {
+              color: white;
+            }
+          }
+        }
+
+        .arCardHeader {
+          padding: 30px;
+          display: flex;
+          align-items: center;
+          gap: 20px;
+
+          .arCardIcon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-primary-light, #e8f2ff);
+            color: var(--color-primary, #667eea);
+
+            i {
+              font-size: 1.5rem;
+            }
+          }
+
+          h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text-primary, #2c3e50);
+          }
+        }
+
+        .arCardBody {
+          padding: 30px;
+
+          p {
+            color: var(--color-text-secondary, #6c757d);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 0 0 25px;
+          }
+
+          .arCardActions {
+            display: flex;
+            justify-content: center;
+
+            .arCreateBtn {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              border: none;
+              color: white;
+              padding: 12px 30px;
+              border-radius: 10px;
+              font-weight: 600;
+              transition: all 0.3s ease;
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+              }
+            }
+          }
+
+          .arJoinForm {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+
+            .arInputGroup {
+              position: relative;
+
+              .arRoomInput {
+                width: 100%;
+                padding: 15px 20px;
+                border: 2px solid var(--color-border, #e9ecef);
+                border-radius: 12px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                letter-spacing: 2px;
+                text-align: center;
+                background: var(--color-background, #f8f9fa);
+                color: var(--color-text-primary, #2c3e50);
+
+                &:focus {
+                  border-color: var(--color-primary, #667eea);
+                  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+
+                &::placeholder {
+                  color: var(--color-text-tertiary, #94a3b8);
+                  letter-spacing: 1px;
+                }
+              }
+
+              .arInputCounter {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--color-text-tertiary, #94a3b8);
+                font-size: 0.9rem;
+                font-weight: 500;
+              }
+            }
+
+            .arJoinBtn {
+              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              border: none;
+              color: white;
+              padding: 12px 30px;
+              border-radius: 10px;
+              font-weight: 600;
+              transition: all 0.3s ease;
+
+              &:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(245, 87, 108, 0.3);
+              }
+
+              &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .arFeaturesSection {
+      .arFeaturesPanel {
+        background: var(--color-surface, white);
+        border: 1px solid var(--color-border, #e9ecef);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+        .p-panel-header {
+          background: var(--color-surface, white);
+          border-bottom: 1px solid var(--color-border, #e9ecef);
+          padding: 25px 30px;
+
+          .p-panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--color-text-primary, #2c3e50);
+          }
+        }
+
+        .p-panel-content {
+          padding: 30px;
+        }
+
+        .arFeaturesGrid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 30px;
+
+          .arFeatureItem {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+
+            .arFeatureIcon {
+              width: 50px;
+              height: 50px;
+              background: var(--color-primary-light, #e8f2ff);
+              border-radius: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: var(--color-primary, #667eea);
+              flex-shrink: 0;
+
+              i {
+                font-size: 1.2rem;
+              }
+            }
+
+            .arFeatureContent {
+              h4 {
+                margin: 0 0 8px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--color-text-primary, #2c3e50);
+              }
+
+              p {
+                margin: 0;
+                color: var(--color-text-secondary, #6c757d);
+                line-height: 1.5;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .arWarningSection {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 12px;
+      padding: 25px;
+      margin-top: 30px;
+
+      .arWarningGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+
+        .arWarningItem {
+          display: flex;
+          align-items: flex-start;
+          gap: 15px;
+
+          .arWarningIcon {
+            width: 40px;
+            height: 40px;
+            background: #ffeaa7;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #856404;
+            flex-shrink: 0;
+
+            i {
+              font-size: 1rem;
+            }
+          }
+
+          .arWarningContent {
+            p {
+              margin: 0;
+              color: #856404;
+              font-size: 0.95rem;
+              line-height: 1.4;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .arPageFooter {
+    background: var(--color-surface, white);
+    border-top: 1px solid var(--color-border, #e9ecef);
+    padding: 30px 0;
+    text-align: center;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .arBackButton {
+      background: transparent;
+      border: 2px solid var(--color-primary, #667eea);
+      color: var(--color-primary, #667eea);
+      padding: 10px 25px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: var(--color-primary, #667eea);
+        color: white;
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .arPage {
+    .arPageHeader {
+      padding: 40px 0 30px;
+
+      .arHeaderContent {
+        .arHeaderIcon {
+          width: 60px;
+          height: 60px;
+          margin-bottom: 15px;
+
+          i {
+            font-size: 1.5rem;
+          }
+        }
+
+        .arPageTitle {
+          font-size: 2rem;
+        }
+
+        .arPageSubtitle {
+          font-size: 1.1rem;
+        }
+      }
+    }
+
+    .arPageContent {
+      padding: 30px 0;
+
+      .arActionCards {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        margin-bottom: 40px;
+
+        .arActionCard {
+          .arCardHeader {
+            padding: 25px;
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+
+            .arCardIcon {
+              width: 50px;
+              height: 50px;
+            }
+
+            h3 {
+              font-size: 1.3rem;
+            }
+          }
+
+          .arCardBody {
+            padding: 25px;
+
+            p {
+              font-size: 1rem;
+            }
+
+            .arJoinForm {
+              .arInputGroup {
+                .arRoomInput {
+                  padding: 12px 16px;
+                  font-size: 1rem;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .arFeaturesSection {
+        .arFeaturesPanel {
+          .p-panel-header {
+            padding: 20px;
+          }
+
+          .p-panel-content {
+            padding: 20px;
+          }
+
+          .arFeaturesGrid {
+            grid-template-columns: 1fr;
+            gap: 25px;
+          }
+        }
+      }
+
+      .arWarningSection {
+        padding: 20px;
+
+        .arWarningGrid {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+      }
+    }
+  }
+}
