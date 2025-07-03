@@ -13,10 +13,7 @@ import TolgeeHoc from './hoc/TolgeeHoc';
 import useTheme from './hooks/useTheme';
 import { FeedbackModule } from './modules/FeedbackModule';
 import { auth, db } from './services/firebase';
-import {
-  useUserDataZState,
-  useUserProfileZState,
-} from './zustandStates/userState';
+import { useUserProfileZState } from './zustandStates/userState';
 
 import './index.scss';
 
@@ -25,7 +22,6 @@ const AppHocWrapper = () => {
   useTheme();
 
   // Get current user for feedback module
-  const currentUser = useUserDataZState((state) => state.data);
   const firebaseUser = auth.currentUser;
 
   // Initialize user profile data from storage

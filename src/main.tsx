@@ -30,20 +30,16 @@ if ('serviceWorker' in navigator) {
   });
 
   // Listen for install prompt
-  let deferredPrompt: any;
   window.addEventListener('beforeinstallprompt', (e) => {
     consoleLog('PWA: Install prompt available');
     // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
-    // Stash the event so it can be triggered later
-    deferredPrompt = e;
-
     // Optionally show your own install button here
     // You can trigger the install prompt with: deferredPrompt.prompt()
   });
 
   // Listen for successful app install
-  window.addEventListener('appinstalled', (evt) => {
+  window.addEventListener('appinstalled', () => {
     consoleLog('PWA: App was successfully installed');
   });
 }
@@ -58,23 +54,4 @@ if (container) {
   );
 } else {
   console.error('Root element not found');
-}
-
-async function startApp() {
-  // PWA Service Worker registration
-  if ('serviceWorker' in navigator) {
-    try {
-      consoleLog(
-        'PWA: Service Worker support detected, starting registration...'
-      );
-
-      window.addEventListener('beforeinstallprompt', () => {
-        consoleLog('PWA: New service worker version found');
-      });
-    } catch (error) {
-      consoleLog('PWA: Service Worker registration failed:', error);
-    }
-  }
-
-  // ... rest of function ...
 }

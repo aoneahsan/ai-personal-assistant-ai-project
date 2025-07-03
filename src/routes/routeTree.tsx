@@ -29,7 +29,6 @@ const chatSearchSchema = z
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
-const ChatView = lazy(() => import('@/components/Chat/ChatView'));
 
 // Policy page components
 const PrivacyPolicy = lazy(() => import('@/pages/Policy/PrivacyPolicy'));
