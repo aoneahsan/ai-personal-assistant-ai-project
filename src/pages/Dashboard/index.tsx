@@ -1,6 +1,7 @@
 import ChatView from '@/components/Chat/ChatView';
 import UserSearch from '@/components/Chat/UserSearch';
 import { useTheme } from '@/hooks/useTheme';
+import EditProfile from '@/pages/EditProfile';
 import {
   ChatConversation,
   ChatService,
@@ -8,7 +9,6 @@ import {
 } from '@/services/chatService';
 import { EmbedConfig, EmbedService } from '@/services/embedService';
 import { ROUTES } from '@/utils/constants/routingConstants';
-import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import {
   useUserDataZState,
   useUserProfileZState,
@@ -47,6 +47,7 @@ const Dashboard: React.FC = () => {
     if (path === ROUTES.DASHBOARD_CHATS) return 'chats';
     if (path === ROUTES.DASHBOARD_CHAT_EMBEDS) return 'embeds';
     if (path === ROUTES.DASHBOARD_ACCOUNT) return 'account';
+    if (path === ROUTES.EDIT_PROFILE) return 'profile';
     if (path.startsWith('/chats/view/')) return 'chat-view';
     return 'overview';
   };
@@ -63,7 +64,8 @@ const Dashboard: React.FC = () => {
             userData.id
           );
           setUserChats(conversations);
-          const embeds = await embedService.getUserEmbeds(userData.id);
+          // const embeds = await embedService.getUserEmbeds(userData.id);
+          const embeds: EmbedConfig[] = []; // Placeholder until getUserEmbeds is implemented
           setUserEmbeds(embeds);
         }
       } catch (error) {
@@ -199,17 +201,15 @@ const Dashboard: React.FC = () => {
                         <Avatar
                           shape='circle'
                           size='normal'
-                          icon='pi pi-user'
-                          className='bg-primary'
+                          image={rowData.participant.avatar}
+                          label={rowData.participant.name?.charAt(0)}
                         />
                         <div>
                           <div className='font-medium'>
-                            {rowData.participantEmails.find(
-                              (email) => email !== userData?.email
-                            ) || 'Unknown'}
+                            {rowData.participant.name}
                           </div>
                           <div className='text-sm text-500'>
-                            {rowData.participantEmails.length} participants
+                            {rowData.participant.email}
                           </div>
                         </div>
                       </div>
@@ -220,15 +220,9 @@ const Dashboard: React.FC = () => {
                     header='Last Message'
                     body={(rowData) => (
                       <div>
-                        <div className='text-sm'>
-                          {rowData.lastMessage || 'No messages yet'}
-                        </div>
+                        <div className='text-sm'>{rowData.lastMessage}</div>
                         <div className='text-xs text-500'>
-                          {rowData.lastMessageTime
-                            ? new Date(
-                                rowData.lastMessageTime.toDate()
-                              ).toLocaleString()
-                            : ''}
+                          {new Date(rowData.lastMessageAt).toLocaleString()}
                         </div>
                       </div>
                     )}
@@ -236,36 +230,27 @@ const Dashboard: React.FC = () => {
                   <Column
                     field='unreadCount'
                     header='Unread'
-                    body={(rowData) => (
-                      <div className='text-center'>
-                        {rowData.unreadCount?.[userData?.id || ''] > 0 ? (
-                          <Chip
-                            label={rowData.unreadCount[userData?.id || '']}
-                            className='bg-red-500 text-white'
-                          />
-                        ) : (
-                          <span className='text-500'>0</span>
-                        )}
-                      </div>
-                    )}
+                    body={(rowData) =>
+                      rowData.unreadCount > 0 ? (
+                        <Chip
+                          label={rowData.unreadCount}
+                          className='p-chip-sm'
+                        />
+                      ) : (
+                        <span className='text-500'>-</span>
+                      )
+                    }
                   />
                   <Column
-                    header='Actions'
+                    field='status'
+                    header='Status'
                     body={(rowData) => (
-                      <div className='flex gap-2'>
-                        <Button
-                          icon='pi pi-eye'
-                          className='p-button-rounded p-button-text'
-                          onClick={() => handleChatClick(rowData.id)}
-                          tooltip='View Chat'
-                        />
-                        <Button
-                          icon='pi pi-copy'
-                          className='p-button-rounded p-button-text'
-                          onClick={() => copyToClipboardWithToast(rowData.id)}
-                          tooltip='Copy Chat ID'
-                        />
-                      </div>
+                      <Tag
+                        value={rowData.status}
+                        severity={
+                          rowData.status === 'active' ? 'success' : 'warning'
+                        }
+                      />
                     )}
                   />
                 </DataTable>
@@ -297,17 +282,23 @@ const Dashboard: React.FC = () => {
                   {[...Array(3)].map((_, i) => (
                     <div
                       key={i}
-                      className='p-3 border-round-lg border-1 surface-border'
+                      className='flex align-items-center gap-3 p-3'
                     >
                       <Skeleton
-                        width='100%'
-                        height='1rem'
-                        className='mb-2'
+                        shape='circle'
+                        size='3rem'
                       />
-                      <Skeleton
-                        width='80%'
-                        height='0.8rem'
-                      />
+                      <div className='flex-1'>
+                        <Skeleton
+                          width='200px'
+                          height='1rem'
+                          className='mb-2'
+                        />
+                        <Skeleton
+                          width='150px'
+                          height='0.8rem'
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -327,8 +318,7 @@ const Dashboard: React.FC = () => {
                     No embeds created yet
                   </h3>
                   <p className='text-lg mb-4'>
-                    Create embeds to integrate chat functionality on your
-                    website
+                    Create your first chat embed to get started
                   </p>
                   <Button
                     label='Create New Embed'
@@ -350,39 +340,10 @@ const Dashboard: React.FC = () => {
                     header='Name'
                     body={(rowData) => (
                       <div>
-                        <div className='font-medium'>
-                          {rowData.name || 'Unnamed Embed'}
+                        <div className='font-medium'>{rowData.name}</div>
+                        <div className='text-sm text-500'>
+                          {rowData.description}
                         </div>
-                        <div className='text-sm text-500'>ID: {rowData.id}</div>
-                      </div>
-                    )}
-                  />
-                  <Column
-                    field='allowedDomains'
-                    header='Domains'
-                    body={(rowData) => (
-                      <div>
-                        {rowData.allowedDomains?.length > 0 ? (
-                          <div className='flex flex-wrap gap-1'>
-                            {rowData.allowedDomains
-                              .slice(0, 2)
-                              .map((domain: string, index: number) => (
-                                <Tag
-                                  key={index}
-                                  value={domain}
-                                />
-                              ))}
-                            {rowData.allowedDomains.length > 2 && (
-                              <Tag
-                                value={`+${rowData.allowedDomains.length - 2} more`}
-                              />
-                            )}
-                          </div>
-                        ) : (
-                          <span className='text-500'>
-                            No domains configured
-                          </span>
-                        )}
                       </div>
                     )}
                   />
@@ -392,22 +353,29 @@ const Dashboard: React.FC = () => {
                     body={(rowData) => (
                       <Tag
                         value={rowData.isActive ? 'Active' : 'Inactive'}
-                        severity={rowData.isActive ? 'success' : 'warning'}
+                        severity={rowData.isActive ? 'success' : 'danger'}
                       />
                     )}
                   />
                   <Column
+                    field='createdAt'
+                    header='Created'
+                    body={(rowData) =>
+                      new Date(rowData.createdAt).toLocaleDateString()
+                    }
+                  />
+                  <Column
+                    field='actions'
                     header='Actions'
                     body={(rowData) => (
                       <div className='flex gap-2'>
                         <Button
                           icon='pi pi-copy'
                           className='p-button-rounded p-button-text'
-                          onClick={() =>
-                            copyToClipboardWithToast(
-                              `<script src="https://yoursite.com/embed/${rowData.id}"></script>`
-                            )
-                          }
+                          onClick={() => {
+                            const embedCode = `<script src="https://yoursite.com/embed/${rowData.id}"></script>`;
+                            navigator.clipboard.writeText(embedCode);
+                          }}
                           tooltip='Copy Embed Code'
                         />
                         <Button
@@ -486,6 +454,9 @@ const Dashboard: React.FC = () => {
           </div>
         );
 
+      case 'profile':
+        return <EditProfile />;
+
       case 'chat-view':
         return <ChatView />;
 
@@ -561,7 +532,7 @@ const Dashboard: React.FC = () => {
   return (
     <div
       className='min-h-screen'
-      style={{ backgroundColor: theme.surfaceGround }}
+      style={{ backgroundColor: theme.surface || '#f8f9fa' }}
     >
       {/* Mobile Header */}
       <div className='lg:hidden flex align-items-center justify-content-between p-3 border-bottom-1 surface-border'>
