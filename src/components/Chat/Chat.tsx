@@ -1,9 +1,10 @@
+import { useTheme } from '@/hooks/useTheme';
 import { unifiedAuthService } from '@/services/authService';
 import { chatService, FirestoreMessage } from '@/services/chatService';
 import { ChatFeatureFlag, SubscriptionPlan } from '@/types/user/subscription';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
-import { useLocation } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
@@ -30,6 +31,10 @@ const Chat: React.FC<ChatProps> = ({
 }) => {
   const currentUser = useUserDataZState((state) => state.data);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Initialize theme to ensure CSS variables are loaded
+  useTheme();
 
   // Get search params safely from URL
   const getSearchParams = () => {
@@ -427,8 +432,12 @@ const Chat: React.FC<ChatProps> = ({
     if (onBack) {
       onBack();
     } else {
-      // Navigate back to chat list
-      window.history.back();
+      // Navigate to chats list page instead of using browser history
+      if (location.pathname === '/anonymous-chat') {
+        navigate({ to: '/chats' });
+      } else {
+        navigate({ to: '/chats' });
+      }
     }
     consoleLog('Chat deleted');
   };

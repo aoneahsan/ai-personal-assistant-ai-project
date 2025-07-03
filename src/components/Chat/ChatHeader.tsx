@@ -1,6 +1,7 @@
 import { FeedbackButton } from '@/modules/FeedbackModule/components/FeedbackButton';
 import { FeedbackModule } from '@/modules/FeedbackModule/components/FeedbackModule';
 import { auth, db } from '@/services/firebase';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog';
@@ -11,6 +12,7 @@ import React, { useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { FaArrowLeft, FaPhone, FaVideo } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import './ChatHeader.scss';
 import { ChatUser } from './types';
 
 interface ChatHeaderProps {
@@ -36,6 +38,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const menuRef = useRef<Menu>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -49,7 +53,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     if (onBack) {
       onBack();
     } else {
-      window.history.back();
+      navigate({ to: '/chats' });
     }
   };
 

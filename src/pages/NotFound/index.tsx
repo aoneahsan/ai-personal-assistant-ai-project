@@ -12,7 +12,8 @@ const NotFound: React.FC = () => {
   };
 
   const goBack = () => {
-    window.history.back();
+    // Navigate to chats list page instead of using browser history
+    navigate({ to: '/chats' });
   };
 
   return (

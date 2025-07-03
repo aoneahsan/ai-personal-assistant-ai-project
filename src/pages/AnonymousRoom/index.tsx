@@ -1,3 +1,4 @@
+import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -11,6 +12,9 @@ const AnonymousRoom: React.FC = () => {
   const [roomName, setRoomName] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const navigate = useNavigate();
+
+  // Initialize theme to ensure CSS variables are loaded
+  useTheme();
 
   // Generate a random 8-character room name
   const generateRoomName = () => {
@@ -66,6 +70,11 @@ const AnonymousRoom: React.FC = () => {
     if (e.key === 'Enter' && roomName.length === 8) {
       handleJoinRoom();
     }
+  };
+
+  const handleBackToChats = () => {
+    // Navigate to chats list page instead of using browser history
+    navigate({ to: '/chats' });
   };
 
   return (
@@ -228,10 +237,10 @@ const AnonymousRoom: React.FC = () => {
           {/* Navigation */}
           <div className='page-navigation'>
             <Button
-              label='Back to Personal Chat'
+              label='Back to Chats'
               icon='pi pi-arrow-left'
               className='p-button-outlined back-btn'
-              onClick={() => navigate({ to: '/anonymous-chat' })}
+              onClick={handleBackToChats}
             />
           </div>
         </div>
