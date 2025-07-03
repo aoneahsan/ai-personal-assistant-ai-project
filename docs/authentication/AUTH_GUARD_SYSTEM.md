@@ -162,10 +162,7 @@ The system provides detailed console logs for debugging:
 ### **📝 Commented Routes (Available for Uncommenting):**
 
 - `/dashboard` - Main dashboard
-- `/modern-dashboard` - Modern dashboard variant
-- `/compact-dashboard` - Compact dashboard variant
 - `/edit-profile` - Profile editing
-- `/compact-edit-profile` - Compact profile editing
 
 ---
 

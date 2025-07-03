@@ -241,12 +241,6 @@ const EditProfile: React.FC = () => {
               tooltipOptions={{ position: 'bottom' }}
             />
             <Button
-              icon='pi pi-compress'
-              label='Compact'
-              className='p-button-outlined p-button-success p-button-sm'
-              onClick={() => navigate({ to: '/compact-edit-profile' })}
-            />
-            <Button
               icon='pi pi-arrow-left'
               label='Back'
               className='p-button-outlined p-button-sm'
@@ -679,7 +673,6 @@ const EditProfile: React.FC = () => {
         visible={showHelpModal}
         onHide={() => setShowHelpModal(false)}
         sections={sections}
-        isCompactView={false}
       />
     </div>
   );

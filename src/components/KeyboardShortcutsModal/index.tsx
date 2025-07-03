@@ -8,14 +8,12 @@ interface KeyboardShortcutsModalProps {
   visible: boolean;
   onHide: () => void;
   sections?: { name: string; icon: string; color: string }[];
-  isCompactView?: boolean;
 }
 
 const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
   visible,
   onHide,
   sections = [],
-  isCompactView = false,
 }) => {
   // Key component for displaying keyboard keys
   const KeyBadge = ({
@@ -62,10 +60,6 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
         <div className='flex align-items-center gap-2'>
           <i className='pi pi-keyboard text-primary'></i>
           <span>Keyboard Shortcuts</span>
-          <Badge
-            value={isCompactView ? 'Compact View' : 'Standard View'}
-            severity='info'
-          />
         </div>
       }
       visible={visible}
@@ -188,9 +182,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
             <div className='mb-4'>
               <h3 className='text-lg font-bold text-color mb-3 flex align-items-center gap-2'>
                 <i className='pi pi-list text-purple-500'></i>
-                {isCompactView
-                  ? 'Accordion Section Navigation'
-                  : 'Section Navigation'}
+                Section Navigation
               </h3>
 
               {sections.map((section, index) => (
@@ -211,9 +203,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               <div className='mt-3 p-2 bg-gray-50 border-round'>
                 <p className='text-sm text-color-secondary m-0'>
                   <i className='pi pi-lightbulb text-yellow-500 mr-2'></i>
-                  {isCompactView
-                    ? 'These shortcuts will expand the corresponding accordion section and scroll to it.'
-                    : 'These shortcuts will scroll to the corresponding form section.'}
+                  These shortcuts will scroll to the corresponding form section.
                 </p>
               </div>
             </div>
