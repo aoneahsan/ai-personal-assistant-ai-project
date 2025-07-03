@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
@@ -12,7 +13,10 @@ import TolgeeHoc from './hoc/TolgeeHoc';
 import useTheme from './hooks/useTheme';
 import { FeedbackModule } from './modules/FeedbackModule';
 import { auth, db } from './services/firebase';
-import { useUserDataZState } from './zustandStates/userState';
+import {
+  useUserDataZState,
+  useUserProfileZState,
+} from './zustandStates/userState';
 
 import './index.scss';
 
@@ -23,6 +27,14 @@ const AppHocWrapper = () => {
   // Get current user for feedback module
   const currentUser = useUserDataZState((state) => state.data);
   const firebaseUser = auth.currentUser;
+
+  // Initialize user profile data from storage
+  const { loadProfileFromStorage } = useUserProfileZState();
+
+  // Load user profile data on app initialization
+  useEffect(() => {
+    loadProfileFromStorage();
+  }, [loadProfileFromStorage]);
 
   return (
     <>

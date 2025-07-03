@@ -1,3 +1,4 @@
+import { STORAGE } from '@/utils/helpers/localStorage';
 import { Preferences } from '@capacitor/preferences';
 import { FEEDBACK_DISMISSAL_CONFIG, STORAGE_KEYS } from '../utils/constants';
 
@@ -39,9 +40,9 @@ class FeedbackDismissalService {
       );
     } catch (error) {
       console.error('Error dismissing feedback widget:', error);
-      // Fallback to localStorage if Capacitor fails
-      localStorage.setItem(STORAGE_KEYS.WIDGET_DISMISSED, 'true');
-      localStorage.setItem(
+      // Fallback to STORAGE helper (which uses Capacitor Preferences)
+      await STORAGE.SET(STORAGE_KEYS.WIDGET_DISMISSED, 'true');
+      await STORAGE.SET(
         STORAGE_KEYS.WIDGET_DISMISSED_TIME,
         new Date().toISOString()
       );
@@ -82,13 +83,13 @@ class FeedbackDismissalService {
     } catch (error) {
       console.error('Error checking widget dismissal status:', error);
 
-      // Fallback to localStorage
-      const dismissed = localStorage.getItem(STORAGE_KEYS.WIDGET_DISMISSED);
+      // Fallback to STORAGE helper (which uses Capacitor Preferences)
+      const dismissed = await STORAGE.GET(STORAGE_KEYS.WIDGET_DISMISSED);
       if (dismissed !== 'true') {
         return true;
       }
 
-      const dismissedTime = localStorage.getItem(
+      const dismissedTime = await STORAGE.GET(
         STORAGE_KEYS.WIDGET_DISMISSED_TIME
       );
       if (!dismissedTime) {
@@ -101,7 +102,7 @@ class FeedbackDismissalService {
         (currentDate.getTime() - dismissedDate.getTime()) / (1000 * 60 * 60);
 
       if (hoursElapsed >= this.dismissHours) {
-        this.clearDismissalFallback();
+        await this.clearDismissalFallback();
         return true;
       }
 
@@ -120,10 +121,10 @@ class FeedbackDismissalService {
     }
   }
 
-  // Fallback to localStorage
-  private clearDismissalFallback(): void {
-    localStorage.removeItem(STORAGE_KEYS.WIDGET_DISMISSED);
-    localStorage.removeItem(STORAGE_KEYS.WIDGET_DISMISSED_TIME);
+  // Fallback to STORAGE helper (which uses Capacitor Preferences)
+  private async clearDismissalFallback(): Promise<void> {
+    await STORAGE.REMOVE(STORAGE_KEYS.WIDGET_DISMISSED);
+    await STORAGE.REMOVE(STORAGE_KEYS.WIDGET_DISMISSED_TIME);
   }
 
   // Get time remaining until widget reappears

@@ -25,10 +25,14 @@ interface ThemeOption {
 }
 
 const ThemeSettings: React.FC<ThemeSettingsProps> = ({ visible, onHide }) => {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeName>('STRIPE');
+  // Use the theme hook to get current theme and change function
+  const { theme, currentTheme, changeTheme, isLoading } = useTheme();
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName>(currentTheme);
 
-  // Initialize theme with current selection
-  const { theme } = useTheme(selectedTheme);
+  // Update selected theme when current theme changes
+  useState(() => {
+    setSelectedTheme(currentTheme);
+  });
 
   // Get current theme colors for dynamic styling
   const currentThemeColors = getThemeByName(selectedTheme);
@@ -56,8 +60,9 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ visible, onHide }) => {
     },
   ];
 
-  const handleThemeChange = (newTheme: ThemeName) => {
+  const handleThemeChange = async (newTheme: ThemeName) => {
     setSelectedTheme(newTheme);
+    await changeTheme(newTheme);
   };
 
   const getCurrentThemeInfo = () => {
@@ -70,55 +75,78 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ visible, onHide }) => {
     return (
       <Card
         key={option.value}
-        className={`theme-option-card ${isSelected ? 'selected' : ''}`}
-        onClick={() => handleThemeChange(option.value)}
+        className={`theme-option-card cursor-pointer transition-all duration-300 mb-3 ${
+          isSelected ? 'selected' : ''
+        }`}
         style={{
-          cursor: 'pointer',
-          marginBottom: '16px',
           border: isSelected
             ? `2px solid ${option.primaryColor}`
-            : `2px solid ${currentThemeColors.border}`,
-          transition: 'all 0.2s ease',
-          backgroundColor: currentThemeColors.surface,
-          color: currentThemeColors.textPrimary,
+            : `1px solid ${currentThemeColors.border}`,
+          backgroundColor: isSelected
+            ? `${option.primaryColor}10`
+            : currentThemeColors.surface,
         }}
+        onClick={() => handleThemeChange(option.value)}
       >
         <div className='flex align-items-center gap-3'>
           <div
-            className='theme-color-preview'
+            className='theme-color-preview w-4rem h-4rem border-round flex-shrink-0'
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: option.primaryColor,
-              border: `2px solid ${currentThemeColors.surface}`,
-              boxShadow: `0 2px 8px ${currentThemeColors.hover}`,
+              background: `linear-gradient(135deg, ${option.primaryColor}, ${option.primaryColor}80)`,
+              boxShadow: `0 4px 12px ${option.primaryColor}30`,
             }}
           />
           <div className='flex-1'>
-            <h4
-              className='m-0 mb-1 text-lg font-semibold'
-              style={{ color: currentThemeColors.textPrimary }}
-            >
-              {option.label}
-            </h4>
+            <div className='flex align-items-center gap-2 mb-2'>
+              <h4
+                className='font-semibold m-0'
+                style={{
+                  color: isSelected
+                    ? option.primaryColor
+                    : currentThemeColors.textPrimary,
+                }}
+              >
+                {option.label}
+              </h4>
+              {isSelected && (
+                <i
+                  className='pi pi-check-circle text-lg'
+                  style={{ color: option.primaryColor }}
+                />
+              )}
+            </div>
             <p
-              className='m-0 text-sm line-height-3'
-              style={{ color: currentThemeColors.textSecondary }}
+              className='text-sm line-height-3 m-0'
+              style={{
+                color: isSelected
+                  ? currentThemeColors.textSecondary
+                  : currentThemeColors.textTertiary,
+              }}
             >
               {option.description}
             </p>
           </div>
-          {isSelected && (
-            <i
-              className='pi pi-check-circle text-xl'
-              style={{ color: option.primaryColor }}
-            />
-          )}
         </div>
       </Card>
     );
   };
+
+  if (isLoading) {
+    return (
+      <Dialog
+        header='Theme Settings'
+        visible={visible}
+        style={{ width: '500px' }}
+        onHide={onHide}
+        modal
+      >
+        <div className='flex align-items-center justify-content-center p-4'>
+          <i className='pi pi-spin pi-spinner text-2xl text-primary mr-2'></i>
+          <span>Loading theme settings...</span>
+        </div>
+      </Dialog>
+    );
+  }
 
   // Dynamic dialog styles based on theme
   const dialogStyle = {

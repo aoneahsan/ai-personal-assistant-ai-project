@@ -1,3 +1,4 @@
+import { STORAGE } from '@/utils/helpers/localStorage';
 import { FeedbackConfig, FeedbackEmojiData } from '../types/feedback.types';
 
 export const FEEDBACK_EMOJIS: FeedbackEmojiData[] = [
@@ -93,13 +94,13 @@ export const generateSessionId = (): string => {
 };
 
 // Get or create session ID
-export const getSessionId = (): string => {
-  let sessionId = localStorage.getItem(STORAGE_KEYS.SESSION_ID);
+export const getSessionId = async (): Promise<string> => {
+  let sessionId = await STORAGE.GET(STORAGE_KEYS.SESSION_ID);
   if (!sessionId) {
     sessionId = generateSessionId();
-    localStorage.setItem(STORAGE_KEYS.SESSION_ID, sessionId);
+    await STORAGE.SET(STORAGE_KEYS.SESSION_ID, sessionId);
   }
-  return sessionId;
+  return sessionId || generateSessionId();
 };
 
 // Get current page info

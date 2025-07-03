@@ -47,7 +47,7 @@ class FeedbackService {
 
     const collectionName = this.config.collectionName || 'user_feedback';
     const pageInfo = getPageInfo();
-    const sessionId = getSessionId();
+    const sessionId = await getSessionId();
 
     const feedbackData: Omit<FeedbackRating, 'id'> = {
       rating,
@@ -204,8 +204,8 @@ class FeedbackService {
   }
 
   // Check if user has recently submitted feedback (spam prevention)
-  async hasRecentFeedback(timeWindowMinutes: number = 30): Promise<boolean> {
-    const sessionId = getSessionId();
+  async hasRecentFeedback(minutes: number = 30): Promise<boolean> {
+    const sessionId = await getSessionId();
 
     try {
       const sessionFeedback = await this.getFeedbackBySession(sessionId);
@@ -216,7 +216,7 @@ class FeedbackService {
         const feedbackTime = feedback.timestamp.getTime
           ? feedback.timestamp.getTime()
           : new Date(feedback.timestamp).getTime();
-        const timeWindow = timeWindowMinutes * 60 * 1000;
+        const timeWindow = minutes * 60 * 1000;
         return Date.now() - feedbackTime < timeWindow;
       });
 

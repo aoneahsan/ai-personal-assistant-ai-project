@@ -1,3 +1,4 @@
+import { STORAGE } from '@/utils/helpers/localStorage';
 import { User } from 'firebase/auth';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { feedbackService } from '../services/feedbackService';
@@ -127,7 +128,7 @@ export const useFeedback = ({
 
     // Store that user has interacted with widget
     if (config.autoHide) {
-      localStorage.setItem(STORAGE_KEYS.WIDGET_HIDDEN, 'true');
+      STORAGE.SET(STORAGE_KEYS.WIDGET_HIDDEN, 'true');
     }
   }, [config.autoHide]);
 
@@ -242,10 +243,7 @@ export const useFeedback = ({
       }
 
       // Store last feedback timestamp
-      localStorage.setItem(
-        STORAGE_KEYS.LAST_FEEDBACK,
-        new Date().toISOString()
-      );
+      await STORAGE.SET(STORAGE_KEYS.LAST_FEEDBACK, new Date().toISOString());
     } catch (error) {
       console.error('Error submitting feedback:', error);
       setError(

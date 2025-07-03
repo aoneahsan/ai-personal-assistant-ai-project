@@ -1,6 +1,6 @@
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { consoleError } from '@/utils/helpers/consoleHelper';
+import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import { useUserProfileZState } from '@/zustandStates/userState';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
@@ -15,7 +15,6 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
 import { z } from 'zod';
 
 // Validation schema
@@ -54,11 +53,17 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const CompactEditProfile: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useUserProfileZState();
+  const { profile, updateProfile, loadProfileFromStorage } =
+    useUserProfileZState();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number[]>([0]);
   const accordionRef = useRef<Accordion>(null);
   const [saving, setSaving] = useState(false);
+
+  // Load profile from storage on component mount
+  useEffect(() => {
+    loadProfileFromStorage();
+  }, [loadProfileFromStorage]);
 
   // Define sections for keyboard shortcuts
   const sections = [
@@ -115,8 +120,10 @@ const CompactEditProfile: React.FC = () => {
     }
   }, [profile, setValue]);
 
-  const onSubmit = async (data: ProfileFormData) => {
+  const onSubmit = async (data: any) => {
+    setSaving(true);
     try {
+      // Map the form data to UserProfileData structure
       const updatedProfile = {
         name: data.name,
         email: data.email,
@@ -149,13 +156,24 @@ const CompactEditProfile: React.FC = () => {
         },
       };
 
-      setSaving(true);
+      // Update the zustand state (this will also persist to storage)
       await updateProfile(updatedProfile);
-      toast.success('Profile updated successfully!');
-      navigate({ to: '/chats' });
+
+      // Show success message
+      await copyToClipboardWithToast({
+        value: 'Profile updated successfully!',
+        successMessage: 'Profile updated successfully!',
+        errorMessage: 'Profile updated but failed to copy message',
+      });
+
+      // Navigate back to dashboard
+      navigate({ to: '/' });
     } catch (error) {
-      consoleError('Error updating profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+      await copyToClipboardWithToast({
+        value: 'Error updating profile',
+        successMessage: 'Error updating profile',
+        errorMessage: 'Error updating profile',
+      });
     } finally {
       setSaving(false);
     }

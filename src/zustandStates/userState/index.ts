@@ -1,5 +1,9 @@
 import { auth } from '@/services/firebase';
 import { IPCAUser } from '@/types/user';
+import {
+  getUserProfileData,
+  setUserProfileData,
+} from '@/utils/helpers/localStorage';
 import React from 'react';
 import { create } from 'zustand';
 
@@ -133,9 +137,12 @@ export interface UserProfileData {
 
 interface UserProfileZState {
   profile: UserProfileData | null;
-  updateProfile: (newProfile: UserProfileData) => void;
-  updatePartialProfile: (partialProfile: Partial<UserProfileData>) => void;
-  resetProfile: () => void;
+  updateProfile: (newProfile: UserProfileData) => Promise<void>;
+  updatePartialProfile: (
+    partialProfile: Partial<UserProfileData>
+  ) => Promise<void>;
+  resetProfile: () => Promise<void>;
+  loadProfileFromStorage: () => Promise<void>;
 }
 
 // Default profile data
@@ -173,10 +180,12 @@ const defaultProfile: UserProfileData = {
 
 export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
   profile: defaultProfile,
-  updateProfile: (newProfile: UserProfileData) => {
+  updateProfile: async (newProfile: UserProfileData) => {
     set({ profile: newProfile });
+    // Persist to storage
+    await setUserProfileData(newProfile);
   },
-  updatePartialProfile: (partialProfile: Partial<UserProfileData>) => {
+  updatePartialProfile: async (partialProfile: Partial<UserProfileData>) => {
     const currentProfile = get().profile;
     if (currentProfile) {
       const updatedProfile = {
@@ -195,9 +204,20 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
         },
       };
       set({ profile: updatedProfile });
+      // Persist to storage
+      await setUserProfileData(updatedProfile);
     }
   },
-  resetProfile: () => {
+  resetProfile: async () => {
     set({ profile: defaultProfile });
+    // Remove from storage
+    await setUserProfileData(defaultProfile);
+  },
+  // Add new method to load profile from storage
+  loadProfileFromStorage: async () => {
+    const savedProfile = await getUserProfileData();
+    if (savedProfile) {
+      set({ profile: savedProfile });
+    }
   },
 }));

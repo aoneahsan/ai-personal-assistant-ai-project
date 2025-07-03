@@ -62,8 +62,14 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useUserProfileZState();
+  const { profile, updateProfile, loadProfileFromStorage } =
+    useUserProfileZState();
   const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Load profile from storage on component mount
+  useEffect(() => {
+    loadProfileFromStorage();
+  }, [loadProfileFromStorage]);
 
   // Define sections for keyboard shortcuts
   const sections = [
@@ -162,8 +168,8 @@ const EditProfile: React.FC = () => {
   // Form submission handler
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      // Update the zustand state
-      updateProfile(data as UserProfileData);
+      // Update the zustand state (this will also persist to storage)
+      await updateProfile(data as UserProfileData);
 
       // Show success message
       await copyToClipboardWithToast({
