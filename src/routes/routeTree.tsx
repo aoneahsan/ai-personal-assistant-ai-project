@@ -267,14 +267,14 @@ const chatViewRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// Profile route
+// Profile route - handled by Dashboard
 const editProfileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.EDIT_PROFILE,
   component: () => (
     <ProtectedRoute>
       <React.Suspense fallback={<div>Loading...</div>}>
-        <EditProfile />
+        <Dashboard />
       </React.Suspense>
     </ProtectedRoute>
   ),
