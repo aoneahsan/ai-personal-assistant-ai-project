@@ -73,7 +73,7 @@ const AppHocWrapper = () => {
             'What can we do better? Your thoughts matter to us...',
 
           // Behavior
-          widgetText: '💬 Share Feedback',
+          widgetText: 'Share Feedback',
           hideAfterSubmit: true,
           requireMessage: false,
           showStep2: true,

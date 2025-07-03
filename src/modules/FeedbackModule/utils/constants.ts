@@ -65,7 +65,7 @@ export const FEEDBACK_WIDGET_ID = 'feedback-widget-module';
 export const FEEDBACK_MODAL_ID = 'feedback-modal-module';
 
 export const WIDGET_POSITIONS = {
-  'bottom-right': { bottom: '20px', right: '20px' },
+  'bottom-right': { bottom: '28px', right: '180px' },
   'bottom-left': { bottom: '20px', left: '20px' },
   'top-right': { top: '20px', right: '20px' },
   'top-left': { top: '20px', left: '20px' },

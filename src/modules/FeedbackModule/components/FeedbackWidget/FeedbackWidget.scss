@@ -136,13 +136,13 @@
       font-size: 12px;
     }
 
-    // Adjust position for mobile
+    // Adjust position for mobile to avoid FAB overlap
     &[style*='bottom'] {
       bottom: 16px !important;
     }
 
     &[style*='right'] {
-      right: 16px !important;
+      right: 90px !important; // Position to the left of mobile FAB button
     }
 
     &[style*='left'] {
@@ -162,6 +162,11 @@
 
     &__icon {
       font-size: 20px;
+    }
+
+    // Adjust position for very small screens to avoid FAB overlap
+    &[style*='right'] {
+      right: 80px !important; // Position to the left of smaller mobile FAB button
     }
   }
 }
