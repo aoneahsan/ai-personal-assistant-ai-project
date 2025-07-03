@@ -1,14 +1,17 @@
-// Main FeedbackModule export
-export { FeedbackModule } from './components/FeedbackModule';
-
-// Individual components for custom usage
+// Main component exports
+export { FeedbackButton } from './components/FeedbackButton';
 export { FeedbackModal } from './components/FeedbackModal';
+export { FeedbackModule } from './components/FeedbackModule';
 export { FeedbackWidget } from './components/FeedbackWidget';
 
-// Hook for custom implementations
+// Hook exports
 export { useFeedback } from './hooks/useFeedback';
 
-// Service for direct API calls
+// Service exports
+export {
+  FeedbackDismissalService,
+  feedbackDismissalService,
+} from './services/feedbackDismissalService';
 export { FeedbackService, feedbackService } from './services/feedbackService';
 
 // Types and interfaces
@@ -23,6 +26,7 @@ export type {
 // Constants and utilities
 export {
   DEFAULT_FEEDBACK_CONFIG,
+  FEEDBACK_DISMISSAL_CONFIG,
   FEEDBACK_EMOJIS,
   WIDGET_POSITIONS,
   generateSessionId,

@@ -94,6 +94,8 @@ const AppHocWrapper = () => {
           },
         }}
         autoShow={false} // Don't auto-show the widget immediately
+        dismissHours={24} // Hide for 24 hours when dismissed
+        showDismissButton={true} // Allow users to dismiss the widget
       />
 
       {/* Toast Notifications */}

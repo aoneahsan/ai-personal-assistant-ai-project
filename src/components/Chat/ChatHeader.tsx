@@ -1,7 +1,6 @@
 import { FeedbackButton } from '@/modules/FeedbackModule/components/FeedbackButton';
 import { FeedbackModule } from '@/modules/FeedbackModule/components/FeedbackModule';
-import { db } from '@/services/firebaseConfig';
-import { useUserDataZState } from '@/zustandStates/userState';
+import { auth, db } from '@/services/firebase';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog';
@@ -31,7 +30,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onBlockUser,
   onMuteNotifications,
 }) => {
-  const currentUser = useUserDataZState((state) => state.data);
+  const firebaseUser = auth.currentUser;
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<string>('');
   const [isMuted, setIsMuted] = useState(false);
@@ -280,7 +279,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       {showFeedbackModal && (
         <FeedbackModule
           firestore={db}
-          user={currentUser}
+          user={firebaseUser}
           config={{
             collectionName: 'user_feedback',
             theme: 'auto',
