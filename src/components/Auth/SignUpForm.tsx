@@ -1,5 +1,7 @@
 import { AuthProvider, unifiedAuthService } from '@/services/authService';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Checkbox } from 'primereact/checkbox';
@@ -40,6 +42,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   onSwitchToLogin,
   onBackToWelcome,
 }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<AuthProvider | null>(null);
   const [isAppleAvailable] = useState(
@@ -404,19 +407,23 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                 className='text-900 line-height-3 text-sm'
               >
                 I agree to the{' '}
-                <a
-                  href='#'
-                  className='text-primary-500 hover:text-primary-600 no-underline font-medium'
-                >
-                  Terms of Service
-                </a>{' '}
+                <Button
+                  type='button'
+                  link
+                  label='Terms of Service'
+                  onClick={() => navigate({ to: ROUTES.TERMS_OF_SERVICE })}
+                  className='p-0 text-primary-500 hover:text-primary-600 font-medium text-sm'
+                  style={{ verticalAlign: 'baseline' }}
+                />{' '}
                 and{' '}
-                <a
-                  href='#'
-                  className='text-primary-500 hover:text-primary-600 no-underline font-medium'
-                >
-                  Privacy Policy
-                </a>
+                <Button
+                  type='button'
+                  link
+                  label='Privacy Policy'
+                  onClick={() => navigate({ to: ROUTES.PRIVACY_POLICY })}
+                  className='p-0 text-primary-500 hover:text-primary-600 font-medium text-sm'
+                  style={{ verticalAlign: 'baseline' }}
+                />
               </label>
             </div>
             {errors.acceptTerms && (
