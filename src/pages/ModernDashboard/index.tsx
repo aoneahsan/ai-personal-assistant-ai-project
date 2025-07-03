@@ -25,6 +25,7 @@ const ModernDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('overview');
   const [showSubscriptionManagement, setShowSubscriptionManagement] =
     useState(false);
+  const [showEmbedManager, setShowEmbedManager] = useState(false);
 
   // Get user profile data from zustand state
   const { profile: userProfileData } = useUserProfileZState();
@@ -117,6 +118,12 @@ const ModernDashboard: React.FC = () => {
     { label: 'Overview', icon: 'pi pi-home', badge: null, key: 'overview' },
     { label: 'Profile', icon: 'pi pi-user', badge: null, key: 'profile' },
     { label: 'Chats', icon: 'pi pi-comments', badge: '5', key: 'chats' },
+    {
+      label: 'Chat Embeds',
+      icon: 'pi pi-code',
+      badge: 'NEW',
+      key: 'embed-manager',
+    },
     { label: 'Projects', icon: 'pi pi-folder', badge: '3', key: 'projects' },
     { label: 'Tasks', icon: 'pi pi-check-square', badge: '12', key: 'tasks' },
     { label: 'Messages', icon: 'pi pi-envelope', badge: '5', key: 'messages' },
@@ -172,6 +179,8 @@ const ModernDashboard: React.FC = () => {
   const handleSidebarItemClick = (key: string) => {
     if (key === 'subscription') {
       setShowSubscriptionManagement(true);
+    } else if (key === 'embed-manager') {
+      setShowEmbedManager(true);
     } else {
       setActiveSection(key);
     }

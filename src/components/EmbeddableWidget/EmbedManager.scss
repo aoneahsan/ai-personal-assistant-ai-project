@@ -1,0 +1,290 @@
+.embed-manager-dialog {
+  .p-dialog-content {
+    padding: 0;
+  }
+}
+
+.embed-manager-content {
+  .embed-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 1px solid var(--surface-border);
+
+    h3 {
+      margin: 0;
+      color: var(--text-color);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+  }
+
+  .embeds-table-card {
+    margin: 0;
+    border: none;
+    box-shadow: none;
+
+    .p-card-body {
+      padding: 0;
+    }
+  }
+
+  .embeds-table {
+    .domains-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .domain-chip {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+      }
+    }
+
+    .actions-buttons {
+      display: flex;
+      gap: 4px;
+
+      .p-button {
+        padding: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+}
+
+.embed-form-dialog {
+  .p-tabview {
+    .p-tabview-nav {
+      background: var(--surface-50);
+      border-radius: 8px 8px 0 0;
+
+      .p-tabview-nav-link {
+        border: none;
+        background: transparent;
+        color: var(--text-color-secondary);
+        padding: 1rem 1.5rem;
+        font-weight: 500;
+
+        &:hover {
+          background: var(--surface-100);
+        }
+      }
+
+      .p-highlight .p-tabview-nav-link {
+        background: var(--primary-color);
+        color: white;
+      }
+    }
+
+    .p-tabview-panels {
+      padding: 2rem;
+      background: var(--surface-0);
+      border-radius: 0 0 8px 8px;
+      border: 1px solid var(--surface-border);
+      border-top: none;
+    }
+  }
+
+  .form-grid {
+    display: grid;
+    gap: 1.5rem;
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        font-weight: 500;
+        color: var(--text-color);
+        font-size: 0.875rem;
+      }
+
+      .p-inputtext,
+      .p-inputtextarea,
+      .p-dropdown {
+        width: 100%;
+      }
+    }
+
+    .form-field-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      label {
+        font-weight: 500;
+        color: var(--text-color);
+        font-size: 0.875rem;
+        margin: 0;
+      }
+    }
+
+    .domain-input-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+
+      .p-inputtext {
+        flex: 1;
+      }
+
+      .p-button {
+        white-space: nowrap;
+      }
+    }
+
+    .domains-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+
+      .domain-chip {
+        font-size: 0.75rem;
+
+        .p-chip-remove-icon {
+          margin-left: 0.25rem;
+          font-size: 0.875rem;
+        }
+      }
+    }
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+}
+
+.embed-preview-dialog {
+  .embed-preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .embed-code-panel {
+      .p-panel-content {
+        padding: 1rem;
+      }
+
+      .embed-code-container {
+        position: relative;
+
+        .embed-code {
+          background: var(--surface-100);
+          border: 1px solid var(--surface-border);
+          border-radius: 6px;
+          padding: 1rem;
+          font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+          font-size: 0.875rem;
+          line-height: 1.5;
+          color: var(--text-color);
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          max-height: 300px;
+          overflow-y: auto;
+          margin: 0;
+        }
+
+        .copy-button {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          font-size: 0.875rem;
+        }
+      }
+    }
+
+    .embed-config-panel {
+      .p-panel-content {
+        padding: 1rem;
+      }
+
+      .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+
+        .config-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          strong {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.875rem;
+          }
+
+          &:not(strong) {
+            color: var(--text-color-secondary);
+            font-size: 0.875rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .embed-manager-dialog {
+    .p-dialog {
+      width: 95vw !important;
+      height: 90vh !important;
+      max-width: none !important;
+    }
+  }
+
+  .embed-form-dialog {
+    .p-dialog {
+      width: 95vw !important;
+      max-width: none !important;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .domain-input-group {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .embed-preview-dialog {
+    .p-dialog {
+      width: 95vw !important;
+      max-width: none !important;
+    }
+
+    .config-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  .embeds-table {
+    .p-datatable-wrapper {
+      overflow-x: auto;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .embed-code {
+    background: #1e293b !important;
+    border-color: #374151 !important;
+    color: #f1f5f9 !important;
+  }
+}
