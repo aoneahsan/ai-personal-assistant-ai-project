@@ -1,6 +1,7 @@
 import { FeedbackButton } from '@/modules/FeedbackModule/components/FeedbackButton';
 import { FeedbackModule } from '@/modules/FeedbackModule/components/FeedbackModule';
 import { auth, db } from '@/services/firebase';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
@@ -52,7 +53,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     if (onBack) {
       onBack();
     } else {
-      navigate({ to: '/chats' });
+      navigate({ to: ROUTES.CHATS });
     }
   };
 
