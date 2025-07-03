@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { InputText } from 'primereact/inputtext';
-import { Message } from 'primereact/message';
+import { Panel } from 'primereact/panel';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import './AnonymousRoom.scss';
@@ -69,127 +69,171 @@ const AnonymousRoom: React.FC = () => {
   };
 
   return (
-    <div className='anonymous-room-container'>
-      <div className='anonymous-room-content'>
-        <div className='header-section'>
-          <h1 className='main-title'>
-            <i className='pi pi-comments mr-3'></i>
-            Anonymous Chat Rooms
-          </h1>
-          <p className='subtitle'>
-            Create or join public chat rooms. No account required!
-          </p>
-        </div>
-
-        <div className='cards-container'>
-          {/* Create Room Card */}
-          <Card className='room-card create-card'>
-            <div className='card-content'>
-              <div className='card-icon'>
-                <i className='pi pi-plus-circle'></i>
-              </div>
-              <h3>Create New Room</h3>
-              <p>
-                Start a new chat room with a randomly generated 8-character room
-                name. Share the room name with others to invite them.
-              </p>
-              <Button
-                label='Create Room'
-                icon='pi pi-plus'
-                onClick={handleCreateRoom}
-                className='create-button'
-                size='large'
-              />
+    <div className='anonymous-room-page'>
+      {/* Header Section */}
+      <div className='page-header'>
+        <div className='container'>
+          <div className='header-content'>
+            <div className='header-icon'>
+              <i className='pi pi-users'></i>
             </div>
-          </Card>
+            <h1 className='page-title'>Anonymous Chat Rooms</h1>
+            <p className='page-subtitle'>
+              Create or join public chat rooms instantly. No account required!
+            </p>
+          </div>
+        </div>
+      </div>
 
-          {/* Join Room Card */}
-          <Card className='room-card join-card'>
-            <div className='card-content'>
-              <div className='card-icon'>
-                <i className='pi pi-sign-in'></i>
+      {/* Main Content */}
+      <div className='page-content'>
+        <div className='container'>
+          {/* Action Cards */}
+          <div className='action-cards'>
+            <Card className='action-card create-card'>
+              <div className='card-header'>
+                <div className='card-icon'>
+                  <i className='pi pi-plus'></i>
+                </div>
+                <h3>Create New Room</h3>
               </div>
-              <h3>Join Existing Room</h3>
-              <p>
-                Enter an 8-character room name to join an existing chat room.
-              </p>
-
-              <div className='join-form'>
-                <div className='input-container'>
-                  <InputText
-                    value={roomName}
-                    onChange={handleRoomNameChange}
-                    onKeyPress={handleKeyPress}
-                    placeholder='Enter 8-character room name'
-                    className='room-input'
-                    maxLength={8}
+              <div className='card-body'>
+                <p>
+                  Generate a unique room code and start chatting instantly.
+                  Share the room code with friends to invite them.
+                </p>
+                <div className='card-actions'>
+                  <Button
+                    label='Create Room'
+                    icon='pi pi-plus'
+                    onClick={handleCreateRoom}
+                    className='create-btn'
+                    size='large'
                   />
-                  <small className='input-help'>
-                    {roomName.length}/8 characters (A-Z, 0-9 only)
-                  </small>
+                </div>
+              </div>
+            </Card>
+
+            <Card className='action-card join-card'>
+              <div className='card-header'>
+                <div className='card-icon'>
+                  <i className='pi pi-sign-in'></i>
+                </div>
+                <h3>Join Existing Room</h3>
+              </div>
+              <div className='card-body'>
+                <p>
+                  Enter an 8-character room code to join an existing chat room.
+                </p>
+                <div className='join-form'>
+                  <div className='input-group'>
+                    <InputText
+                      value={roomName}
+                      onChange={handleRoomNameChange}
+                      onKeyPress={handleKeyPress}
+                      placeholder='ROOM CODE'
+                      className='room-input'
+                      maxLength={8}
+                    />
+                    <span className='input-counter'>{roomName.length}/8</span>
+                  </div>
+                  <Button
+                    label='Join Room'
+                    icon='pi pi-arrow-right'
+                    onClick={handleJoinRoom}
+                    disabled={roomName.length !== 8 || isJoining}
+                    loading={isJoining}
+                    className='join-btn'
+                    size='large'
+                  />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Features Section */}
+          <div className='features-section'>
+            <Panel
+              header='How Anonymous Rooms Work'
+              className='features-panel'
+            >
+              <div className='features-grid'>
+                <div className='feature-item'>
+                  <div className='feature-icon'>
+                    <i className='pi pi-lock-open'></i>
+                  </div>
+                  <div className='feature-content'>
+                    <h4>No Registration</h4>
+                    <p>
+                      Jump right in without creating an account or signing up
+                    </p>
+                  </div>
                 </div>
 
-                <Button
-                  label='Join Room'
-                  icon='pi pi-arrow-right'
-                  onClick={handleJoinRoom}
-                  disabled={roomName.length !== 8 || isJoining}
-                  loading={isJoining}
-                  className='join-button'
-                  size='large'
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
+                <div className='feature-item'>
+                  <div className='feature-icon'>
+                    <i className='pi pi-hashtag'></i>
+                  </div>
+                  <div className='feature-content'>
+                    <h4>8-Character Codes</h4>
+                    <p>
+                      Easy to share and remember room codes for quick access
+                    </p>
+                  </div>
+                </div>
 
-        {/* Information Section */}
-        <div className='info-section'>
-          <Message
-            severity='info'
-            className='room-info-message'
-            content={
-              <div>
-                <h4>How it works:</h4>
-                <ul>
-                  <li>
-                    🔓 <strong>No login required</strong> - Start chatting
-                    immediately
-                  </li>
-                  <li>
-                    🏷️ <strong>Room names are 8 characters</strong> - Easy to
-                    share and remember
-                  </li>
-                  <li>
-                    👥 <strong>Anyone can join</strong> - Share the room name
-                    with friends
-                  </li>
-                  <li>
-                    ✏️ <strong>Everyone can edit/delete</strong> - All messages
-                    can be modified by anyone
-                  </li>
-                  <li>
-                    🔄 <strong>Real-time chat</strong> - Messages appear
-                    instantly
-                  </li>
-                  <li>
-                    🎨 <strong>No message history</strong> - Rooms are temporary
-                    and messages aren't permanently stored
-                  </li>
-                </ul>
-              </div>
-            }
-          />
-        </div>
+                <div className='feature-item'>
+                  <div className='feature-icon'>
+                    <i className='pi pi-users'></i>
+                  </div>
+                  <div className='feature-content'>
+                    <h4>Open to Everyone</h4>
+                    <p>Anyone with the room code can join and participate</p>
+                  </div>
+                </div>
 
-        {/* Back to Main Chat */}
-        <div className='navigation-section'>
-          <Button
-            label='Back to Personal Chat'
-            icon='pi pi-arrow-left'
-            className='p-button-outlined'
-            onClick={() => navigate({ to: '/anonymous-chat' })}
-          />
+                <div className='feature-item'>
+                  <div className='feature-icon'>
+                    <i className='pi pi-bolt'></i>
+                  </div>
+                  <div className='feature-content'>
+                    <h4>Real-Time Chat</h4>
+                    <p>Messages appear instantly for seamless conversation</p>
+                  </div>
+                </div>
+
+                <div className='feature-item'>
+                  <div className='feature-icon'>
+                    <i className='pi pi-edit'></i>
+                  </div>
+                  <div className='feature-content'>
+                    <h4>Collaborative Editing</h4>
+                    <p>All participants can edit and delete messages</p>
+                  </div>
+                </div>
+
+                <div className='feature-item'>
+                  <div className='feature-icon'>
+                    <i className='pi pi-clock'></i>
+                  </div>
+                  <div className='feature-content'>
+                    <h4>Temporary Rooms</h4>
+                    <p>No permanent storage - rooms are temporary by design</p>
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          </div>
+
+          {/* Navigation */}
+          <div className='page-navigation'>
+            <Button
+              label='Back to Personal Chat'
+              icon='pi pi-arrow-left'
+              className='p-button-outlined back-btn'
+              onClick={() => navigate({ to: '/anonymous-chat' })}
+            />
+          </div>
         </div>
       </div>
     </div>
