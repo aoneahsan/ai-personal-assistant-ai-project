@@ -170,7 +170,7 @@ const MediaMessageManager: React.FC<MediaMessageManagerProps> = ({
         let messageId: string;
 
         switch (validation.type) {
-          case 'image':
+          case 'image': {
             const dimensions = await getImageDimensions(file);
             messageId = await chatService.sendImageMessage({
               file,
@@ -180,8 +180,9 @@ const MediaMessageManager: React.FC<MediaMessageManagerProps> = ({
               dimensions,
             });
             break;
+          }
 
-          case 'audio':
+          case 'audio': {
             const audioDuration = await getMediaDuration(file);
             const transcript = generateMockTranscript(audioDuration);
             const quickTranscript = transcript.map((s) => s.text).join(' ');
@@ -196,8 +197,9 @@ const MediaMessageManager: React.FC<MediaMessageManagerProps> = ({
               quickTranscript,
             });
             break;
+          }
 
-          case 'video':
+          case 'video': {
             const videoDuration = await getMediaDuration(file);
             messageId = await chatService.sendVideoMessage({
               file,
@@ -207,6 +209,7 @@ const MediaMessageManager: React.FC<MediaMessageManagerProps> = ({
               duration: videoDuration,
             });
             break;
+          }
 
           default:
             throw new Error('Unsupported file type');

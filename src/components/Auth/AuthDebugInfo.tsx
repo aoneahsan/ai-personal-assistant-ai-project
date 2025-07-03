@@ -17,7 +17,6 @@ const AuthDebugInfo: React.FC<AuthDebugInfoProps> = ({ onClose }) => {
   }
 
   const configStatus = unifiedAuthService.getConfigurationStatus();
-  const platform = Capacitor.getPlatform();
   const isNative = Capacitor.isNativePlatform();
 
   const getStatusBadge = (isConfigured: boolean) => (

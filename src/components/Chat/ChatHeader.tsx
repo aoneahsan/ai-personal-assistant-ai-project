@@ -2,7 +2,7 @@ import { FeedbackButton } from '@/modules/FeedbackModule/components/FeedbackButt
 import { FeedbackModule } from '@/modules/FeedbackModule/components/FeedbackModule';
 import { auth, db } from '@/services/firebase';
 import { ROUTES } from '@/utils/constants/routingConstants';
-import { useLocation, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog';
@@ -38,7 +38,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const menuRef = useRef<Menu>(null);
-  const location = useLocation();
   const navigate = useNavigate();
 
   const formatTime = (date: Date) => {

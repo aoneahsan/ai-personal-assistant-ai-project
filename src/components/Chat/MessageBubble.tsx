@@ -32,7 +32,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onViewHistory,
   onUpgrade,
 }) => {
-  const audioMenuRef = useRef<Menu>(null);
   const contextMenuRef = useRef<Menu>(null);
   const currentUser = useUserDataZState((state) => state.data);
 

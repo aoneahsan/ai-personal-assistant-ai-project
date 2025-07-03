@@ -40,7 +40,6 @@ const AnonymousConversionModal: React.FC<AnonymousConversionModalProps> = ({
   const anonymousInfo = unifiedAuthService.getAnonymousUserInfo();
 
   const {
-    register,
     handleSubmit,
     formState: { errors },
     reset,

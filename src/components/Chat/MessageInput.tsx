@@ -52,7 +52,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   // Check platform
   const isNative = Capacitor.isNativePlatform();
-  const platform = Capacitor.getPlatform();
 
   const handleSendMessage = () => {
     if (currentMessage.trim() && !disabled) {
