@@ -1,4 +1,5 @@
 import PWAInstallButton from '@/components/PWAInstallButton';
+import { useTheme } from '@/hooks/useTheme';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import { consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserProfileZState } from '@/zustandStates/userState';
@@ -17,6 +18,7 @@ import React, { useState } from 'react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [selectedTreeKey, setSelectedTreeKey] = useState<string>('0');
 
@@ -26,10 +28,16 @@ const Dashboard: React.FC = () => {
   // If no profile data, show loading or default
   if (!userProfileData) {
     return (
-      <div className='flex align-items-center justify-content-center min-h-screen'>
+      <div
+        className='flex align-items-center justify-content-center min-h-screen'
+        style={{ background: theme.background }}
+      >
         <div className='text-center'>
-          <i className='pi pi-spin pi-spinner text-4xl text-primary mb-3'></i>
-          <p className='text-color-secondary'>Loading profile...</p>
+          <i
+            className='pi pi-spin pi-spinner text-4xl mb-3'
+            style={{ color: theme.primary }}
+          ></i>
+          <p style={{ color: theme.textSecondary }}>Loading profile...</p>
         </div>
       </div>
     );
@@ -191,9 +199,15 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div
+      className='min-h-screen'
+      style={{ background: theme.background }}
+    >
       {/* Header Navigation */}
-      <header className='bg-white shadow-1 border-bottom-1 surface-border sticky top-0 z-5'>
+      <header
+        className='shadow-1 border-bottom-1 sticky top-0 z-5'
+        style={{ background: theme.surface, borderColor: theme.border }}
+      >
         <div className='flex align-items-center justify-content-between px-2 sm:px-4 py-2 sm:py-3'>
           {/* Left side - Logo and menu toggle */}
           <div className='flex align-items-center gap-2 sm:gap-3'>
@@ -205,8 +219,14 @@ const Dashboard: React.FC = () => {
               tooltipOptions={{ position: 'bottom' }}
             />
             <div className='flex align-items-center gap-2'>
-              <i className='pi pi-shield text-primary text-lg sm:text-2xl'></i>
-              <span className='text-lg sm:text-xl font-bold text-primary'>
+              <i
+                className='pi pi-shield text-lg sm:text-2xl'
+                style={{ color: theme.primary }}
+              ></i>
+              <span
+                className='text-lg sm:text-xl font-bold'
+                style={{ color: theme.primary }}
+              >
                 AI Personal Assistant
               </span>
             </div>
@@ -359,9 +379,15 @@ const Dashboard: React.FC = () => {
       {/* Main Content Layout */}
       <div className='flex min-h-screen'>
         {/* Sub Sidebar with Tree Menu */}
-        <aside className='w-16rem sm:w-18rem lg:w-20rem bg-white shadow-1 border-right-1 surface-border hidden lg:block'>
+        <aside
+          className='w-16rem sm:w-18rem lg:w-20rem shadow-1 border-right-1 hidden lg:block'
+          style={{ background: theme.surface, borderColor: theme.border }}
+        >
           <div className='p-3 sm:p-4'>
-            <h3 className='text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-color'>
+            <h3
+              className='text-base sm:text-lg font-semibold mb-3 sm:mb-4'
+              style={{ color: theme.textPrimary }}
+            >
               Navigation
             </h3>
             <Tree
@@ -380,10 +406,16 @@ const Dashboard: React.FC = () => {
             {/* Page Header */}
             <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between mb-3 sm:mb-4 gap-3'>
               <div>
-                <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-color m-0'>
+                <h1
+                  className='text-xl sm:text-2xl lg:text-3xl font-bold m-0'
+                  style={{ color: theme.textPrimary }}
+                >
                   Dashboard
                 </h1>
-                <p className='text-color-secondary mt-1 sm:mt-2 mb-0 text-sm sm:text-base'>
+                <p
+                  className='mt-1 sm:mt-2 mb-0 text-sm sm:text-base'
+                  style={{ color: theme.textSecondary }}
+                >
                   Welcome back, {userProfileData.name}!
                 </p>
               </div>
