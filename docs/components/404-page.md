@@ -29,22 +29,45 @@ The enhanced 404 (Not Found) page provides a beautiful, theme-aware user experie
   - "Go Back" button (secondary action)
 - **Help Section**: Additional support information with contact guidance
 
-## Route Configuration
+## Modern Route Configuration
 
-The 404 page is configured as a catch-all route in the TanStack Router:
+The 404 page uses the modern TanStack Router `notFoundComponent` approach:
 
 ```typescript
-// In routing constants
-export const ROUTES = {
-  NOT_FOUND: '*', // Catch-all route pattern
-  // ... other routes
-} as const;
+// In root route configuration
+const appRootRoute = createRootRoute({
+  component: RootComponent,
+  notFoundComponent: NotFound, // 404 component handled at root level
+});
+```
 
-// In route tree
+### Key Benefits of Modern Approach:
+
+- **Simpler Configuration**: No need for separate route definitions
+- **Better Layout Preservation**: Maintains parent layouts when showing 404
+- **Improved Performance**: More efficient routing resolution
+- **Future-Proof**: Uses the latest TanStack Router patterns
+
+## Migration from Legacy Approach
+
+**Old Method (Deprecated)**:
+
+```typescript
+// ❌ Legacy approach - no longer recommended
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: ROUTES.NOT_FOUND,
+  path: '*', // Catch-all route
   component: NotFound,
+});
+```
+
+**New Method (Current)**:
+
+```typescript
+// ✅ Modern approach - recommended
+const appRootRoute = createRootRoute({
+  component: RootComponent,
+  notFoundComponent: NotFound, // Handles all 404s at root level
 });
 ```
 
@@ -94,6 +117,26 @@ The 404 page provides two navigation options:
 
 This ensures users always land on a functional page regardless of their navigation path.
 
+## Router Configuration Details
+
+### NotFound Mode
+
+TanStack Router supports different `notFoundMode` configurations:
+
+- **"fuzzy" (default)**: Finds the closest matching route with children and displays the 404 component
+- **"root"**: Always handles 404s at the root level
+
+Our configuration uses the root-level approach for consistent 404 handling.
+
+### Error Handling
+
+The 404 component is distinct from error boundaries:
+
+- **404 (Not Found)**: Page/route doesn't exist
+- **Error Boundary**: JavaScript errors or component crashes
+
+Both are handled separately for better user experience.
+
 ## Design Principles
 
 ### Accessibility
@@ -123,6 +166,16 @@ To test the 404 page:
 2. **Check theme adaptation**: Switch themes and verify colors update
 3. **Test responsive design**: Resize browser window
 4. **Verify navigation**: Test both "Go to Dashboard" and "Go Back" buttons
+5. **Test different paths**: Try nested non-existent routes like `/dashboard/invalid-page`
+
+## Performance Considerations
+
+### Modern Approach Benefits:
+
+- **Faster Route Resolution**: No need to check catch-all routes
+- **Better Bundle Splitting**: 404 component loaded with root route
+- **Reduced Route Tree Size**: Simplified route configuration
+- **Improved Developer Experience**: Less configuration needed
 
 ## Future Enhancements
 
@@ -133,22 +186,39 @@ Potential improvements to consider:
 - **Popular Links**: Display commonly accessed routes
 - **Analytics**: Track 404 occurrences for improvement insights
 - **Customizable Messages**: Admin-configurable error messages
+- **Smart Suggestions**: AI-powered route suggestions based on typos
 
 ## Technical Details
 
 - **Component Path**: `src/pages/NotFound/index.tsx`
-- **Route Pattern**: `*` (catch-all)
+- **Route Configuration**: Root-level `notFoundComponent`
 - **Dependencies**: PrimeReact, TanStack Router, Theme system
 - **Styling**: Inline styles with theme variables + CSS animations
+- **Router Version**: TanStack Router v1+ (modern approach)
 
 ## Maintenance
 
 When updating the 404 page:
 
-1. Ensure theme integration remains intact
-2. Test across all supported themes
-3. Verify responsive behavior
-4. Check navigation functionality
-5. Update documentation if needed
+1. **Ensure theme integration remains intact**
+2. **Test across all supported themes**
+3. **Verify responsive behavior**
+4. **Check navigation functionality**
+5. **Test route resolution for edge cases**
+6. **Update documentation if needed**
 
-The 404 page is a crucial part of the user experience and should be maintained with the same care as other key application pages.
+### Common Issues & Solutions:
+
+**Issue**: 404 page not showing
+
+- **Solution**: Ensure `notFoundComponent` is properly configured on root route
+
+**Issue**: Layout not preserved
+
+- **Solution**: Verify root route has proper `Outlet` implementation
+
+**Issue**: Theme not updating
+
+- **Solution**: Check `useTheme()` hook implementation and theme provider
+
+The 404 page is a crucial part of the user experience and should be maintained with the same care as other key application pages. The modern TanStack Router approach provides better performance and maintainability compared to the legacy method.

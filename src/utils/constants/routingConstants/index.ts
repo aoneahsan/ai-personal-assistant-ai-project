@@ -47,9 +47,6 @@ export const ROUTES = {
   TERMS_OF_SERVICE: '/terms-of-service',
   DATA_DELETION_POLICY: '/data-deletion-policy',
   COOKIE_POLICY: '/cookie-policy',
-
-  // Error Routes
-  NOT_FOUND: '*',
 } as const;
 
 // Route Labels for Display

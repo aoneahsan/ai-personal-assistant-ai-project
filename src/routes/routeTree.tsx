@@ -2,7 +2,6 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import PublicRoute from '@/components/Auth/PublicRoute';
 import AuthPage from '@/pages/Auth';
 import Chat from '@/pages/Chat';
-import NotFound from '@/pages/NotFound';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
 import React, { lazy } from 'react';
@@ -328,13 +327,6 @@ const cookiePolicyRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// 404 route
-const notFoundRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.NOT_FOUND,
-  component: NotFound,
-});
-
 // Anonymous chat room route (no authentication required)
 const anonymousRoomRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -384,8 +376,7 @@ export const appRouteTree = rootRoute.addChildren([
   termsOfServiceRoute,
   dataDeletionPolicyRoute,
   cookiePolicyRoute,
-  // Other routes
-  notFoundRoute,
+  // Anonymous room routes
   anonymousRoomRoute,
   anonymousRoomWithIdRoute,
 ]);

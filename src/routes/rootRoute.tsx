@@ -1,5 +1,6 @@
 import AuthStateDebug from '@/components/Auth/AuthStateDebug';
 import AppSwipeHOC from '@/hoc/AppSwipeHOC';
+import NotFound from '@/pages/NotFound';
 import { unifiedAuthService } from '@/services/authService';
 import ENV_KEYS from '@/utils/envKeys';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
@@ -110,6 +111,7 @@ const RootComponent = () => {
 
 const appRootRoute = createRootRoute({
   component: RootComponent,
+  notFoundComponent: NotFound,
 });
 
 export default appRootRoute;
