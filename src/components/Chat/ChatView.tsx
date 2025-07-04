@@ -8,7 +8,7 @@ import React from 'react';
 const ChatView: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { chatId } = useParams({ from: '/chats/view/$chatId' });
+  const { chatId } = useParams({ from: '/dashboard/chats/view/$chatId' });
 
   const handleBackToChats = () => {
     navigate({ to: ROUTES.DASHBOARD_CHATS });
