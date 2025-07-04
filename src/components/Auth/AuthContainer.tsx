@@ -1,3 +1,4 @@
+import { useTheme } from '@/hooks/useTheme';
 import { consoleLog } from '@/utils/helpers/consoleHelper';
 import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
@@ -30,6 +31,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const isAuthenticated = useIsAuthenticatedZState();
 
   const handleAuthSuccess = useCallback(() => {
@@ -101,13 +103,26 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
 
       {/* Debug Info Toggle - Only show in development */}
       {import.meta.env.DEV && (
-        <div className='debug-toggle'>
+        <div
+          className='debug-toggle'
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 1000,
+          }}
+        >
           <Button
             icon='pi pi-cog'
-            className='p-button-text p-button-sm'
+            className='p-button-text p-button-sm p-button-rounded'
             onClick={() => setShowDebugInfo(!showDebugInfo)}
             tooltip='Debug Info'
             tooltipOptions={{ position: 'top' }}
+            style={{
+              backgroundColor: theme.surface,
+              color: theme.textSecondary,
+              border: `1px solid ${theme.border}`,
+            }}
           />
         </div>
       )}
