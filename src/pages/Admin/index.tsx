@@ -3,6 +3,7 @@ import { FeatureFlagManagement } from '@/components/Admin/FeatureFlagManagement'
 import { IntegrationManagement } from '@/components/Admin/IntegrationManagement';
 import { RoleManagement } from '@/components/Admin/RoleManagement';
 import { SettingsManagement } from '@/components/Admin/SettingsManagement';
+import { AdminSubscriptionManagement } from '@/components/Admin/SubscriptionManagement';
 import { SystemAnalytics } from '@/components/Admin/SystemAnalytics';
 import { UserManagement } from '@/components/Admin/UserManagement';
 import {
@@ -497,6 +498,15 @@ const AdminDashboard: React.FC = () => {
                 leftIcon='pi pi-flag'
               >
                 <FeatureFlagManagement />
+              </TabPanel>
+            )}
+
+            {hasPermission(Permission.MANAGE_SUBSCRIPTIONS) && (
+              <TabPanel
+                header='Subscriptions'
+                leftIcon='pi pi-credit-card'
+              >
+                <AdminSubscriptionManagement />
               </TabPanel>
             )}
           </TabView>
