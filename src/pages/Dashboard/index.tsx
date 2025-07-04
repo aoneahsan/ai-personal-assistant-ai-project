@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
     if (path === ROUTES.DASHBOARD_CHAT_EMBEDS) return 'embeds';
     if (path === ROUTES.DASHBOARD_ACCOUNT) return 'account';
     if (path === ROUTES.EDIT_PROFILE) return 'profile';
-    if (path.startsWith('/chats/view/')) return 'chat-view';
+    if (path.startsWith('/dashboard/chats/view/')) return 'chat-view';
     return 'overview';
   };
 
@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
 
   // Handle chat row click
   const handleChatClick = (chatId: string) => {
-    navigate({ to: `/chats/view/${chatId}` });
+    navigate({ to: ROUTES.DASHBOARD_CHAT_VIEW.replace('$chatId', chatId) });
   };
 
   // Render different sections based on active route
@@ -230,24 +230,41 @@ const Dashboard: React.FC = () => {
                   rowHover
                   className='p-datatable-customers'
                   onRowClick={(e) => handleChatClick(e.data.id)}
+                  style={{ cursor: 'pointer' }}
                 >
                   <Column
                     field='participant'
                     header='Participant'
-                    body={(rowData) => (
+                    body={(rowData: ChatConversation) => (
                       <div className='flex align-items-center gap-3'>
                         <Avatar
                           shape='circle'
                           size='normal'
-                          image={rowData.participant.avatar}
-                          label={rowData.participant.name?.charAt(0)}
+                          image={rowData.participant?.avatar}
+                          label={rowData.participant?.name
+                            ?.charAt(0)
+                            .toUpperCase()}
+                          style={{
+                            backgroundColor: !rowData.participant?.avatar
+                              ? theme.primary
+                              : undefined,
+                            color: !rowData.participant?.avatar
+                              ? theme.textInverse
+                              : undefined,
+                          }}
                         />
                         <div>
-                          <div className='font-medium'>
-                            {rowData.participant.name}
+                          <div
+                            className='font-medium'
+                            style={{ color: theme.textPrimary }}
+                          >
+                            {rowData.participant?.name || 'Unknown User'}
                           </div>
-                          <div className='text-sm text-500'>
-                            {rowData.participant.email}
+                          <div
+                            className='text-sm'
+                            style={{ color: theme.textSecondary }}
+                          >
+                            {rowData.participant?.email || ''}
                           </div>
                         </div>
                       </div>
@@ -256,11 +273,19 @@ const Dashboard: React.FC = () => {
                   <Column
                     field='lastMessage'
                     header='Last Message'
-                    body={(rowData) => (
+                    body={(rowData: ChatConversation) => (
                       <div>
-                        <div className='text-sm'>{rowData.lastMessage}</div>
-                        <div className='text-xs text-500'>
-                          {new Date(rowData.lastMessageAt).toLocaleString()}
+                        <div
+                          className='text-sm mb-1'
+                          style={{ color: theme.textPrimary }}
+                        >
+                          {rowData.lastMessage || 'No messages yet'}
+                        </div>
+                        <div
+                          className='text-xs'
+                          style={{ color: theme.textSecondary }}
+                        >
+                          {rowData.lastMessageAt || ''}
                         </div>
                       </div>
                     )}
@@ -268,28 +293,87 @@ const Dashboard: React.FC = () => {
                   <Column
                     field='unreadCount'
                     header='Unread'
-                    body={(rowData) =>
-                      rowData.unreadCount > 0 ? (
+                    body={(rowData: ChatConversation) => {
+                      const unreadCount = userData?.id
+                        ? rowData.unreadCount?.[userData.id] || 0
+                        : 0;
+                      return unreadCount > 0 ? (
                         <Chip
-                          label={rowData.unreadCount}
+                          label={unreadCount.toString()}
                           className='p-chip-sm'
+                          style={{
+                            backgroundColor: theme.primary,
+                            color: theme.textInverse,
+                          }}
                         />
                       ) : (
-                        <span className='text-500'>-</span>
-                      )
-                    }
+                        <span style={{ color: theme.textSecondary }}>-</span>
+                      );
+                    }}
                   />
                   <Column
                     field='status'
                     header='Status'
-                    body={(rowData) => (
+                    body={(rowData: ChatConversation) => (
                       <Tag
-                        value={rowData.status}
+                        value={rowData.status || 'active'}
                         severity={
                           rowData.status === 'active' ? 'success' : 'warning'
                         }
+                        style={{
+                          backgroundColor:
+                            rowData.status === 'active'
+                              ? theme.success
+                              : theme.warning,
+                          color: theme.textInverse,
+                        }}
                       />
                     )}
+                  />
+                  <Column
+                    field='type'
+                    header='Type'
+                    body={(rowData: ChatConversation) => {
+                      const getTypeIcon = (type: string) => {
+                        switch (type) {
+                          case 'system':
+                            return 'pi pi-cog';
+                          case 'support':
+                            return 'pi pi-question-circle';
+                          default:
+                            return 'pi pi-user';
+                        }
+                      };
+
+                      const getTypeColor = (type: string) => {
+                        switch (type) {
+                          case 'system':
+                            return theme.info;
+                          case 'support':
+                            return theme.warning;
+                          default:
+                            return theme.primary;
+                        }
+                      };
+
+                      return (
+                        <div className='flex align-items-center gap-2'>
+                          <i
+                            className={getTypeIcon(rowData.type || 'user')}
+                            style={{
+                              color: getTypeColor(rowData.type || 'user'),
+                            }}
+                          ></i>
+                          <span
+                            className='text-sm font-medium'
+                            style={{ color: theme.textSecondary }}
+                          >
+                            {(rowData.type || 'user').charAt(0).toUpperCase() +
+                              (rowData.type || 'user').slice(1)}
+                          </span>
+                        </div>
+                      );
+                    }}
                   />
                 </DataTable>
               )}

@@ -85,15 +85,28 @@ export interface FirestoreMessage {
   cleanupJobId?: string;
 }
 
-// Chat conversation
+// Participant information for UI display
+export interface ConversationParticipant {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  status?: 'online' | 'offline';
+}
+
+// Enhanced chat conversation with participant details
 export interface ChatConversation {
   id?: string;
   participants: string[]; // User IDs
   participantEmails: string[]; // User emails for easy searching
+  participant?: ConversationParticipant; // For UI display (other participant in the conversation)
   lastMessage?: string;
   lastMessageTime?: any; // Firestore timestamp
+  lastMessageAt?: string; // Formatted timestamp for UI
   lastMessageSender?: string;
-  unreadCount?: { [userId: string]: number };
+  unreadCount?: { [userId: string]: number }; // Keep original format
+  status?: 'active' | 'inactive';
+  type?: 'user' | 'system' | 'support'; // Type of conversation
   createdAt: any;
   updatedAt: any;
 }
@@ -583,10 +596,13 @@ export class ChatService {
     }
   }
 
-  // Get user conversations
+  // Get user conversations with enhanced participant details
   async getUserConversations(userId: string): Promise<ChatConversation[]> {
     try {
       consoleLog('📋 Getting conversations for user:', userId);
+
+      // First, create default conversations if they don't exist
+      await this.createDefaultConversations(userId, ''); // Email will be fetched if needed
 
       const q = query(
         collection(db, this.CONVERSATIONS_COLLECTION),
@@ -597,15 +613,72 @@ export class ChatService {
       const querySnapshot = await getDocs(q);
       const conversations: ChatConversation[] = [];
 
-      querySnapshot.forEach((doc) => {
-        conversations.push({ id: doc.id, ...doc.data() } as ChatConversation);
-      });
+      for (const doc of querySnapshot.docs) {
+        const conversationData = doc.data() as ChatConversation;
 
-      consoleLog('✅ Found conversations:', conversations.length);
+        // Find the other participant (not the current user)
+        const otherParticipantId = conversationData.participants.find(
+          (id) => id !== userId
+        );
+
+        if (otherParticipantId) {
+          // Get participant details
+          const participantProfile =
+            await this.getUserProfile(otherParticipantId);
+
+          // Format the conversation for UI
+          const enhancedConversation: ChatConversation = {
+            id: doc.id,
+            ...conversationData,
+            participant: participantProfile || {
+              id: otherParticipantId,
+              name: 'Unknown User',
+              email:
+                conversationData.participantEmails?.find(
+                  (email) => !email.includes(userId)
+                ) || '',
+              avatar: undefined,
+              status: 'offline',
+            },
+            lastMessageAt: conversationData.lastMessageTime
+              ? this.formatTimestamp(conversationData.lastMessageTime)
+              : '',
+            status: conversationData.status || 'active',
+            type: conversationData.type || 'user',
+          };
+
+          conversations.push(enhancedConversation);
+        }
+      }
+
+      consoleLog('✅ Found conversations with details:', conversations.length);
       return conversations;
     } catch (error) {
       consoleError('❌ Error getting user conversations:', error);
       throw error;
+    }
+  }
+
+  // Helper method to format timestamps for UI
+  private formatTimestamp(timestamp: any): string {
+    try {
+      if (!timestamp) return '';
+
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInHours < 24) return `${diffInHours}h ago`;
+      if (diffInDays < 7) return `${diffInDays}d ago`;
+
+      return date.toLocaleDateString();
+    } catch (error) {
+      return '';
     }
   }
 
@@ -894,6 +967,139 @@ export class ChatService {
         icon: '👤',
       },
     ];
+  }
+
+  // Create default conversations for new users
+  async createDefaultConversations(
+    userId: string,
+    userEmail: string
+  ): Promise<void> {
+    try {
+      consoleLog('🚀 Creating default conversations for user:', userEmail);
+
+      const defaultConversations = [
+        {
+          type: 'system',
+          participant: {
+            id: 'system-welcome',
+            name: 'AI Assistant',
+            email: 'assistant@ai-personal-assistant.com',
+            avatar: '/assets/images/ai-avatar.png',
+          },
+          lastMessage:
+            'Welcome to AI Personal Assistant! How can I help you today?',
+          welcomeMessage:
+            "Hello! I'm your AI assistant. Feel free to ask me anything or start a conversation with other users.",
+        },
+        {
+          type: 'support',
+          participant: {
+            id: 'system-support',
+            name: 'Support Team',
+            email: 'support@ai-personal-assistant.com',
+            avatar: '/assets/images/support-avatar.png',
+          },
+          lastMessage: "Need help? We're here to assist you!",
+          welcomeMessage:
+            "Hi there! If you have any questions or need assistance, don't hesitate to reach out. We're here to help!",
+        },
+      ];
+
+      for (const conv of defaultConversations) {
+        // Check if conversation already exists
+        const existingQuery = query(
+          collection(db, this.CONVERSATIONS_COLLECTION),
+          where('participants', 'array-contains', userId),
+          where('type', '==', conv.type)
+        );
+
+        const existingDocs = await getDocs(existingQuery);
+        if (existingDocs.empty) {
+          // Create conversation
+          const newConversation = {
+            participants: [userId, conv.participant.id],
+            participantEmails: [userEmail, conv.participant.email],
+            type: conv.type,
+            status: 'active',
+            lastMessage: conv.lastMessage,
+            lastMessageTime: serverTimestamp(),
+            lastMessageSender: conv.participant.id,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            unreadCount: {
+              [userId]: 1,
+              [conv.participant.id]: 0,
+            },
+          };
+
+          const docRef = await addDoc(
+            collection(db, this.CONVERSATIONS_COLLECTION),
+            newConversation
+          );
+
+          // Add welcome message
+          await this.sendMessage(
+            docRef.id,
+            conv.participant.id,
+            conv.participant.email,
+            {
+              text: conv.welcomeMessage,
+              type: 'text',
+            }
+          );
+
+          consoleLog(`✅ Created ${conv.type} conversation:`, docRef.id);
+        }
+      }
+    } catch (error) {
+      consoleError('❌ Error creating default conversations:', error);
+      // Don't throw - this is not critical for user experience
+    }
+  }
+
+  // Get user profile information
+  private async getUserProfile(
+    userId: string
+  ): Promise<ConversationParticipant | null> {
+    try {
+      // Handle system users
+      if (userId.startsWith('system-')) {
+        const systemUsers: { [key: string]: ConversationParticipant } = {
+          'system-welcome': {
+            id: 'system-welcome',
+            name: 'AI Assistant',
+            email: 'assistant@ai-personal-assistant.com',
+            avatar: '/assets/images/ai-avatar.png',
+            status: 'online',
+          },
+          'system-support': {
+            id: 'system-support',
+            name: 'Support Team',
+            email: 'support@ai-personal-assistant.com',
+            avatar: '/assets/images/support-avatar.png',
+            status: 'online',
+          },
+        };
+        return systemUsers[userId] || null;
+      }
+
+      // Get real user profile
+      const userDoc = await getDoc(doc(db, this.USERS_COLLECTION, userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return {
+          id: userId,
+          name: userData.displayName || userData.email || 'Unknown User',
+          email: userData.email || '',
+          avatar: userData.photoURL,
+          status: 'offline', // TODO: Implement real-time status
+        };
+      }
+      return null;
+    } catch (error) {
+      consoleError('❌ Error getting user profile:', error);
+      return null;
+    }
   }
 }
 
