@@ -1,11 +1,13 @@
-import { auth } from '@/services/firebase';
+import { auth } from '@/services/firebaseService';
 import { IPCAUser } from '@/types/user';
 import {
   getUserProfileData,
-  setUserProfileData,
+  saveUserProfileData,
 } from '@/utils/helpers/localStorage';
 import React from 'react';
 import { create } from 'zustand';
+import { CONSOLE_MESSAGES } from '@/utils/constants/generic';
+import { get, set } from 'react-hook-form';
 
 interface IPCAUserDataZState {
   data: IPCAUser | null;
@@ -65,7 +67,7 @@ export const useIsAuthenticatedZState = () => {
   // Minimal debug logging to prevent performance issues
   if (import.meta.env.DEV && Math.random() < 0.01) {
     // Only log 1% of the time to reduce noise
-    console.log('Auth State Check:', {
+    console.log(CONSOLE_MESSAGES.DEBUG.AUTH_STATE_CHECK, {
       hasUserData,
       hasFirebaseAuth,
       isAuthenticated,
@@ -90,7 +92,7 @@ export const useIsAuthSystemReady = () => {
   if (prevStateRef.current !== isReady) {
     prevStateRef.current = isReady;
     if (import.meta.env.DEV) {
-      console.log('🔄 Auth System Status Changed:', {
+      console.log(CONSOLE_MESSAGES.DEBUG.AUTH_SYSTEM_STATUS, {
         isInitializing,
         isAuthServicesReady,
         isAuthStateSettled,
@@ -183,7 +185,7 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
   updateProfile: async (newProfile: UserProfileData) => {
     set({ profile: newProfile });
     // Persist to storage
-    await setUserProfileData(newProfile);
+    await saveUserProfileData(newProfile);
   },
   updatePartialProfile: async (partialProfile: Partial<UserProfileData>) => {
     const currentProfile = get().profile;
@@ -205,13 +207,13 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
       };
       set({ profile: updatedProfile });
       // Persist to storage
-      await setUserProfileData(updatedProfile);
+      await saveUserProfileData(updatedProfile);
     }
   },
   resetProfile: async () => {
     set({ profile: defaultProfile });
     // Remove from storage
-    await setUserProfileData(defaultProfile);
+    await saveUserProfileData(defaultProfile);
   },
   // Add new method to load profile from storage
   loadProfileFromStorage: async () => {
@@ -221,3 +223,23 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
     }
   },
 }));
+
+// Debug auth state - will help us understand the authentication flow
+checkAuthState: () => {
+  const { userData, isAuthenticated } = get();
+  console.log(CONSOLE_MESSAGES.DEBUG.AUTH_STATE_CHECK, {
+    isAuthenticated,
+    hasUserData: !!userData,
+    userDataId: userData?.id || 'none',
+    firebaseUserId: auth.currentUser?.uid || 'none',
+  });
+},
+
+// Optimistic auth system status tracker
+setAuthSystemStatus: (status: AuthSystemStatus) => {
+  set({ authSystemStatus: status });
+  console.log(CONSOLE_MESSAGES.DEBUG.AUTH_SYSTEM_STATUS, {
+    status,
+    timestamp: new Date().toISOString(),
+  });
+},

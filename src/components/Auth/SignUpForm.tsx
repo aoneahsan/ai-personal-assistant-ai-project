@@ -1,5 +1,6 @@
 import { useTheme } from '@/hooks/useTheme';
 import { AuthProvider, unifiedAuthService } from '@/services/authService';
+import { TOAST_MESSAGES, VALIDATION_MESSAGES } from '@/utils/constants/generic';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
@@ -18,15 +19,15 @@ import { z } from 'zod';
 const signUpSchema = z
   .object({
     displayName: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    email: z.string().email(VALIDATION_MESSAGES.FORMAT.EMAIL),
+    password: z.string().min(6, VALIDATION_MESSAGES.FORMAT.PASSWORD_TOO_SHORT),
     confirmPassword: z.string(),
     acceptTerms: z.boolean().refine((val) => val === true, {
-      message: 'You must accept the terms and conditions',
+      message: VALIDATION_MESSAGES.REQUIRED.TERMS_ACCEPTANCE,
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: VALIDATION_MESSAGES.FORMAT.PASSWORDS_DONT_MATCH,
     path: ['confirmPassword'],
   });
 
@@ -76,9 +77,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         password: data.password,
         displayName: data.displayName,
       });
-      toast.success(
-        'Welcome! Account created successfully. Please check your email for verification.'
-      );
+      toast.success(TOAST_MESSAGES.SUCCESS.ACCOUNT_CREATED);
       reset();
       // Add delay to allow auth state to update
       setTimeout(() => {
@@ -86,7 +85,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       }, 500);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to create account'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.ACCOUNT_CREATION_FAILED
       );
     } finally {
       setIsLoading(false);
@@ -97,14 +98,16 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     setSocialLoading(AuthProvider.GOOGLE);
     try {
       await unifiedAuthService.signInWithGoogle();
-      toast.success('Welcome! Account created with Google successfully.');
+      toast.success(TOAST_MESSAGES.SUCCESS.ACCOUNT_CREATED_GOOGLE);
       // Add delay to allow auth state to update
       setTimeout(() => {
         onSuccess?.();
       }, 500);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to sign up with Google'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.GOOGLE_SIGNIN_FAILED
       );
     } finally {
       setSocialLoading(null);
@@ -115,14 +118,16 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     setSocialLoading(AuthProvider.APPLE);
     try {
       await unifiedAuthService.signInWithApple();
-      toast.success('Welcome! Account created with Apple successfully.');
+      toast.success(TOAST_MESSAGES.SUCCESS.ACCOUNT_CREATED_APPLE);
       // Add delay to allow auth state to update
       setTimeout(() => {
         onSuccess?.();
       }, 500);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to sign up with Apple'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.APPLE_SIGNIN_FAILED
       );
     } finally {
       setSocialLoading(null);

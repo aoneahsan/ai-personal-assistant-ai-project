@@ -1,3 +1,4 @@
+import { CONSOLE_MESSAGES } from '@/utils/constants/generic';
 import { Preferences } from '@capacitor/preferences';
 import { USER_LOCALSTORAGE_KEY } from '@perkforce/tool-kit';
 import { aesDecrypt, aesEncrypt } from '../encryptDecrypt';
@@ -40,60 +41,60 @@ export const getLocalStorageUser = async () => {
 };
 
 // User Profile Data Storage
-export const setUserProfileData = async (data: any) => {
+export const saveUserProfileData = async (data: any): Promise<void> => {
   try {
     await STORAGE.SET(USER_SETTINGS_KEYS.USER_PROFILE, JSON.stringify(data));
   } catch (error) {
-    console.error('Error saving user profile data:', error);
+    console.error(CONSOLE_MESSAGES.ERROR.SAVING_USER_PROFILE, error);
   }
 };
 
-export const getUserProfileData = async () => {
+export const getUserProfileData = async (): Promise<any | null> => {
   try {
     const profileData = await STORAGE.GET(USER_SETTINGS_KEYS.USER_PROFILE);
     return profileData ? JSON.parse(profileData) : null;
   } catch (error) {
-    console.error('Error retrieving user profile data:', error);
+    console.error(CONSOLE_MESSAGES.ERROR.RETRIEVING_USER_PROFILE, error);
     return null;
   }
 };
 
 // Theme Settings Storage
-export const setThemeSettings = async (themeName: string) => {
+export const saveThemeSettings = async (themeName: string): Promise<void> => {
   try {
     await STORAGE.SET(USER_SETTINGS_KEYS.THEME_SETTINGS, themeName);
   } catch (error) {
-    console.error('Error saving theme settings:', error);
+    console.error(CONSOLE_MESSAGES.ERROR.SAVING_THEME, error);
   }
 };
 
-export const getThemeSettings = async () => {
+export const getThemeSettings = async (): Promise<any | null> => {
   try {
     return await STORAGE.GET(USER_SETTINGS_KEYS.THEME_SETTINGS);
   } catch (error) {
-    console.error('Error retrieving theme settings:', error);
+    console.error(CONSOLE_MESSAGES.ERROR.RETRIEVING_THEME, error);
     return null;
   }
 };
 
 // App Preferences Storage
-export const setAppPreferences = async (preferences: any) => {
+export const saveAppPreferences = async (preferences: any): Promise<void> => {
   try {
     await STORAGE.SET(
       USER_SETTINGS_KEYS.APP_PREFERENCES,
       JSON.stringify(preferences)
     );
   } catch (error) {
-    console.error('Error saving app preferences:', error);
+    console.error(CONSOLE_MESSAGES.ERROR.SAVING_PREFERENCES, error);
   }
 };
 
-export const getAppPreferences = async () => {
+export const getAppPreferences = async (): Promise<any | null> => {
   try {
     const preferences = await STORAGE.GET(USER_SETTINGS_KEYS.APP_PREFERENCES);
     return preferences ? JSON.parse(preferences) : null;
   } catch (error) {
-    console.error('Error retrieving app preferences:', error);
+    console.error(CONSOLE_MESSAGES.ERROR.RETRIEVING_PREFERENCES, error);
     return null;
   }
 };

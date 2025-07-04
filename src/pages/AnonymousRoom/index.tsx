@@ -1,4 +1,5 @@
 import { useTheme } from '@/hooks/useTheme';
+import { TOAST_MESSAGES } from '@/utils/constants/generic';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
@@ -36,20 +37,21 @@ const AnonymousRoom: React.FC = () => {
   };
 
   const handleJoinRoom = () => {
-    if (!roomName.trim()) {
-      toast.error('Please enter a room name');
+    const roomName = roomName.trim();
+
+    if (!roomName) {
+      toast.error(TOAST_MESSAGES.ERROR.ENTER_ROOM_NAME);
       return;
     }
 
     if (roomName.length !== 8) {
-      toast.error('Room name must be exactly 8 characters');
+      toast.error(TOAST_MESSAGES.ERROR.ROOM_NAME_LENGTH);
       return;
     }
 
-    // Validate room name format (only alphanumeric characters)
-    const isValidFormat = /^[A-Z0-9]{8}$/.test(roomName.toUpperCase());
-    if (!isValidFormat) {
-      toast.error('Room name can only contain letters and numbers');
+    // Check if room name contains only letters and numbers
+    if (!/^[a-zA-Z0-9]+$/.test(roomName)) {
+      toast.error(TOAST_MESSAGES.ERROR.ROOM_NAME_ALPHANUMERIC);
       return;
     }
 
@@ -57,7 +59,10 @@ const AnonymousRoom: React.FC = () => {
     const formattedRoomName = roomName.toUpperCase();
 
     // Navigate to the room
-    navigate({ to: `/room/${formattedRoomName}` });
+    navigate({
+      to: ROUTES.ANONYMOUS_ROOM_WITH_ID,
+      params: { roomId: formattedRoomName.toLowerCase() },
+    });
   };
 
   const handleRoomNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,5 +1,6 @@
 import { useTheme } from '@/hooks/useTheme';
 import { unifiedAuthService } from '@/services/authService';
+import { TOAST_MESSAGES, VALIDATION_MESSAGES } from '@/utils/constants/generic';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -12,7 +13,7 @@ import { z } from 'zod';
 
 // Validation schema
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email(VALIDATION_MESSAGES.FORMAT.EMAIL),
 });
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
@@ -48,11 +49,13 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     try {
       await unifiedAuthService.resetPassword(data.email);
       setIsEmailSent(true);
-      toast.success('Password reset email sent! Please check your inbox.');
+      toast.success(TOAST_MESSAGES.SUCCESS.PASSWORD_RESET_SENT);
       onSuccess?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to send reset email'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.PASSWORD_RESET_FAILED
       );
     } finally {
       setIsLoading(false);
@@ -61,17 +64,19 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
 
   const handleResendEmail = async () => {
     if (!email) {
-      toast.error('Please enter your email address');
+      toast.error(TOAST_MESSAGES.ERROR.ENTER_EMAIL);
       return;
     }
 
     setIsLoading(true);
     try {
       await unifiedAuthService.resetPassword(email);
-      toast.success('Password reset email sent again!');
+      toast.success(TOAST_MESSAGES.SUCCESS.PASSWORD_RESET_SENT_AGAIN);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to resend email'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.PASSWORD_RESET_FAILED
       );
     } finally {
       setIsLoading(false);

@@ -1,5 +1,6 @@
 import MessageEditDialog from '@/components/Chat/MessageEditDialog';
 import { chatService, FirestoreMessage } from '@/services/chatService';
+import { CONSOLE_MESSAGES, TOAST_MESSAGES } from '@/utils/constants/generic';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
@@ -72,20 +73,21 @@ const AnonymousRoomChat: React.FC = () => {
 
   // Set up real-time message subscription
   useEffect(() => {
-    if (!isConnected || !roomId) return;
+    console.log(CONSOLE_MESSAGES.DEBUG.MESSAGE_SUBSCRIPTION, roomId);
 
-    console.log('Setting up message subscription for room:', roomId);
+    if (!roomId) return;
 
     const unsubscribe = chatService.subscribeToMessages(
       `room_${roomId}`,
       (firestoreMessages) => {
-        console.log('Received room messages:', firestoreMessages.length);
-
+        console.log(
+          CONSOLE_MESSAGES.DEBUG.RECEIVED_MESSAGES,
+          firestoreMessages.length
+        );
         const roomMessages: RoomMessage[] = firestoreMessages.map((msg) => ({
           ...msg,
           senderName: msg.senderEmail || 'Anonymous User',
         }));
-
         setMessages(roomMessages);
       }
     );
@@ -97,7 +99,7 @@ const AnonymousRoomChat: React.FC = () => {
         unsubscribeRef.current();
       }
     };
-  }, [isConnected, roomId]);
+  }, [roomId]);
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -109,24 +111,33 @@ const AnonymousRoomChat: React.FC = () => {
   }, []);
 
   const handleJoinRoom = () => {
-    if (!senderName.trim()) {
-      toast.error('Please enter your name');
+    const trimmedName = senderName.trim();
+
+    if (!trimmedName) {
+      toast.error(TOAST_MESSAGES.ERROR.ENTER_NAME);
       return;
     }
 
-    if (senderName.length > 20) {
-      toast.error('Name must be 20 characters or less');
+    if (trimmedName.length > 20) {
+      toast.error(TOAST_MESSAGES.ERROR.NAME_TOO_LONG);
       return;
     }
 
     setIsConnected(true);
     setShowNameDialog(false);
-    setOnlineUsers([senderName]);
-    toast.success(`Welcome to room ${roomId}!`);
+    setOnlineUsers([trimmedName]);
+    toast.success(`${TOAST_MESSAGES.SUCCESS.ROOM_WELCOME} ${roomId}!`);
   };
 
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !isConnected) return;
+
+    const messageData = {
+      text: currentMessage.trim(),
+      senderName: senderName,
+      roomId: roomId,
+      timestamp: new Date(),
+    };
 
     try {
       await chatService.sendTextMessage(
@@ -138,8 +149,8 @@ const AnonymousRoomChat: React.FC = () => {
 
       setCurrentMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
+      console.error(CONSOLE_MESSAGES.ERROR.SENDING_MESSAGE, error);
+      toast.error(TOAST_MESSAGES.ERROR.MESSAGE_SEND_FAILED);
     }
   };
 
@@ -164,10 +175,10 @@ const AnonymousRoomChat: React.FC = () => {
         senderName,
         'Deleted by room member'
       );
-      toast.success('Message deleted');
+      toast.success(TOAST_MESSAGES.SUCCESS.MESSAGE_DELETED);
     } catch (error) {
-      console.error('Error deleting message:', error);
-      toast.error('Failed to delete message');
+      console.error(CONSOLE_MESSAGES.ERROR.DELETING_MESSAGE, error);
+      toast.error(TOAST_MESSAGES.ERROR.MESSAGE_DELETE_FAILED);
     }
   };
 
@@ -181,12 +192,12 @@ const AnonymousRoomChat: React.FC = () => {
         senderName,
         editReason
       );
-      toast.success('Message updated');
+      toast.success(TOAST_MESSAGES.SUCCESS.MESSAGE_UPDATED);
       setShowEditDialog(false);
       setSelectedMessage(null);
     } catch (error) {
-      console.error('Error editing message:', error);
-      toast.error('Failed to edit message');
+      console.error(CONSOLE_MESSAGES.ERROR.EDITING_MESSAGE, error);
+      toast.error(TOAST_MESSAGES.ERROR.MESSAGE_EDIT_FAILED);
     }
   };
 
@@ -225,9 +236,20 @@ const AnonymousRoomChat: React.FC = () => {
     navigate({ to: '/room' });
   };
 
-  const handleCopyRoomId = () => {
-    navigator.clipboard.writeText(roomId || '');
-    toast.success('Room ID copied to clipboard!');
+  const handleCopyRoomId = async () => {
+    try {
+      await navigator.clipboard.writeText(roomId || '');
+      toast.success(TOAST_MESSAGES.SUCCESS.ROOM_ID_COPIED);
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = roomId || '';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toast.success(TOAST_MESSAGES.SUCCESS.ROOM_ID_COPIED);
+    }
   };
 
   // Name entry dialog
