@@ -1,4 +1,5 @@
 import { IPCAUser } from '@/types/user';
+import { UserRole } from '@/types/user/roles';
 import {
   SUBSCRIPTION_FEATURES,
   SubscriptionPlan,
@@ -207,6 +208,11 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
       isEmailVerified: user.emailVerified,
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
+
+      // Role-based access control - Default to USER role for new users
+      role: UserRole.USER,
+      isActive: true,
+
       // Add subscription for anonymous users (limited features)
       ...(isAnonymous && {
         subscription: {
@@ -224,6 +230,7 @@ export const saveUserToFirestore = async (user: User): Promise<void> => {
       displayName: userData.displayName,
       isEmailVerified: userData.isEmailVerified,
       isAnonymous: isAnonymous,
+      role: userData.role,
     });
 
     await setDoc(userRef, userData, { merge: true });

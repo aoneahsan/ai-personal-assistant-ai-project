@@ -1,3 +1,4 @@
+import { UserRole, UserRoleAssignment } from './roles';
 import {
   SUBSCRIPTION_FEATURES,
   SubscriptionPlan,
@@ -19,6 +20,26 @@ export interface IPCAUser {
   ipAddress?: string;
   location?: string;
   subscription?: UserSubscription;
+
+  // Role-based access control
+  role?: UserRole;
+  roleAssignment?: UserRoleAssignment;
+
+  // User status and metadata
+  isActive?: boolean;
+  isBanned?: boolean;
+  bannedUntil?: Date;
+  bannedReason?: string;
+  lastActiveAt?: Date;
+
+  // Profile completion and verification
+  profileCompletionPercentage?: number;
+  isProfileComplete?: boolean;
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+
+  // Administrative notes (only visible to admins)
+  adminNotes?: string;
+  tags?: string[];
 }
 
 // Default subscription for users (can be updated via admin panel or payment system)
@@ -28,3 +49,10 @@ export const getDefaultUserSubscription = (): UserSubscription => ({
   isActive: true,
   features: SUBSCRIPTION_FEATURES[SubscriptionPlan.FREE],
 });
+
+// Default role for new users
+export const getDefaultUserRole = (): UserRole => UserRole.USER;
+
+// Export all user-related types
+export * from './roles';
+export * from './subscription';
