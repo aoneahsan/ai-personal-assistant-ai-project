@@ -1,3 +1,4 @@
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   useIsAuthenticatedZState,
@@ -14,7 +15,7 @@ interface PublicRouteProps {
 
 const PublicRoute: React.FC<PublicRouteProps> = ({
   children,
-  redirectTo = '/chats',
+  redirectTo = ROUTES.DASHBOARD_CHATS,
 }) => {
   const isAuthenticated = useIsAuthenticatedZState();
   const isAuthSystemReady = useIsAuthSystemReady();

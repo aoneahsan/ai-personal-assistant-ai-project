@@ -1,4 +1,5 @@
 import { useTheme } from '@/hooks/useTheme';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -74,7 +75,7 @@ const AnonymousRoom: React.FC = () => {
 
   const handleBackToChats = () => {
     // Navigate to chats list page instead of using browser history
-    navigate({ to: '/chats' });
+    navigate({ to: ROUTES.DASHBOARD_CHATS });
   };
 
   return (

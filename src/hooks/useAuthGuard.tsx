@@ -1,3 +1,4 @@
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   useIsAuthenticatedZState,
@@ -80,6 +81,8 @@ export const useRequireAuth = (redirectTo: string = '/auth') => {
   return useAuthGuard({ requireAuth: true, redirectTo });
 };
 
-export const useRequireGuest = (redirectTo: string = '/chats') => {
+export const useRequireGuest = (
+  redirectTo: string = ROUTES.DASHBOARD_CHATS
+) => {
   return useAuthGuard({ requireAuth: false, redirectTo });
 };

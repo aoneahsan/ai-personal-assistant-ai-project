@@ -2,7 +2,6 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import PublicRoute from '@/components/Auth/PublicRoute';
 import AuthPage from '@/pages/Auth';
 import Chat from '@/pages/Chat';
-import ChatList from '@/pages/ChatList';
 import NotFound from '@/pages/NotFound';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
@@ -174,17 +173,6 @@ const anonymousChatRoute = createRoute({
 });
 
 // Chat routes - with auth protection
-const chatListRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.CHATS,
-  component: () => (
-    <ProtectedRoute>
-      <ChatList />
-    </ProtectedRoute>
-  ),
-  errorComponent: ErrorFallback,
-});
-
 const chatRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.CHAT,
@@ -390,7 +378,6 @@ export const appRouteTree = rootRoute.addChildren([
   chatViewRoute,
   editProfileRoute,
   embedDemoRoute,
-  chatListRoute,
   chatRoute,
   // Policy routes
   privacyPolicyRoute,

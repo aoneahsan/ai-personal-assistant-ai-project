@@ -1,4 +1,5 @@
 import { useTheme } from '@/hooks/useTheme';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { consoleLog } from '@/utils/helpers/consoleHelper';
 import { useIsAuthenticatedZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
@@ -25,7 +26,7 @@ interface AuthContainerProps {
 
 const AuthContainer: React.FC<AuthContainerProps> = ({
   initialMode = AuthMode.WELCOME,
-  redirectTo = '/chats',
+  redirectTo = ROUTES.DASHBOARD_CHATS,
   onAuthSuccess,
 }) => {
   const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);

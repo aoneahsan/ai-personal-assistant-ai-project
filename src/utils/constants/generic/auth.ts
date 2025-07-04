@@ -7,7 +7,7 @@ export const AUTH_ROUTES = {
 } as const;
 
 // Protected Routes - routes that require authentication (currently active routes only)
-export const PROTECTED_ROUTES = ['/chats', '/chat'] as const;
+export const PROTECTED_ROUTES = ['/dashboard/chats', '/chat'] as const;
 
 // Commented Protected Routes - routes that will require authentication when uncommented
 export const COMMENTED_PROTECTED_ROUTES = [
@@ -34,7 +34,7 @@ export const ANONYMOUS_FEATURE_LIMITATIONS = {
 
 // Default redirect routes
 export const DEFAULT_ROUTES = {
-  AFTER_LOGIN: '/chats',
+  AFTER_LOGIN: '/dashboard/chats',
   AFTER_LOGOUT: '/auth',
   AFTER_ANONYMOUS_START: '/anonymous-chat',
   UNAUTHORIZED: '/auth',
@@ -94,4 +94,47 @@ export const AUTH_FORM_FIELDS = {
   CONFIRM_PASSWORD: 'confirmPassword',
   DISPLAY_NAME: 'displayName',
   ACCEPT_TERMS: 'acceptTerms',
+} as const;
+
+export const AUTH_CONFIG = {
+  // Session duration in milliseconds (24 hours)
+  SESSION_DURATION: 24 * 60 * 60 * 1000,
+
+  // Routes that require authentication
+  PROTECTED_ROUTES: ['/dashboard/chats', '/chat'] as const,
+
+  // Routes that are only accessible to guests (non-authenticated users)
+  GUEST_ONLY_ROUTES: ['/auth', '/sign-in', '/sign-up'] as const,
+
+  // Default redirect routes
+  REDIRECT_ROUTES: {
+    // Where to redirect after login
+    AFTER_LOGIN: '/dashboard/chats',
+
+    // Where to redirect when authentication is required
+    REQUIRE_AUTH: '/auth',
+
+    // Where to redirect when guest access is required
+    REQUIRE_GUEST: '/dashboard/chats',
+  },
+
+  // Cookie/Storage keys
+  STORAGE_KEYS: {
+    AUTH_TOKEN: 'auth_token',
+    USER_DATA: 'user_data',
+    REMEMBER_ME: 'remember_me',
+    LAST_ROUTE: 'last_route',
+  },
+
+  // OAuth providers configuration
+  OAUTH_PROVIDERS: {
+    GOOGLE: {
+      enabled: true,
+      scopes: ['email', 'profile'],
+    },
+    APPLE: {
+      enabled: true,
+      scopes: ['email', 'name'],
+    },
+  },
 } as const;

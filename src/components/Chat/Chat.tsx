@@ -2,6 +2,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { unifiedAuthService } from '@/services/authService';
 import { chatService, FirestoreMessage } from '@/services/chatService';
 import { ChatFeatureFlag, SubscriptionPlan } from '@/types/user/subscription';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
@@ -434,9 +435,9 @@ const Chat: React.FC<ChatProps> = ({
     } else {
       // Navigate to chats list page instead of using browser history
       if (location.pathname === '/anonymous-chat') {
-        navigate({ to: '/chats' });
+        navigate({ to: ROUTES.DASHBOARD_CHATS });
       } else {
-        navigate({ to: '/chats' });
+        navigate({ to: ROUTES.DASHBOARD_CHATS });
       }
     }
     consoleLog('Chat deleted');

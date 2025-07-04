@@ -52,7 +52,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     if (onBack) {
       onBack();
     } else {
-      navigate({ to: ROUTES.CHATS });
+      navigate({ to: ROUTES.DASHBOARD_CHATS });
     }
   };
 

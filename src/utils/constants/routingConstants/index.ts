@@ -32,7 +32,6 @@ export const ROUTES = {
   DASHBOARD_ACCOUNT: '/dashboard/account',
 
   // Chat Routes
-  CHATS: '/chats',
   CHAT: '/chat',
   ANONYMOUS_CHAT: '/anonymous-chat',
 
@@ -89,7 +88,7 @@ export const NAVIGATION_ITEMS = [
     key: 'chats',
     label: 'Chats',
     icon: 'pi pi-comments',
-    route: ROUTES.CHATS,
+    route: ROUTES.DASHBOARD_CHATS,
   },
   {
     key: 'profile',
