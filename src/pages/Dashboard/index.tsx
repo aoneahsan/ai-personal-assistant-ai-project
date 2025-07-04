@@ -1,6 +1,7 @@
 import ChatView from '@/components/Chat/ChatView';
 import UserSearch from '@/components/Chat/UserSearch';
 import { FullPageLoader, RefreshButton } from '@/components/common';
+import { useRoleCheck } from '@/components/common/RoleGuard';
 import { useTheme } from '@/hooks/useTheme';
 import EditProfile from '@/pages/EditProfile';
 import {
@@ -9,6 +10,7 @@ import {
   UserSearchResult,
 } from '@/services/chatService';
 import { EmbedConfig, EmbedService } from '@/services/embedService';
+import { Permission } from '@/types/user/roles';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import {
   useUserDataZState,
@@ -31,6 +33,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
+  const { hasPermission } = useRoleCheck();
   const toast = useRef<Toast>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [userChats, setUserChats] = useState<ChatConversation[]>([]);
@@ -133,6 +136,8 @@ const Dashboard: React.FC = () => {
       navigate({ to: ROUTES.DASHBOARD_ACCOUNT });
     } else if (key === 'profile') {
       navigate({ to: ROUTES.EDIT_PROFILE });
+    } else if (key === 'admin') {
+      navigate({ to: ROUTES.ADMIN });
     } else {
       navigate({ to: ROUTES.DASHBOARD });
     }
@@ -662,6 +667,9 @@ const Dashboard: React.FC = () => {
     { key: 'embeds', label: 'Chat Embeds', icon: 'pi pi-code' },
     { key: 'account', label: 'Account', icon: 'pi pi-user' },
     { key: 'profile', label: 'Profile', icon: 'pi pi-user-edit' },
+    ...(hasPermission(Permission.ACCESS_ADMIN_PANEL)
+      ? [{ key: 'admin', label: 'Admin Panel', icon: 'pi pi-cog' }]
+      : []),
   ];
 
   return (

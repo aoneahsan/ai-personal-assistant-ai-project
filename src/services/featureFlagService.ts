@@ -1,15 +1,33 @@
-import { IPCAUser } from '@/types/user';
-import {
-  ChatFeatureFlag,
-  FeatureAccessResult,
-  SUBSCRIPTION_FEATURES,
-  SubscriptionPlan,
-  UserSubscription,
-} from '@/types/user/subscription';
-import { consoleLog, consoleWarn } from '@/utils/helpers/consoleHelper';
+import { adminSettingsService, AdminSettings } from './adminSettingsService';
+
+export interface FeatureFlagResult {
+  isEnabled: boolean;
+  reason?: string;
+}
+
+export interface FeatureFlagConfig {
+  name: string;
+  enabled: boolean;
+  description?: string;
+  environments?: ('development' | 'staging' | 'production')[];
+  rolloutPercentage?: number;
+  targetUsers?: string[];
+  startDate?: Date;
+  endDate?: Date;
+}
 
 export class FeatureFlagService {
   private static instance: FeatureFlagService;
+  private settings: AdminSettings;
+
+  private constructor() {
+    this.settings = adminSettingsService.getSettings();
+    
+    // Subscribe to settings changes
+    adminSettingsService.subscribe((newSettings) => {
+      this.settings = newSettings;
+    });
+  }
 
   public static getInstance(): FeatureFlagService {
     if (!FeatureFlagService.instance) {
@@ -18,223 +36,199 @@ export class FeatureFlagService {
     return FeatureFlagService.instance;
   }
 
-  /**
-   * Check if user has access to a specific feature
-   */
-  public hasFeatureAccess(
-    user: IPCAUser | null | undefined,
-    feature: ChatFeatureFlag
-  ): FeatureAccessResult {
-    if (!user) {
+  // ==================== Core Feature Flags ====================
+
+  public isAnonymousChatEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('anonymousChat');
+  }
+
+  public isEmbedSystemEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('embedSystem');
+  }
+
+  public isFeedbackSystemEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('feedbackSystem');
+  }
+
+  public isSubscriptionSystemEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('subscriptionSystem');
+  }
+
+  public isAnalyticsEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('analytics');
+  }
+
+  public isNotificationsEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('notifications');
+  }
+
+  // ==================== Advanced Features ====================
+
+  public isVoiceMessagesEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('voiceMessages');
+  }
+
+  public isFileUploadsEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('fileUploads');
+  }
+
+  public isVideoChatEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('videoChat');
+  }
+
+  public isScreenSharingEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('screenSharing');
+  }
+
+  public isAiAssistantEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('aiAssistant');
+  }
+
+  public isMultiLanguageEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('multiLanguage');
+  }
+
+  // ==================== Admin Features ====================
+
+  public isUserManagementEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('userManagement');
+  }
+
+  public isSettingsManagementEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('settingsManagement');
+  }
+
+  public isAuditLogsEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('auditLogs');
+  }
+
+  public isSystemMonitoringEnabled(): FeatureFlagResult {
+    return this.checkFeatureFlag('systemMonitoring');
+  }
+
+  // ==================== Helper Methods ====================
+
+  private checkFeatureFlag(flagName: keyof AdminSettings['features']): FeatureFlagResult {
+    const isEnabled = this.settings.features[flagName];
+    
+    // Check if in maintenance mode
+    if (this.settings.system.maintenanceMode) {
       return {
-        hasAccess: false,
-        requiredPlan: this.getMinimumPlanForFeature(feature),
-        upgradeMessage: 'Please sign in to access this feature',
+        isEnabled: false,
+        reason: 'System is in maintenance mode'
       };
     }
 
-    const subscription = this.getUserSubscription(user);
-    const userFeatures = SUBSCRIPTION_FEATURES[subscription.plan] || [];
-    const hasAccess = userFeatures.includes(feature);
-
-    if (hasAccess && subscription.isActive) {
-      return { hasAccess: true };
-    }
-
-    const requiredPlan = this.getMinimumPlanForFeature(feature);
-
+    // Check environment-specific rules if needed
+    const environment = this.settings.system.environment;
+    
     return {
-      hasAccess: false,
-      requiredPlan,
-      upgradeMessage: this.getUpgradeMessage(
-        feature,
-        requiredPlan,
-        subscription.plan
-      ),
+      isEnabled,
+      reason: isEnabled ? 'Feature is enabled' : 'Feature is disabled'
     };
   }
 
   /**
-   * Get user's current subscription or default to FREE
+   * Check multiple feature flags at once
    */
-  private getUserSubscription(user: IPCAUser): UserSubscription {
-    if (user.subscription) {
-      return user.subscription;
-    }
-
-    // Default subscription for users without explicit subscription
-    return {
-      plan: SubscriptionPlan.FREE,
-      startDate: new Date(),
-      isActive: true,
-      features: SUBSCRIPTION_FEATURES[SubscriptionPlan.FREE],
-    };
-  }
-
-  /**
-   * Get the minimum plan required for a feature
-   */
-  private getMinimumPlanForFeature(feature: ChatFeatureFlag): SubscriptionPlan {
-    for (const [plan, features] of Object.entries(SUBSCRIPTION_FEATURES)) {
-      if (features.includes(feature)) {
-        return plan as SubscriptionPlan;
-      }
-    }
-    return SubscriptionPlan.ENTERPRISE; // Default to highest plan if not found
-  }
-
-  /**
-   * Generate upgrade message for a feature
-   */
-  private getUpgradeMessage(
-    feature: ChatFeatureFlag,
-    requiredPlan: SubscriptionPlan,
-    currentPlan: SubscriptionPlan
-  ): string {
-    const featureNames: Record<ChatFeatureFlag, string> = {
-      [ChatFeatureFlag.MESSAGE_EDITING]: 'Message Editing',
-      [ChatFeatureFlag.MESSAGE_DELETION]: 'Message Deletion',
-      [ChatFeatureFlag.MESSAGE_HISTORY]: 'Message Edit History',
-      [ChatFeatureFlag.ANONYMOUS_CHAT]: 'Anonymous Chat',
-      [ChatFeatureFlag.GROUP_CHAT]: 'Group Chat',
-      [ChatFeatureFlag.FILE_SHARING]: 'File Sharing',
-      [ChatFeatureFlag.VOICE_MESSAGES]: 'Voice Messages',
-      [ChatFeatureFlag.VIDEO_MESSAGES]: 'Video Messages',
-      [ChatFeatureFlag.MESSAGE_REACTIONS]: 'Message Reactions',
-      [ChatFeatureFlag.MESSAGE_FORWARDING]: 'Message Forwarding',
-    };
-
-    const featureName = featureNames[feature] || 'This feature';
-
-    if (currentPlan === SubscriptionPlan.FREE) {
-      return `${featureName} is available for ${requiredPlan.toUpperCase()} subscribers and above. Upgrade your plan to unlock this feature.`;
-    }
-
-    return `${featureName} requires ${requiredPlan.toUpperCase()} plan or higher. Please upgrade your subscription.`;
-  }
-
-  /**
-   * Get all available features for a user
-   */
-  public getUserFeatures(user: IPCAUser | null | undefined): ChatFeatureFlag[] {
-    if (!user) {
-      return [];
-    }
-
-    const subscription = this.getUserSubscription(user);
-    return subscription.isActive
-      ? SUBSCRIPTION_FEATURES[subscription.plan]
-      : [];
-  }
-
-  /**
-   * Check if user can edit messages
-   */
-  public canEditMessages(
-    user: IPCAUser | null | undefined
-  ): FeatureAccessResult {
-    return this.hasFeatureAccess(user, ChatFeatureFlag.MESSAGE_EDITING);
-  }
-
-  /**
-   * Check if user can delete messages
-   */
-  public canDeleteMessages(
-    user: IPCAUser | null | undefined
-  ): FeatureAccessResult {
-    return this.hasFeatureAccess(user, ChatFeatureFlag.MESSAGE_DELETION);
-  }
-
-  /**
-   * Check if user can view message history
-   */
-  public canViewMessageHistory(
-    user: IPCAUser | null | undefined
-  ): FeatureAccessResult {
-    return this.hasFeatureAccess(user, ChatFeatureFlag.MESSAGE_HISTORY);
-  }
-
-  /**
-   * Check if user can use anonymous chat
-   */
-  public canUseAnonymousChat(
-    user: IPCAUser | null | undefined
-  ): FeatureAccessResult {
-    return this.hasFeatureAccess(user, ChatFeatureFlag.ANONYMOUS_CHAT);
-  }
-
-  /**
-   * Get feature upgrade info for display in UI
-   */
-  public getFeatureUpgradeInfo(feature: ChatFeatureFlag) {
-    const requiredPlan = this.getMinimumPlanForFeature(feature);
-
-    return {
-      feature,
-      requiredPlan,
-      planName: requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1),
-      benefits: this.getPlanBenefits(requiredPlan),
-    };
-  }
-
-  /**
-   * Get benefits for a specific plan
-   */
-  private getPlanBenefits(plan: SubscriptionPlan): string[] {
-    const benefits: Record<SubscriptionPlan, string[]> = {
-      [SubscriptionPlan.FREE]: [
-        'Basic file sharing',
-        'Voice messages',
-        'Standard support',
-      ],
-      [SubscriptionPlan.PRO]: [
-        'Message editing & deletion',
-        'Edit history tracking',
-        'Video messages',
-        'Priority support',
-        'Extended file storage',
-      ],
-      [SubscriptionPlan.PREMIUM]: [
-        'Anonymous chat',
-        'Message reactions',
-        'Message forwarding',
-        'Advanced file sharing',
-        'Premium support',
-        'Custom themes',
-      ],
-      [SubscriptionPlan.ENTERPRISE]: [
-        'All premium features',
-        'Group chat management',
-        'Advanced analytics',
-        'Custom integrations',
-        'Dedicated support',
-        'SLA guarantee',
-      ],
-    };
-
-    return benefits[plan] || [];
-  }
-
-  /**
-   * Log feature access attempt (for analytics)
-   */
-  public logFeatureAccess(
-    user: IPCAUser | null | undefined,
-    feature: ChatFeatureFlag,
-    granted: boolean
-  ): void {
-    const userPlan = user?.subscription?.plan || SubscriptionPlan.FREE;
-
-    consoleLog(`Feature access: ${feature}`, {
-      userId: user?.id,
-      userPlan,
-      granted,
-      timestamp: new Date().toISOString(),
+  public checkMultipleFlags(flagNames: (keyof AdminSettings['features'])[]): Record<string, FeatureFlagResult> {
+    const results: Record<string, FeatureFlagResult> = {};
+    
+    flagNames.forEach(flagName => {
+      results[flagName] = this.checkFeatureFlag(flagName);
     });
+    
+    return results;
+  }
 
-    if (!granted) {
-      consoleWarn(`Feature ${feature} blocked for ${userPlan} plan`);
+  /**
+   * Get all feature flag states
+   */
+  public getAllFlags(): Record<keyof AdminSettings['features'], FeatureFlagResult> {
+    const flags = Object.keys(this.settings.features) as (keyof AdminSettings['features'])[];
+    return this.checkMultipleFlags(flags);
+  }
+
+  /**
+   * Enable a feature flag
+   */
+  public async enableFeature(flagName: keyof AdminSettings['features']): Promise<void> {
+    const currentSettings = adminSettingsService.getSettings();
+    await adminSettingsService.updatePartialSettings({
+      features: {
+        ...currentSettings.features,
+        [flagName]: true
+      }
+    });
+  }
+
+  /**
+   * Disable a feature flag
+   */
+  public async disableFeature(flagName: keyof AdminSettings['features']): Promise<void> {
+    const currentSettings = adminSettingsService.getSettings();
+    await adminSettingsService.updatePartialSettings({
+      features: {
+        ...currentSettings.features,
+        [flagName]: false
+      }
+    });
+  }
+
+  /**
+   * Toggle a feature flag
+   */
+  public async toggleFeature(flagName: keyof AdminSettings['features']): Promise<boolean> {
+    const currentState = this.checkFeatureFlag(flagName).isEnabled;
+    
+    if (currentState) {
+      await this.disableFeature(flagName);
+    } else {
+      await this.enableFeature(flagName);
     }
+    
+    return !currentState;
+  }
+
+  /**
+   * Bulk update feature flags
+   */
+  public async updateFeatureFlags(flags: Partial<AdminSettings['features']>): Promise<void> {
+    const currentSettings = adminSettingsService.getSettings();
+    await adminSettingsService.updatePartialSettings({
+      features: {
+        ...currentSettings.features,
+        ...flags
+      }
+    });
+  }
+
+  /**
+   * Check if system is in maintenance mode
+   */
+  public isMaintenanceMode(): boolean {
+    return this.settings.system.maintenanceMode;
+  }
+
+  /**
+   * Get maintenance message
+   */
+  public getMaintenanceMessage(): string {
+    return this.settings.system.maintenanceMessage;
+  }
+
+  /**
+   * Check if debug mode is enabled
+   */
+  public isDebugMode(): boolean {
+    return this.settings.system.debugMode;
+  }
+
+  /**
+   * Get current environment
+   */
+  public getEnvironment(): string {
+    return this.settings.system.environment;
   }
 }
 
