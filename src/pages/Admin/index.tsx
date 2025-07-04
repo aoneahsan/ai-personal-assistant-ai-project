@@ -12,6 +12,7 @@ import {
 } from '@/components/common/RoleGuard';
 import { Permission } from '@/types/user/roles';
 import { useUserDataZState } from '@/zustandStates/userState';
+import { useNavigate } from '@tanstack/react-router';
 import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -21,7 +22,6 @@ import { ProgressBar } from 'primereact/progressbar';
 import { TabPanel, TabView } from 'primereact/tabview';
 import { Toast } from 'primereact/toast';
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface AdminDashboardStats {
   totalUsers: number;

@@ -24,11 +24,10 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { firestore } from './firebase';
+import { db } from './firebase';
 
 export class RoleService {
   private static instance: RoleService;
-  private db = firestore;
   private readonly USERS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_users`;
   private readonly ROLE_ASSIGNMENTS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_role_assignments`;
   private readonly ROLE_AUDIT_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_role_audit`;
@@ -205,7 +204,7 @@ export class RoleService {
 
       // Get current user data
       const userDoc = await getDoc(
-        doc(this.db, this.USERS_COLLECTION, request.userId)
+        doc(db, this.USERS_COLLECTION, request.userId)
       );
       if (!userDoc.exists()) {
         return {
@@ -247,7 +246,7 @@ export class RoleService {
       });
 
       // Save role assignment record
-      await addDoc(collection(this.db, this.ROLE_ASSIGNMENTS_COLLECTION), {
+      await addDoc(collection(db, this.ROLE_ASSIGNMENTS_COLLECTION), {
         ...roleAssignment,
         createdAt: new Date(),
       });
@@ -304,7 +303,7 @@ export class RoleService {
   public async getUsersByRole(role: UserRole): Promise<IPCAUser[]> {
     try {
       const q = query(
-        collection(this.db, this.USERS_COLLECTION),
+        collection(db, this.USERS_COLLECTION),
         where('role', '==', role)
       );
       const querySnapshot = await getDocs(q);
@@ -321,7 +320,7 @@ export class RoleService {
   public async getRoleHistory(userId: string): Promise<RoleAuditLog[]> {
     try {
       const q = query(
-        collection(this.db, this.ROLE_AUDIT_COLLECTION),
+        collection(db, this.ROLE_AUDIT_COLLECTION),
         where('userId', '==', userId)
       );
       const querySnapshot = await getDocs(q);
@@ -395,7 +394,7 @@ export class RoleService {
 
     // Check if user exists
     const userDoc = await getDoc(
-      doc(this.db, this.USERS_COLLECTION, request.userId)
+      doc(db, this.USERS_COLLECTION, request.userId)
     );
     if (!userDoc.exists()) {
       errors.push('User not found');
@@ -403,7 +402,7 @@ export class RoleService {
 
     // Check if assigner exists and has permission
     const assignerDoc = await getDoc(
-      doc(this.db, this.USERS_COLLECTION, assignedBy)
+      doc(db, this.USERS_COLLECTION, assignedBy)
     );
     if (!assignerDoc.exists()) {
       errors.push('Assigner not found');
@@ -452,7 +451,7 @@ export class RoleService {
    */
   private async logRoleChange(auditLog: RoleAuditLog): Promise<void> {
     try {
-      await addDoc(collection(this.db, this.ROLE_AUDIT_COLLECTION), {
+      await addDoc(collection(db, this.ROLE_AUDIT_COLLECTION), {
         ...auditLog,
         createdAt: new Date(),
       });
