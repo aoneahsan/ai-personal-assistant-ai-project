@@ -1,5 +1,6 @@
 import { useTheme } from '@/hooks/useTheme';
 import { AuthProvider, unifiedAuthService } from '@/services/authService';
+import { TOAST_MESSAGES, VALIDATION_MESSAGES } from '@/utils/constants/generic';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
@@ -15,8 +16,8 @@ import { z } from 'zod';
 
 // Validation schema
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email(VALIDATION_MESSAGES.FORMAT.EMAIL),
+  password: z.string().min(6, VALIDATION_MESSAGES.FORMAT.PASSWORD_TOO_SHORT),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -56,14 +57,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
     try {
       await unifiedAuthService.signInWithEmail(data.email, data.password);
-      toast.success('Welcome back! You have signed in successfully.');
+      toast.success(TOAST_MESSAGES.SUCCESS.WELCOME_BACK);
       reset();
       // Add delay to allow auth state to update
       setTimeout(() => {
         onSuccess?.();
       }, 500);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to sign in');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.SIGNIN_FAILED
+      );
     } finally {
       setIsLoading(false);
     }
@@ -73,14 +78,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setSocialLoading(AuthProvider.GOOGLE);
     try {
       await unifiedAuthService.signInWithGoogle();
-      toast.success('Welcome! You have signed in with Google successfully.');
+      toast.success(TOAST_MESSAGES.SUCCESS.GOOGLE_SIGNIN);
       // Add delay to allow auth state to update
       setTimeout(() => {
         onSuccess?.();
       }, 500);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to sign in with Google'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.GOOGLE_SIGNIN_FAILED
       );
     } finally {
       setSocialLoading(null);
@@ -91,14 +98,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setSocialLoading(AuthProvider.APPLE);
     try {
       await unifiedAuthService.signInWithApple();
-      toast.success('Welcome! You have signed in with Apple successfully.');
+      toast.success(TOAST_MESSAGES.SUCCESS.APPLE_SIGNIN);
       // Add delay to allow auth state to update
       setTimeout(() => {
         onSuccess?.();
       }, 500);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to sign in with Apple'
+        error instanceof Error
+          ? error.message
+          : TOAST_MESSAGES.ERROR.APPLE_SIGNIN_FAILED
       );
     } finally {
       setSocialLoading(null);
