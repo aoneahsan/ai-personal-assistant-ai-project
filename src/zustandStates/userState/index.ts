@@ -1,13 +1,12 @@
-import { auth } from '@/services/firebaseService';
+import { auth } from '@/services/firebase';
 import { IPCAUser } from '@/types/user';
+import { CONSOLE_MESSAGES } from '@/utils/constants/generic';
 import {
   getUserProfileData,
   saveUserProfileData,
 } from '@/utils/helpers/localStorage';
 import React from 'react';
 import { create } from 'zustand';
-import { CONSOLE_MESSAGES } from '@/utils/constants/generic';
-import { get, set } from 'react-hook-form';
 
 interface IPCAUserDataZState {
   data: IPCAUser | null;
@@ -223,23 +222,3 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
     }
   },
 }));
-
-// Debug auth state - will help us understand the authentication flow
-checkAuthState: () => {
-  const { userData, isAuthenticated } = get();
-  console.log(CONSOLE_MESSAGES.DEBUG.AUTH_STATE_CHECK, {
-    isAuthenticated,
-    hasUserData: !!userData,
-    userDataId: userData?.id || 'none',
-    firebaseUserId: auth.currentUser?.uid || 'none',
-  });
-},
-
-// Optimistic auth system status tracker
-setAuthSystemStatus: (status: AuthSystemStatus) => {
-  set({ authSystemStatus: status });
-  console.log(CONSOLE_MESSAGES.DEBUG.AUTH_SYSTEM_STATUS, {
-    status,
-    timestamp: new Date().toISOString(),
-  });
-},

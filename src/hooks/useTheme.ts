@@ -6,7 +6,7 @@ import {
 } from '@/utils/constants/theme/colors';
 import {
   getThemeSettings,
-  setThemeSettings,
+  saveThemeSettings,
 } from '@/utils/helpers/localStorage';
 import { useEffect, useState } from 'react';
 
@@ -76,7 +76,7 @@ export const useTheme = (themeName?: ThemeName) => {
   // Function to change theme and persist it
   const changeTheme = async (newTheme: ThemeName) => {
     setCurrentTheme(newTheme);
-    await setThemeSettings(newTheme);
+    await saveThemeSettings(newTheme);
   };
 
   return {

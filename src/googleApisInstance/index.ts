@@ -174,7 +174,7 @@ export const autoComplete = async ({
   infoMessage: string;
   items: Array<google.maps.places.Place>;
 }> => {
-  let result: {
+  const result: {
     errorMessage: string;
     infoMessage: string;
     items: Array<google.maps.places.Place>;

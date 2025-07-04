@@ -22,7 +22,7 @@ const SocketIoHOC: React.FC<{ children?: React.ReactNode }> = (props) => {
       })();
     }
 
-    // eslint-disable-next-line
+     
   }, [userEmail]);
 
   return <>{props?.children}</>;
