@@ -332,7 +332,9 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
     setIsProcessing(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, TIME_CONSTANTS.TIMEOUTS.LONG)
+      );
 
       toast.current?.show({
         severity: 'success',
@@ -366,7 +368,9 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
     setIsProcessing(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) =>
+        setTimeout(resolve, TIME_CONSTANTS.TIMEOUTS.MEDIUM)
+      );
 
       toast.current?.show({
         severity: 'info',
