@@ -1,3 +1,4 @@
+import { RefreshButton } from '@/components/common';
 import {
   CustomCalendar,
   CustomCheckbox,
@@ -68,6 +69,7 @@ const EditProfile: React.FC = () => {
   const { profile, updateProfile, loadProfileFromStorage } =
     useUserProfileZState();
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Load profile from storage on component mount
   useEffect(() => {
@@ -112,6 +114,27 @@ const EditProfile: React.FC = () => {
       reset(profile);
     }
     navigate({ to: ROUTES.DASHBOARD });
+  };
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadProfileFromStorage();
+      await copyToClipboardWithToast({
+        value: 'Profile data refreshed!',
+        successMessage: 'Profile data refreshed successfully!',
+        errorMessage: 'Profile refreshed but failed to copy message',
+      });
+    } catch (error) {
+      await copyToClipboardWithToast({
+        value: 'Error refreshing profile',
+        successMessage: 'Error refreshing profile',
+        errorMessage: 'Error refreshing profile',
+      });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Handle section navigation
@@ -233,6 +256,12 @@ const EditProfile: React.FC = () => {
             </p>
           </div>
           <div className='flex flex-wrap gap-2'>
+            <RefreshButton
+              onRefresh={handleRefresh}
+              loading={refreshing}
+              tooltip='Refresh Profile Data'
+              size='small'
+            />
             <Button
               icon='pi pi-keyboard'
               className='p-button-text p-button-rounded p-button-sm'

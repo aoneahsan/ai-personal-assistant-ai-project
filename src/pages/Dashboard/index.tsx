@@ -1,5 +1,6 @@
 import ChatView from '@/components/Chat/ChatView';
 import UserSearch from '@/components/Chat/UserSearch';
+import { FullPageLoader, RefreshButton } from '@/components/common';
 import { useTheme } from '@/hooks/useTheme';
 import EditProfile from '@/pages/EditProfile';
 import {
@@ -23,16 +24,19 @@ import { DataTable } from 'primereact/datatable';
 import { Sidebar } from 'primereact/sidebar';
 import { Skeleton } from 'primereact/skeleton';
 import { Tag } from 'primereact/tag';
-import React, { useEffect, useState } from 'react';
+import { Toast } from 'primereact/toast';
+import React, { useEffect, useRef, useState } from 'react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
+  const toast = useRef<Toast>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [userChats, setUserChats] = useState<ChatConversation[]>([]);
   const [userEmbeds, setUserEmbeds] = useState<EmbedConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showUserSearch, setShowUserSearch] = useState(false);
 
   const { profile: userProfileData } = useUserProfileZState();
@@ -55,28 +59,55 @@ const Dashboard: React.FC = () => {
   const activeSection = getActiveSection();
 
   // Load user data
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
+  const loadUserData = async (showFullLoader = false) => {
+    try {
+      if (showFullLoader) {
+        setRefreshing(true);
+      } else {
         setLoading(true);
-        if (userData?.id) {
-          const conversations = await chatService.getUserConversations(
-            userData.id
-          );
-          setUserChats(conversations);
-          // const embeds = await embedService.getUserEmbeds(userData.id);
-          const embeds: EmbedConfig[] = []; // Placeholder until getUserEmbeds is implemented
-          setUserEmbeds(embeds);
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      } finally {
-        setLoading(false);
       }
-    };
 
+      if (userData?.id) {
+        const conversations = await chatService.getUserConversations(
+          userData.id
+        );
+        setUserChats(conversations);
+
+        // const embeds = await embedService.getUserEmbeds(userData.id);
+        const embeds: EmbedConfig[] = []; // Placeholder until getUserEmbeds is implemented
+        setUserEmbeds(embeds);
+
+        if (showFullLoader) {
+          toast.current?.show({
+            severity: 'success',
+            summary: 'Data Refreshed',
+            detail: 'All data has been successfully refreshed',
+            life: 3000,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to load data. Please try again.',
+        life: 5000,
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     loadUserData();
   }, [userData?.id]);
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    await loadUserData(true);
+  };
 
   // Handle user found from search
   const handleUserFound = (user: UserSearchResult) => {
@@ -126,12 +157,19 @@ const Dashboard: React.FC = () => {
               >
                 My Chats
               </h2>
-              <Button
-                label='Start New Chat'
-                icon='pi pi-plus'
-                className='p-button-rounded'
-                onClick={() => setShowUserSearch(true)}
-              />
+              <div className='flex align-items-center gap-2'>
+                <RefreshButton
+                  onRefresh={handleRefresh}
+                  loading={refreshing}
+                  tooltip='Refresh Chats'
+                />
+                <Button
+                  label='Start New Chat'
+                  icon='pi pi-plus'
+                  className='p-button-rounded'
+                  onClick={() => setShowUserSearch(true)}
+                />
+              </div>
             </div>
             <Card className='shadow-3 border-round-2xl'>
               {loading ? (
@@ -269,12 +307,19 @@ const Dashboard: React.FC = () => {
               >
                 Chat Embeds
               </h2>
-              <Button
-                label='Create New Embed'
-                icon='pi pi-plus'
-                className='p-button-rounded'
-                onClick={() => navigate({ to: ROUTES.EMBED_DEMO })}
-              />
+              <div className='flex align-items-center gap-2'>
+                <RefreshButton
+                  onRefresh={handleRefresh}
+                  loading={refreshing}
+                  tooltip='Refresh Embeds'
+                />
+                <Button
+                  label='Create New Embed'
+                  icon='pi pi-plus'
+                  className='p-button-rounded'
+                  onClick={() => navigate({ to: ROUTES.EMBED_DEMO })}
+                />
+              </div>
             </div>
             <Card className='shadow-3 border-round-2xl'>
               {loading ? (
@@ -405,12 +450,19 @@ const Dashboard: React.FC = () => {
               >
                 Account Information
               </h2>
-              <Button
-                label='Edit Profile'
-                icon='pi pi-pencil'
-                className='p-button-rounded'
-                onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
-              />
+              <div className='flex align-items-center gap-2'>
+                <RefreshButton
+                  onRefresh={handleRefresh}
+                  loading={refreshing}
+                  tooltip='Refresh Account Data'
+                />
+                <Button
+                  label='Edit Profile'
+                  icon='pi pi-pencil'
+                  className='p-button-rounded'
+                  onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
+                />
+              </div>
             </div>
             <Card className='shadow-3 border-round-2xl'>
               <div className='grid'>
@@ -471,11 +523,10 @@ const Dashboard: React.FC = () => {
                 >
                   Dashboard Overview
                 </h2>
-                <Button
-                  icon='pi pi-refresh'
-                  className='p-button-text p-button-rounded'
-                  onClick={() => window.location.reload()}
-                  tooltip='Refresh'
+                <RefreshButton
+                  onRefresh={handleRefresh}
+                  loading={refreshing}
+                  tooltip='Refresh Dashboard'
                 />
               </div>
             </div>
@@ -534,6 +585,12 @@ const Dashboard: React.FC = () => {
       className='min-h-screen'
       style={{ backgroundColor: theme.surface || '#f8f9fa' }}
     >
+      <Toast ref={toast} />
+      <FullPageLoader
+        visible={refreshing}
+        message='Refreshing data...'
+      />
+
       {/* Mobile Header */}
       <div className='lg:hidden flex align-items-center justify-content-between p-3 border-bottom-1 surface-border'>
         <Button
