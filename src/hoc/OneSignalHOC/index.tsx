@@ -70,15 +70,21 @@ const OneSignalHOC: React.FC = () => {
           if (isWebBrowser) {
             try {
               await OneSignalWeb.logout();
-            } catch (_) {}
+            } catch {
+              // Intentionally ignore logout errors
+            }
 
             try {
               await OneSignalWeb.login(_currentUserData.id);
-            } catch (_) {}
+            } catch {
+              // Intentionally ignore login errors
+            }
 
             try {
               await OneSignalWeb.Notifications.requestPermission();
-            } catch (_) {}
+            } catch {
+              // Intentionally ignore permission request errors
+            }
 
             try {
               OneSignalWeb.User.addEmail(_currentUserData.email);
@@ -94,8 +100,12 @@ const OneSignalHOC: React.FC = () => {
                 } else {
                   OneSignalWeb.User.addTag('email', _currentUserData.email);
                 }
-              } catch (_) {}
-            } catch (_) {}
+              } catch {
+                // Intentionally ignore tag setting errors
+              }
+            } catch {
+              // Intentionally ignore user data setting errors
+            }
 
             try {
               await OneSignalWeb.User.PushSubscription.optIn();

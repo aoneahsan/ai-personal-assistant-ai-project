@@ -25,7 +25,6 @@ const chatSearchSchema = z
 
 // Lazy load components
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
 
 // Policy page components

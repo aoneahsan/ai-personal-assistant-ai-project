@@ -20,7 +20,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioUrl,
   duration,
   isPlaying,
-  messageId,
   onTogglePlay,
   onShowTranscript,
   transcript,

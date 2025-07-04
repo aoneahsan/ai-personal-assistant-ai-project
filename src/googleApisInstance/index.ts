@@ -90,7 +90,7 @@ export const fetchAutocompleteSuggestions = async (
     const { suggestions } =
       await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
     return suggestions;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch autocomplete suggestions.');
   }
 };
@@ -137,7 +137,7 @@ export const fetchPlaceDetails = async (
   try {
     await place.fetchFields({ fields });
     return place;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch place details.');
   }
 };

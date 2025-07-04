@@ -47,8 +47,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [socialLoading, setSocialLoading] = useState<AuthProvider | null>(null);
   const [isAppleAvailable] = useState(
     unifiedAuthService.isAppleSignInAvailable()
@@ -60,7 +58,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     formState: { errors },
     reset,
     setValue,
-    watch,
     control,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
