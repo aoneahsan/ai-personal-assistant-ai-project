@@ -42,6 +42,9 @@ export const ROUTES = {
   // Demo Routes
   EMBED_DEMO: '/embed-demo',
 
+  // Admin Routes
+  ADMIN: '/admin',
+
   // Policy Routes
   PRIVACY_POLICY: '/privacy-policy',
   TERMS_OF_SERVICE: '/terms-of-service',
@@ -62,6 +65,7 @@ export const ROUTE_LABELS = {
   [ROUTES.ANONYMOUS_CHAT]: 'Anonymous Chat',
   [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',
   [ROUTES.EMBED_DEMO]: 'Embed Demo',
+  [ROUTES.ADMIN]: 'Admin Dashboard',
   [ROUTES.AUTH]: 'Authentication',
   [ROUTES.PRIVACY_POLICY]: 'Privacy Policy',
   [ROUTES.TERMS_OF_SERVICE]: 'Terms of Service',

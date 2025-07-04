@@ -27,6 +27,9 @@ const chatSearchSchema = z
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
 
+// Admin page components
+const AdminDashboard = lazy(() => import('@/pages/Admin'));
+
 // Policy page components
 const PrivacyPolicy = lazy(() => import('@/pages/Policy/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('@/pages/Policy/TermsOfService'));
@@ -281,6 +284,20 @@ const embedDemoRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+// Admin dashboard route
+const adminDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.ADMIN,
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <AdminDashboard />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 // Policy routes - public access
 const privacyPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -369,6 +386,7 @@ export const appRouteTree = rootRoute.addChildren([
   chatViewRoute,
   editProfileRoute,
   embedDemoRoute,
+  adminDashboardRoute,
   chatRoute,
   // Policy routes
   privacyPolicyRoute,
