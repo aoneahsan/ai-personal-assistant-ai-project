@@ -1,6 +1,6 @@
 import { RoleBadge, useRoleCheck } from '@/components/common/RoleGuard';
-import { roleService } from '@/services/roleService';
 import { IPCAUser } from '@/types/user';
+import { roleService } from '@/services/roleService';
 import { Badge } from 'primereact/badge';
 import { Card } from 'primereact/card';
 import { Chip } from 'primereact/chip';
@@ -47,10 +47,7 @@ export const UserProfileRole: React.FC<UserProfileRoleProps> = ({
         {/* Role Information */}
         <div className='flex items-center justify-between'>
           <h3 className='text-lg font-semibold'>Role Information</h3>
-          <RoleBadge
-            role={userRole}
-            size='medium'
-          />
+          <RoleBadge role={userRole} size='medium' />
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -59,10 +56,7 @@ export const UserProfileRole: React.FC<UserProfileRoleProps> = ({
               Role Level
             </label>
             <div className='flex items-center gap-2'>
-              <Badge
-                value={roleConfig.level}
-                severity='info'
-              />
+              <Badge value={roleConfig.level} severity='info' />
               <span className='text-sm text-gray-500'>
                 Level {roleConfig.level}
               </span>
