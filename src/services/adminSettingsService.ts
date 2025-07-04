@@ -6,7 +6,7 @@ import {
   Unsubscribe,
   updateDoc,
 } from 'firebase/firestore';
-import { FIREBASE_COLLECTIONS } from '../utils/constants/generic/firebase';
+import { PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS } from '../utils/constants/generic/firebase';
 import {
   BUSINESS_CONSTANTS,
   DIMENSION_CONSTANTS,
@@ -15,7 +15,7 @@ import {
   TIME_CONSTANTS,
   VALIDATION_CONSTANTS,
 } from '../utils/constants/generic/numbers';
-import { firestore } from './firebase';
+import { db } from './firebase';
 
 // Admin Settings Interface
 export interface AdminSettings {
@@ -712,7 +712,11 @@ export class AdminSettingsService {
     try {
       // Load settings from Firestore
       const settingsDoc = await getDoc(
-        doc(firestore, FIREBASE_COLLECTIONS.SETTINGS, 'admin')
+        doc(
+          db,
+          `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_settings`,
+          'admin'
+        )
       );
 
       if (settingsDoc.exists()) {
@@ -740,7 +744,11 @@ export class AdminSettingsService {
 
   private setupRealtimeListener(): void {
     this.unsubscribe = onSnapshot(
-      doc(firestore, FIREBASE_COLLECTIONS.SETTINGS, 'admin'),
+      doc(
+        db,
+        `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_settings`,
+        'admin'
+      ),
       (doc) => {
         if (doc.exists()) {
           const data = doc.data();
@@ -784,7 +792,11 @@ export class AdminSettingsService {
       };
 
       await setDoc(
-        doc(firestore, FIREBASE_COLLECTIONS.SETTINGS, 'admin'),
+        doc(
+          db,
+          `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_settings`,
+          'admin'
+        ),
         updatedSettings
       );
       this.settings = updatedSettings;
@@ -812,7 +824,11 @@ export class AdminSettingsService {
       };
 
       await updateDoc(
-        doc(firestore, FIREBASE_COLLECTIONS.SETTINGS, 'admin'),
+        doc(
+          db,
+          `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_settings`,
+          'admin'
+        ),
         updatedSettings
       );
       this.settings = updatedSettings;
@@ -924,8 +940,5 @@ export class AdminSettingsService {
   }
 }
 
-// Export singleton instance
 export const adminSettingsService = AdminSettingsService.getInstance();
 
-// Export types for use in other files
-export type { AdminSettings };
