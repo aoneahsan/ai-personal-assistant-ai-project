@@ -466,6 +466,7 @@ export const SettingsManagement: React.FC = () => {
                             (_, i) => i !== index
                           );
                           updateSettings('ui.customThemes', newThemes);
+                          return true;
                         }}
                       />
                     ))}

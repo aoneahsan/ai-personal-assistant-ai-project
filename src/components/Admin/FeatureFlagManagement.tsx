@@ -100,7 +100,7 @@ export const FeatureFlagManagement: React.FC = () => {
     setLoading(true);
     try {
       // Simulate API call
-      const mockFlags = [
+      const mockFlags: FeatureFlag[] = [
         {
           id: '1',
           name: 'New Chat Interface',
@@ -160,8 +160,8 @@ export const FeatureFlagManagement: React.FC = () => {
           name: 'AI Response Limit',
           key: 'ai_response_limit',
           description: 'Set maximum number of AI responses per user per day',
-          type: 'number',
-          status: 'active',
+          type: 'number' as const,
+          status: 'active' as const,
           defaultValue: 10,
           variations: [
             {
@@ -192,7 +192,7 @@ export const FeatureFlagManagement: React.FC = () => {
                 conditions: [
                   {
                     attribute: 'subscriptionPlan',
-                    operator: 'equals',
+                    operator: 'equals' as const,
                     value: 'FREE',
                   },
                 ],
@@ -203,7 +203,7 @@ export const FeatureFlagManagement: React.FC = () => {
             fallback: 'Pro Tier',
           },
           rolloutPercentage: 100,
-          environment: 'production',
+          environment: 'production' as const,
           tags: ['ai', 'limits', 'subscription'],
           createdBy: 'admin@example.com',
           createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
@@ -220,8 +220,8 @@ export const FeatureFlagManagement: React.FC = () => {
           name: 'Dark Mode Default',
           key: 'dark_mode_default',
           description: 'Set dark mode as default theme for new users',
-          type: 'boolean',
-          status: 'scheduled',
+          type: 'boolean' as const,
+          status: 'scheduled' as const,
           defaultValue: false,
           variations: [
             {
@@ -243,7 +243,7 @@ export const FeatureFlagManagement: React.FC = () => {
             fallback: 'Light',
           },
           rolloutPercentage: 0,
-          environment: 'production',
+          environment: 'production' as const,
           tags: ['ui', 'theme', 'ux'],
           createdBy: 'designer@example.com',
           createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
@@ -392,7 +392,8 @@ export const FeatureFlagManagement: React.FC = () => {
 
   const toggleFlag = async (flag: FeatureFlag) => {
     try {
-      const newStatus = flag.status === 'active' ? 'inactive' : 'active';
+      const newStatus: FeatureFlag['status'] =
+        flag.status === 'active' ? 'inactive' : 'active';
       const updatedFlags = featureFlags.map((f) =>
         f.id === flag.id
           ? { ...f, status: newStatus, updatedAt: new Date() }
@@ -814,7 +815,7 @@ export const FeatureFlagManagement: React.FC = () => {
                     onChange={(e) =>
                       setEditingFlag({
                         ...editingFlag,
-                        scheduledStart: e.value,
+                        scheduledStart: e.value || undefined,
                       })
                     }
                     showTime
@@ -831,7 +832,10 @@ export const FeatureFlagManagement: React.FC = () => {
                       undefined
                     }
                     onChange={(e) =>
-                      setEditingFlag({ ...editingFlag, scheduledEnd: e.value })
+                      setEditingFlag({
+                        ...editingFlag,
+                        scheduledEnd: e.value || undefined,
+                      })
                     }
                     showTime
                     className='w-full'

@@ -9,7 +9,7 @@ import { Calendar } from 'primereact/calendar';
 import { Card } from 'primereact/card';
 import { Column } from 'primereact/column';
 import { ConfirmDialog } from 'primereact/confirmdialog';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -17,13 +17,6 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-interface UserFilters {
-  global: { value: string; matchMode: string };
-  role: { value: UserRole | null; matchMode: string };
-  subscription: { value: SubscriptionPlan | null; matchMode: string };
-  isActive: { value: boolean | null; matchMode: string };
-}
 
 export const UserManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -40,10 +33,10 @@ export const UserManagement: React.FC = () => {
 
   const { loadUsers } = useRoleManagement();
 
-  const [filters, setFilters] = useState<UserFilters>({
+  const [filters, setFilters] = useState<DataTableFilterMeta>({
     global: { value: '', matchMode: FilterMatchMode.CONTAINS },
     role: { value: null, matchMode: FilterMatchMode.EQUALS },
-    subscription: { value: null, matchMode: FilterMatchMode.EQUALS },
+    'subscription.plan': { value: null, matchMode: FilterMatchMode.EQUALS },
     isActive: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
 
@@ -308,12 +301,12 @@ export const UserManagement: React.FC = () => {
 
     try {
       // In a real app, this would call an API
-      const updatedUser = {
+      const updatedUser: IPCAUser = {
         ...selectedUser,
         isBanned: true,
         isActive: false,
         bannedReason: banReason,
-        bannedUntil: banUntil,
+        bannedUntil: banUntil || undefined,
       };
 
       setUsers(users.map((u) => (u.id === selectedUser.id ? updatedUser : u)));
@@ -339,7 +332,7 @@ export const UserManagement: React.FC = () => {
 
   const handleUnbanUser = async (user: IPCAUser) => {
     try {
-      const updatedUser = {
+      const updatedUser: IPCAUser = {
         ...user,
         isBanned: false,
         isActive: true,
@@ -425,7 +418,7 @@ export const UserManagement: React.FC = () => {
         <DataTable
           value={users}
           selection={selectedUsers}
-          onSelectionChange={(e) => setSelectedUsers(e.value)}
+          onSelectionChange={(e) => setSelectedUsers(e.value as IPCAUser[])}
           dataKey='id'
           paginator
           rows={10}

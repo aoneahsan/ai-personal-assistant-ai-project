@@ -266,6 +266,7 @@ export const useRoleCheck = (user?: IPCAUser | null) => {
   const targetUser = user || stateUser;
 
   return {
+    user: targetUser,
     hasPermission: (permission: Permission) => {
       const result = roleService.hasPermission(targetUser, permission);
       return result.hasPermission;
