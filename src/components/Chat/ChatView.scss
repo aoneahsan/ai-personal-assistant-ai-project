@@ -1,0 +1,63 @@
+/* Dashboard Chat View Styles */
+.dashboard-chat-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  /* Override the full-screen chat container styles for dashboard */
+  .chat-container {
+    height: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    min-height: unset !important;
+    min-width: unset !important;
+    position: relative !important;
+    z-index: auto !important;
+
+    /* Ensure proper flex layout within dashboard */
+    display: flex;
+    flex-direction: column;
+
+    /* Remove viewport-based sizing */
+    max-height: calc(100vh - 120px); /* Account for dashboard header */
+
+    /* Messages container adjustments */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0; /* Allow flex shrinking */
+      max-height: calc(100vh - 200px); /* Account for header and input */
+    }
+
+    /* Ensure message input stays at bottom */
+    .message-input-container {
+      flex-shrink: 0;
+    }
+  }
+}
+
+/* Responsive adjustments for dashboard chat */
+@media (max-width: 768px) {
+  .dashboard-chat-view {
+    .chat-container {
+      max-height: calc(100vh - 100px);
+
+      .messages-container {
+        max-height: calc(100vh - 180px);
+      }
+    }
+  }
+}
+
+/* Ensure proper scrolling within dashboard */
+@media (max-height: 600px) {
+  .dashboard-chat-view {
+    .chat-container {
+      max-height: calc(100vh - 80px);
+
+      .messages-container {
+        max-height: calc(100vh - 160px);
+      }
+    }
+  }
+}
