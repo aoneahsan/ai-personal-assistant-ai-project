@@ -40,8 +40,6 @@ interface WidgetMessage {
 
 const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
   embedId,
-  containerId, // eslint-disable-line @typescript-eslint/no-unused-vars
-  baseUrl, // eslint-disable-line @typescript-eslint/no-unused-vars
   userId,
   userMetadata,
 }) => {

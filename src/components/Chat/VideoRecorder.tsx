@@ -38,34 +38,27 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const previewVideoRef = useRef<HTMLVideoElement>(null);
 
+  const { status, startRecording, stopRecording, clearBlobUrl, previewStream } =
+    useReactMediaRecorder({
+      video: {
+        facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: true,
+      askPermissionOnMount: true,
+      onStop: (blobUrl, blob) => {
+        setRecordedVideoBlob(blob);
+        setShowPreview(true);
+        if (previewVideoRef.current) {
+          previewVideoRef.current.src = blobUrl;
+        }
+      },
+    });
+
   const handleStopRecording = useCallback(() => {
     stopRecording();
   }, []);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const {
-    mediaBlobUrl,
-    status,
-    startRecording,
-    stopRecording,
-    clearBlobUrl,
-    previewStream,
-  } = useReactMediaRecorder({
-    video: {
-      facingMode,
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
-    },
-    audio: true,
-    askPermissionOnMount: true,
-    onStop: (blobUrl, blob) => {
-      setRecordedVideoBlob(blob);
-      setShowPreview(true);
-      if (previewVideoRef.current) {
-        previewVideoRef.current.src = blobUrl;
-      }
-    },
-  });
 
   useEffect(() => {
     if (status === 'recording') {

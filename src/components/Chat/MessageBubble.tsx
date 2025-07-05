@@ -61,8 +61,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 }) => {
   const contextMenuRef = useRef<ContextMenu>(null);
   const currentUser = useUserDataZState((state) => state.data);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isOwnMessage = message.sender === 'me';
   const extendedMessage = message as ExtendedMessage;
 
   // Convert message to FirestoreMessage format with all required properties
@@ -114,13 +112,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getStatusIcon = (status?: string) => {
@@ -237,42 +228,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
     return items;
   };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleUpgradeClick = (feature: ChatFeatureFlag) => {
-    onUpgrade?.(feature);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getAudioMenuItems = () => [
-    {
-      label: 'Read Transcript',
-      icon: 'pi pi-file-word',
-      command: () => onShowTranscript(message.id),
-    },
-    {
-      label: 'Download Audio',
-      icon: 'pi pi-download',
-      command: () => {
-        if (message.fileData?.url) {
-          const link = document.createElement('a');
-          link.href = message.fileData.url;
-          link.download = message.fileData.name || 'audio-message.webm';
-          link.click();
-        }
-      },
-    },
-    {
-      label: 'Copy Transcript',
-      icon: 'pi pi-copy',
-      command: () => {
-        if (message.transcript) {
-          const fullText = message.transcript.map((seg) => seg.text).join(' ');
-          navigator.clipboard.writeText(fullText);
-        }
-      },
-    },
-  ];
 
   const renderEditIndicator = () => {
     if (!extendedMessage.isEdited) return null;
