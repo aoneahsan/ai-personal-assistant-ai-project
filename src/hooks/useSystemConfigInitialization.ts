@@ -39,12 +39,20 @@ export const useSystemConfigInitialization = () => {
     setState((prev) => ({ ...prev, isInitializing: true, error: null }));
 
     try {
-      // If we have a user ID, initialize with that user as the creator
-      if (userId) {
-        await initializeConfig(userId);
-      } else {
-        // Otherwise, just load existing configurations
-        await loadConfig();
+      // Try to load existing configurations first (doesn't require auth)
+      await loadConfig();
+
+      // If we have a user ID and configurations are empty, try to initialize
+      if (userId && !isInitialized) {
+        try {
+          await initializeConfig(userId);
+        } catch (initError) {
+          console.warn(
+            'Failed to initialize with user ID, but continuing with loaded config:',
+            initError
+          );
+          // Don't throw here - we might have fallback configurations
+        }
       }
 
       setState((prev) => ({
@@ -56,14 +64,33 @@ export const useSystemConfigInitialization = () => {
       }));
     } catch (error) {
       console.error('Failed to initialize system configuration:', error);
-      setState((prev) => ({
-        ...prev,
-        isInitializing: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to initialize system configuration',
-      }));
+
+      // Check if this is a permission error
+      const isPermissionError =
+        error instanceof Error &&
+        (error.message.includes('permission') ||
+          error.message.includes('insufficient'));
+
+      if (isPermissionError) {
+        console.warn(
+          'Permission error detected - system may not be fully authenticated yet'
+        );
+        // Set a less severe error message for permission issues
+        setState((prev) => ({
+          ...prev,
+          isInitializing: false,
+          error: 'System configurations will load once authenticated',
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isInitializing: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to initialize system configuration',
+        }));
+      }
     }
   };
 
@@ -110,6 +137,16 @@ export const useSystemConfigInitialization = () => {
       setState((prev) => ({ ...prev, error: configError }));
     }
   }, [configError]);
+
+  // Auto-retry when user becomes available
+  useEffect(() => {
+    if (user?.id && state.error && state.error.includes('authenticated')) {
+      console.log(
+        'User authenticated, retrying system configuration initialization...'
+      );
+      initializeSystemConfig(user.id);
+    }
+  }, [user?.id, state.error]);
 
   return {
     // Initialization state

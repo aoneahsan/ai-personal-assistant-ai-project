@@ -1037,15 +1037,20 @@ export class ChatService {
             newConversation
           );
 
-          // Add welcome message
-          await this.sendMessage(
-            docRef.id,
-            conv.participant.id,
-            conv.participant.email,
-            {
-              text: conv.welcomeMessage,
-              type: 'text',
-            }
+          // Add welcome message directly (since system users don't have auth)
+          const welcomeMessage: Omit<FirestoreMessage, 'id'> = {
+            chatId: docRef.id,
+            senderId: conv.participant.id,
+            senderEmail: conv.participant.email,
+            text: conv.welcomeMessage,
+            type: 'text',
+            timestamp: serverTimestamp(),
+            status: 'sent',
+          };
+
+          await addDoc(
+            collection(db, this.MESSAGES_COLLECTION),
+            welcomeMessage
           );
 
           consoleLog(`✅ Created ${conv.type} conversation:`, docRef.id);

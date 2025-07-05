@@ -42,13 +42,154 @@ class SystemConfigurationService {
   // Initialize system configurations
   async initializeSystemConfigurations(userId: string): Promise<void> {
     try {
+      // First try to load existing configurations
+      const existingConfig = await this.loadAllConfigurations();
+
+      // If we have existing configurations, we're done
+      if (existingConfig.roles.length > 0) {
+        this.initialized = true;
+        return;
+      }
+
+      // If no existing configurations, create defaults
       await this.createDefaultConfigurations(userId);
       await this.loadAllConfigurations();
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize system configurations:', error);
+
+      // If initialization fails, try to provide fallback configurations
+      this.provideFallbackConfigurations();
       throw error;
     }
+  }
+
+  // Provide fallback configurations when Firebase is not available
+  private provideFallbackConfigurations(): void {
+    console.warn('Using fallback system configurations');
+
+    this.cache = {
+      roles: [
+        {
+          id: 'user',
+          name: 'USER',
+          displayName: 'User',
+          description: 'Regular user with basic features',
+          level: 1,
+          permissions: [
+            'VIEW_PUBLIC_CONTENT',
+            'MANAGE_OWN_PROFILE',
+            'CREATE_CHATS',
+            'SEND_MESSAGES',
+          ],
+          color: '#10B981',
+          icon: 'pi-user',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'system',
+          updatedBy: 'system',
+        },
+        {
+          id: 'admin',
+          name: 'ADMIN',
+          displayName: 'Administrator',
+          description: 'System administrator with full access',
+          level: 4,
+          permissions: ['*'],
+          color: '#EF4444',
+          icon: 'pi-crown',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'system',
+          updatedBy: 'system',
+        },
+      ],
+      permissions: [
+        {
+          id: 'VIEW_PUBLIC_CONTENT',
+          name: 'VIEW_PUBLIC_CONTENT',
+          displayName: 'View Public Content',
+          description: 'View publicly available content',
+          category: PERMISSION_CATEGORIES.USER_MANAGEMENT,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'MANAGE_OWN_PROFILE',
+          name: 'MANAGE_OWN_PROFILE',
+          displayName: 'Manage Own Profile',
+          description: 'Edit own profile information',
+          category: PERMISSION_CATEGORIES.USER_MANAGEMENT,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      subscriptionPlans: [
+        {
+          id: 'free',
+          name: 'FREE',
+          displayName: 'Free Plan',
+          description: 'Basic features for personal use',
+          price: 0,
+          currency: 'USD',
+          interval: 'monthly',
+          features: ['Basic Chat', 'Limited Messages'],
+          limits: {
+            maxChats: 10,
+            maxMessages: 100,
+            maxUsers: 1,
+            maxStorage: 100,
+            maxApiCalls: 1000,
+          },
+          isActive: true,
+          isPopular: false,
+          order: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      featureFlags: [
+        {
+          id: 'ai_chat_enabled',
+          name: 'AI_CHAT_ENABLED',
+          displayName: 'AI Chat',
+          description: 'Enable AI chat functionality',
+          enabled: true,
+          rolloutPercentage: 100,
+          targetRoles: ['USER', 'ADMIN'],
+          targetPlans: ['FREE', 'PRO', 'ENTERPRISE'],
+          conditions: {},
+          metadata: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'system',
+          updatedBy: 'system',
+        },
+      ],
+      settings: [
+        {
+          id: 'app_name',
+          category: SETTINGS_CATEGORIES.GENERAL,
+          key: 'app_name',
+          value: 'AI Personal Assistant',
+          type: 'string',
+          description: 'Application name displayed to users',
+          isPublic: true,
+          isEditable: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          updatedBy: 'system',
+        },
+      ],
+      lastUpdated: new Date(),
+      version: '1.0.0',
+    };
+
+    this.initialized = true;
   }
 
   // Create default configurations if they don't exist
@@ -227,17 +368,22 @@ class SystemConfigurationService {
       {
         id: 'free',
         name: 'FREE',
-        displayName: 'Free',
+        displayName: 'Free Plan',
         description: 'Basic features for personal use',
         price: 0,
         currency: 'USD',
         interval: 'monthly',
-        features: ['Basic chat', 'Limited messages', 'Standard support'],
+        features: [
+          'Basic Chat',
+          'Limited Messages (100/month)',
+          'Basic Support',
+          'Single User',
+        ],
         limits: {
-          maxChats: 5,
+          maxChats: 10,
           maxMessages: 100,
           maxUsers: 1,
-          maxStorage: 100,
+          maxStorage: 100, // 100MB
           maxApiCalls: 1000,
         },
         isActive: true,
@@ -247,22 +393,23 @@ class SystemConfigurationService {
       {
         id: 'pro',
         name: 'PRO',
-        displayName: 'Professional',
+        displayName: 'Pro Plan',
         description: 'Advanced features for professionals',
         price: 9.99,
         currency: 'USD',
         interval: 'monthly',
         features: [
-          'Unlimited chats',
-          'Advanced AI',
-          'Priority support',
-          'Custom integrations',
+          'Unlimited Chats',
+          'Unlimited Messages',
+          'Priority Support',
+          'Advanced Analytics',
+          'Team Collaboration',
         ],
         limits: {
-          maxChats: -1,
-          maxMessages: 10000,
+          maxChats: -1, // Unlimited
+          maxMessages: -1, // Unlimited
           maxUsers: 5,
-          maxStorage: 1000,
+          maxStorage: 1000, // 1GB
           maxApiCalls: 10000,
         },
         isActive: true,
@@ -272,23 +419,24 @@ class SystemConfigurationService {
       {
         id: 'enterprise',
         name: 'ENTERPRISE',
-        displayName: 'Enterprise',
-        description: 'Full features for organizations',
-        price: 49.99,
+        displayName: 'Enterprise Plan',
+        description: 'Full-featured solution for organizations',
+        price: 29.99,
         currency: 'USD',
         interval: 'monthly',
         features: [
           'Everything in Pro',
-          'Team management',
-          'Advanced analytics',
-          'Custom branding',
-          'Dedicated support',
+          'Custom Integrations',
+          'Advanced Security',
+          'Dedicated Support',
+          'Custom Branding',
+          'API Access',
         ],
         limits: {
-          maxChats: -1,
-          maxMessages: -1,
-          maxUsers: -1,
-          maxStorage: 10000,
+          maxChats: -1, // Unlimited
+          maxMessages: -1, // Unlimited
+          maxUsers: -1, // Unlimited
+          maxStorage: 10000, // 10GB
           maxApiCalls: 100000,
         },
         isActive: true,
@@ -447,6 +595,12 @@ class SystemConfigurationService {
       return this.cache;
     } catch (error) {
       console.error('Failed to load system configurations:', error);
+
+      // If loading fails and we don't have cached data, provide fallback
+      if (this.cache.roles.length === 0) {
+        this.provideFallbackConfigurations();
+      }
+
       throw error;
     }
   }
