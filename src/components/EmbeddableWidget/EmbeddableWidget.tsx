@@ -29,7 +29,7 @@ interface WidgetMessage {
   text: string;
   sender: 'visitor' | 'owner';
   timestamp: Date;
-  type: 'text' | 'image' | 'file';
+  type: 'text' | 'image' | 'file' | 'video' | 'audio';
   fileData?: {
     name: string;
     size: number;
@@ -40,8 +40,8 @@ interface WidgetMessage {
 
 const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
   embedId,
-  containerId,
-  baseUrl,
+  containerId, // eslint-disable-line @typescript-eslint/no-unused-vars
+  baseUrl, // eslint-disable-line @typescript-eslint/no-unused-vars
   userId,
   userMetadata,
 }) => {
@@ -54,7 +54,7 @@ const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
   const [config, setConfig] = useState<EmbedConfig | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [visitorId, setVisitorId] = useState<string>('');
-  const [isOwnerOnline, setIsOwnerOnline] = useState(false);
+  const [isOwnerOnline, setIsOwnerOnline] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -231,10 +231,6 @@ const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
   const minimizeWidget = () => {
     setIsMinimized(true);
     setHasUnreadMessages(false);
-  };
-
-  const maximizeWidget = () => {
-    setIsMinimized(false);
   };
 
   const formatTime = (date: Date) => {

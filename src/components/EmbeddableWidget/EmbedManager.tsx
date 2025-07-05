@@ -395,7 +395,10 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
                   key={index}
                   label={domain}
                   removable
-                  onRemove={() => removeDomain(domain)}
+                  onRemove={() => {
+                    removeDomain(domain);
+                    return true;
+                  }}
                   className='domain-chip'
                 />
               ))}
@@ -516,7 +519,7 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
 
           <div className='form-field-switch'>
             <InputSwitch
-              checked={formData.behavior?.autoOpen}
+              checked={formData.behavior?.autoOpen ?? false}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -529,7 +532,7 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
 
           <div className='form-field-switch'>
             <InputSwitch
-              checked={formData.behavior?.showOnlineStatus}
+              checked={formData.behavior?.showOnlineStatus ?? false}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -542,7 +545,7 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
 
           <div className='form-field-switch'>
             <InputSwitch
-              checked={formData.behavior?.enableFileUpload}
+              checked={formData.behavior?.enableFileUpload ?? false}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -555,7 +558,7 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
 
           <div className='form-field-switch'>
             <InputSwitch
-              checked={formData.behavior?.enableAudioMessages}
+              checked={formData.behavior?.enableAudioMessages ?? false}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -571,7 +574,7 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
 
           <div className='form-field-switch'>
             <InputSwitch
-              checked={formData.behavior?.enableVideoMessages}
+              checked={formData.behavior?.enableVideoMessages ?? false}
               onChange={(e) =>
                 setFormData({
                   ...formData,

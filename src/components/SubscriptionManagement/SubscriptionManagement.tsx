@@ -52,13 +52,11 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
 
   // Get current subscription (mock data for now)
   const currentSubscription: UserSubscription = currentUser?.subscription || {
-    plan: 'FREE',
-    status: 'active',
+    plan: SubscriptionPlan.FREE,
+    isActive: true,
     startDate: new Date(),
-    endDate: null,
-    features: featureFlagService.getAvailableFeatures('FREE'),
-    billingCycle: 'monthly',
-    autoRenew: true,
+    endDate: undefined,
+    features: featureFlagService.getAvailableFeatures(SubscriptionPlan.FREE),
   };
 
   // Plan configurations
@@ -332,14 +330,12 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
     setIsProcessing(true);
     try {
       // Simulate API call
-      await new Promise((resolve) =>
-        setTimeout(resolve, TIME_CONSTANTS.TIMEOUTS.LONG)
-      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       toast.current?.show({
         severity: 'success',
         summary: 'Plan Updated',
-        detail: `Successfully upgraded to ${planConfigs[selectedPlan].name}`,
+        detail: `Successfully upgraded to ${planConfigs[selectedPlan as keyof typeof planConfigs].name}`,
         life: 5000,
       });
 
@@ -349,6 +345,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
       // In real app, this would update the user's subscription in the backend
       // and refresh the user data
     } catch (error) {
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       toast.current?.show({
         severity: 'error',
         summary: 'Upgrade Failed',
@@ -368,9 +365,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
     setIsProcessing(true);
     try {
       // Simulate API call
-      await new Promise((resolve) =>
-        setTimeout(resolve, TIME_CONSTANTS.TIMEOUTS.MEDIUM)
-      );
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       toast.current?.show({
         severity: 'info',
@@ -446,11 +441,13 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
     const plan = planConfigs[planKey];
     const isCurrentPlan = currentSubscription.plan === planKey;
     const isUpgrade =
-      planKey !== 'FREE' &&
-      (currentSubscription.plan === 'FREE' ||
-        (currentSubscription.plan === 'PRO' &&
-          (planKey === 'PREMIUM' || planKey === 'ENTERPRISE')) ||
-        (currentSubscription.plan === 'PREMIUM' && planKey === 'ENTERPRISE'));
+      planKey !== SubscriptionPlan.FREE &&
+      (currentSubscription.plan === SubscriptionPlan.FREE ||
+        (currentSubscription.plan === SubscriptionPlan.PRO &&
+          (planKey === SubscriptionPlan.PREMIUM ||
+            planKey === SubscriptionPlan.ENTERPRISE)) ||
+        (currentSubscription.plan === SubscriptionPlan.PREMIUM &&
+          planKey === SubscriptionPlan.ENTERPRISE));
 
     return (
       <Card
@@ -753,19 +750,25 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
             </div>
             <p>
               Are you sure you want to change your plan to{' '}
-              <strong>{planConfigs[selectedPlan].name}</strong>?
+              <strong>
+                {planConfigs[selectedPlan as keyof typeof planConfigs].name}
+              </strong>
+              ?
             </p>
             <div className='plan-change-summary bg-gray-50 p-3 border-round mt-3'>
               <div className='flex justify-content-between'>
                 <span>New Plan:</span>
-                <strong>{planConfigs[selectedPlan].name}</strong>
+                <strong>
+                  {planConfigs[selectedPlan as keyof typeof planConfigs].name}
+                </strong>
               </div>
               <div className='flex justify-content-between'>
                 <span>Price:</span>
                 <strong>
-                  {planConfigs[selectedPlan].price === 0
+                  {planConfigs[selectedPlan as keyof typeof planConfigs]
+                    .price === 0
                     ? 'Free'
-                    : `${formatCurrency(planConfigs[selectedPlan].price)} ${planConfigs[selectedPlan].billing}`}
+                    : `${formatCurrency(planConfigs[selectedPlan as keyof typeof planConfigs].price)} ${planConfigs[selectedPlan as keyof typeof planConfigs].billing}`}
                 </strong>
               </div>
             </div>
