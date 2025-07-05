@@ -3,7 +3,7 @@ import { FilterMatchMode } from 'primereact/api';
 // Generic filter type for admin tables
 export interface AdminTableFilters {
   global: { value: string; matchMode: string };
-  [key: string]: { value: any; matchMode: string };
+  [key: string]: { value: string | number | boolean | null; matchMode: string };
 }
 
 // Create default filters for admin tables
@@ -122,7 +122,7 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-export const validateRequired = (value: any): boolean => {
+export const validateRequired = (value: string | number | boolean | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '';
 };
 
@@ -131,8 +131,8 @@ export const validateMinLength = (value: string, minLength: number): boolean => 
 };
 
 // Common admin error handling
-export const handleAdminError = (error: any, defaultMessage: string): string => {
-  if (error?.message) return error.message;
+export const handleAdminError = (error: Error | string | unknown, defaultMessage: string): string => {
+  if (error instanceof Error && error.message) return error.message;
   if (typeof error === 'string') return error;
   return defaultMessage;
 }; 

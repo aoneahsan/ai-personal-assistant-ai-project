@@ -1,9 +1,9 @@
+import { UserRole } from '@/types/user';
 import { isHybrid, isWebBrowser } from '@/utils/constants/capacitorConstants';
 import ENV_KEYS from '@/utils/envKeys';
 import { consoleInfo } from '@/utils/helpers/consoleHelper';
 import { useOneSignalZState } from '@/zustandStates/oneSignal';
 import { useUserDataZState } from '@/zustandStates/userState';
-import { UserTypeEnum } from '@perkforce/tool-kit';
 import OneSignalMobile from 'onesignal-cordova-plugin';
 import { useEffect } from 'react';
 import OneSignalWeb from 'react-onesignal';
@@ -59,12 +59,18 @@ const OneSignalHOC: React.FC = () => {
         const _currentUserData = {
           id: _currentUser?.id ?? '',
           email: _currentUser?.email ?? '',
-          type: _currentUser?.type ?? null,
-          name: _currentUser?.name ?? null,
+          role: _currentUser?.role ?? null,
+          displayName: _currentUser?.displayName ?? null,
         };
 
         const _currentUserIsEmployee =
-          _currentUserData.type === UserTypeEnum.employee;
+          _currentUserData.role &&
+          [
+            UserRole.SUPPORT,
+            UserRole.MODERATOR,
+            UserRole.ADMIN,
+            UserRole.SUPER_ADMIN,
+          ].includes(_currentUserData.role);
 
         if (_currentUserData.id && _currentUserData.email) {
           if (isWebBrowser) {
@@ -92,8 +98,8 @@ const OneSignalHOC: React.FC = () => {
               OneSignalWeb.User.addAlias('userId', _currentUserData.id);
 
               try {
-                if (_currentUserData.type) {
-                  OneSignalWeb.User.addTag('type', _currentUserData.type);
+                if (_currentUserData.role) {
+                  OneSignalWeb.User.addTag('role', _currentUserData.role);
                 }
                 if (_currentUserIsEmployee) {
                   OneSignalWeb.User.addTag('email', _currentUserData.email);
@@ -120,17 +126,23 @@ const OneSignalHOC: React.FC = () => {
                   });
                 }
               );
-            } catch (_) {}
+            } catch {
+              // Intentionally ignore push subscription errors
+            }
           } else if (isHybrid) {
             try {
               try {
                 OneSignalMobile.logout();
-              } catch (_) {}
+              } catch {
+                // Intentionally ignore logout errors
+              }
 
               setTimeout(async () => {
                 try {
                   OneSignalMobile.login(_currentUserData.id);
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore login errors
+                }
 
                 try {
                   const requestPermission =
@@ -140,7 +152,9 @@ const OneSignalHOC: React.FC = () => {
                     message: 'requestPermission',
                     requestPermission,
                   });
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore permission request errors
+                }
 
                 try {
                   const permissionNative =
@@ -150,7 +164,9 @@ const OneSignalHOC: React.FC = () => {
                     message: 'permissionNative',
                     permissionNative,
                   });
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore permission native errors
+                }
 
                 try {
                   const getPermissionAsync =
@@ -160,12 +176,16 @@ const OneSignalHOC: React.FC = () => {
                     message: 'getPermissionAsync',
                     getPermissionAsync,
                   });
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore get permission async errors
+                }
 
                 try {
                   OneSignalMobile.setConsentGiven(true);
                   OneSignalMobile.InAppMessages.setPaused(false);
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore consent setting errors
+                }
 
                 try {
                   OneSignalMobile.User.addEmail(_currentUserData.email);
@@ -176,10 +196,10 @@ const OneSignalHOC: React.FC = () => {
                   OneSignalMobile.User.addAlias('userId', _currentUserData.id);
 
                   try {
-                    if (_currentUserData.type) {
+                    if (_currentUserData.role) {
                       OneSignalMobile.User.addTag(
-                        'type',
-                        _currentUserData.type
+                        'role',
+                        _currentUserData.role
                       );
                     }
                     if (_currentUserIsEmployee) {
@@ -193,8 +213,12 @@ const OneSignalHOC: React.FC = () => {
                         _currentUserData.email
                       );
                     }
-                  } catch (_) {}
-                } catch (_) {}
+                  } catch {
+                    // Intentionally ignore tag setting errors
+                  }
+                } catch {
+                  // Intentionally ignore user data setting errors
+                }
 
                 try {
                   OneSignalMobile.User.pushSubscription.optIn();
@@ -210,7 +234,9 @@ const OneSignalHOC: React.FC = () => {
                       });
                     }
                   );
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore push subscription errors
+                }
 
                 try {
                   const getOptedInAsync =
@@ -220,9 +246,13 @@ const OneSignalHOC: React.FC = () => {
                     message: 'getOptedInAsync',
                     getOptedInAsync,
                   });
-                } catch (_) {}
+                } catch {
+                  // Intentionally ignore get opted in async errors
+                }
               }, 1000);
-            } catch (_) {}
+            } catch {
+              // Intentionally ignore hybrid initialization errors
+            }
           }
         }
       }

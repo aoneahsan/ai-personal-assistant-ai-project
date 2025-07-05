@@ -1,7 +1,7 @@
 import { CONSOLE_MESSAGES } from '@/utils/constants/generic';
+import { aesDecrypt, aesEncrypt } from '@/utils/helpers/encryptDecrypt';
 import { Preferences } from '@capacitor/preferences';
 import { USER_LOCALSTORAGE_KEY } from '@perkforce/tool-kit';
-import { aesDecrypt, aesEncrypt } from '../encryptDecrypt';
 
 export const STORAGE = {
   GET: async (key: string) => {
@@ -96,5 +96,121 @@ export const getAppPreferences = async (): Promise<any | null> => {
   } catch (error) {
     console.error(CONSOLE_MESSAGES.ERROR.RETRIEVING_PREFERENCES, error);
     return null;
+  }
+};
+
+export const setLocalStorage = (
+  key: string,
+  value: string | object | number | boolean
+) => {
+  try {
+    const encryptedValue = aesEncrypt(value);
+    localStorage.setItem(key, encryptedValue);
+  } catch {
+    // Silently fail if encryption or storage fails
+  }
+};
+
+export const getLocalStorage = (
+  key: string
+): string | object | number | boolean | null => {
+  try {
+    const value = localStorage.getItem(key);
+    if (!value) return null;
+    return aesDecrypt(value);
+  } catch {
+    return null;
+  }
+};
+
+export const removeLocalStorage = (key: string) => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Silently fail if removal fails
+  }
+};
+
+export const clearLocalStorage = () => {
+  try {
+    localStorage.clear();
+  } catch {
+    // Silently fail if clearing fails
+  }
+};
+
+// Generic get function with type safety
+export const getTypedLocalStorage = <T>(key: string, defaultValue: T): T => {
+  try {
+    const value = localStorage.getItem(key);
+    if (!value) return defaultValue;
+    const decrypted = aesDecrypt(value);
+    return decrypted as T;
+  } catch {
+    return defaultValue;
+  }
+};
+
+// Check if localStorage is available
+export const isLocalStorageAvailable = (): boolean => {
+  try {
+    const test = '__localStorage_test__';
+    localStorage.setItem(test, 'test');
+    localStorage.removeItem(test);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Get all keys from localStorage
+export const getAllLocalStorageKeys = (): string[] => {
+  try {
+    return Object.keys(localStorage);
+  } catch {
+    return [];
+  }
+};
+
+// Get localStorage size
+export const getLocalStorageSize = (): number => {
+  try {
+    let total = 0;
+    for (const key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        total += localStorage[key].length + key.length;
+      }
+    }
+    return total;
+  } catch {
+    return 0;
+  }
+};
+
+// Batch operations
+export const setMultipleLocalStorage = (
+  items: Record<string, string | object | number | boolean>
+) => {
+  try {
+    Object.entries(items).forEach(([key, value]) => {
+      setLocalStorage(key, value);
+    });
+  } catch {
+    // Silently fail if batch setting fails
+  }
+};
+
+export const getMultipleLocalStorage = (
+  keys: string[]
+): Record<string, string | object | number | boolean | null> => {
+  try {
+    const result: Record<string, string | object | number | boolean | null> =
+      {};
+    keys.forEach((key) => {
+      result[key] = getLocalStorage(key);
+    });
+    return result;
+  } catch {
+    return {};
   }
 };

@@ -9,7 +9,11 @@ export const connectToSocketIoServer = () => {
   if (!socketIoObj || !socketIoObj.connected || !socketIoObj.id) {
     socketIoObj = io(ENV_KEYS.socketIoServerUrl, { transports: ['websocket'] });
 
-    socketIoObj && socketIoObj.on('connect', () => {});
+    if (socketIoObj) {
+      socketIoObj.on('connect', () => {
+        // Socket connected successfully
+      });
+    }
 
     return socketIoObj;
   } else {

@@ -127,7 +127,7 @@ const EditProfile: React.FC = () => {
         successMessage: 'Profile data refreshed successfully!',
         errorMessage: 'Profile refreshed but failed to copy message',
       });
-    } catch (error) {
+    } catch {
       await copyToClipboardWithToast({
         value: 'Error refreshing profile',
         successMessage: 'Error refreshing profile',
@@ -207,7 +207,7 @@ const EditProfile: React.FC = () => {
 
       // Navigate back to dashboard
       navigate({ to: ROUTES.DASHBOARD });
-    } catch (error) {
+    } catch {
       await copyToClipboardWithToast({
         value: 'Error updating profile',
         successMessage: 'Error updating profile',
@@ -251,7 +251,7 @@ const EditProfile: React.FC = () => {
             <div className={CSS_CLASSES.TYPOGRAPHY.TEXT_CENTER}>
               <div className={CSS_CLASSES.SPACING.MB_4}>
                 <Avatar
-                  image={profile.generalInfo.phone || undefined}
+                  image={profile.photoURL || undefined}
                   label={
                     profile.generalInfo.firstName?.charAt(0) ||
                     profile.email?.charAt(0) ||
