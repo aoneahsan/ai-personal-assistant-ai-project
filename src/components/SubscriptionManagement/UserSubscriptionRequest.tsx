@@ -44,7 +44,7 @@ export const UserSubscriptionRequest: React.FC<
   UserSubscriptionRequestProps
 > = ({ className }) => {
   const toast = useRef<Toast>(null);
-  const { user } = useUserDataZState();
+  const { data: user } = useUserDataZState();
 
   const [loading, setLoading] = useState(false);
   const [requestDialogVisible, setRequestDialogVisible] = useState(false);

@@ -101,11 +101,39 @@ const EditProfile: React.FC = () => {
     handleSubmit,
     formState: { isSubmitting, isDirty },
     reset,
-    setValue,
-    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: profile,
+    defaultValues: profile || {
+      name: '',
+      email: '',
+      generalInfo: {
+        address: '',
+        phone: '',
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        gender: '',
+      },
+      workInfo: {
+        position: '',
+        department: '',
+        employeeId: '',
+        startDate: '',
+        salary: '',
+        manager: '',
+      },
+      birthInfo: {
+        placeOfBirth: '',
+        nationality: '',
+      },
+      preferences: {
+        theme: '',
+        language: '',
+        timezone: '',
+        emailNotifications: false,
+        pushNotifications: false,
+      },
+    },
   });
 
   // Update form when profile state changes

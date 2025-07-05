@@ -61,8 +61,8 @@ const UserSearch: React.FC<UserSearchProps> = ({
         }
 
         const chatId = await chatService.createOrGetConversation(
-          currentUser.id,
-          currentUser.email,
+          currentUser.id!,
+          currentUser.email!,
           result.id as string,
           result.email as string
         );
@@ -92,8 +92,8 @@ const UserSearch: React.FC<UserSearchProps> = ({
       }
 
       const chatId = await chatService.createOrGetConversation(
-        currentUser.id,
-        currentUser.email,
+        currentUser.id!,
+        currentUser.email!,
         searchResult.id as string,
         searchResult.email as string
       );

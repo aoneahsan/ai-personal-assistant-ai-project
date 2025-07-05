@@ -48,22 +48,21 @@ const UserSearchDebug: React.FC = () => {
       loadedUsers.sort((a, b) => {
         if (a.createdAt && b.createdAt) {
           // Handle both Date objects and Firestore timestamps
-          const aTime =
-            a.createdAt &&
-            typeof a.createdAt === 'object' &&
-            'seconds' in a.createdAt
-              ? (a.createdAt as { seconds: number }).seconds * 1000
-              : a.createdAt && a.createdAt instanceof Date
-                ? a.createdAt.getTime()
-                : 0;
-          const bTime =
-            b.createdAt &&
-            typeof b.createdAt === 'object' &&
-            'seconds' in b.createdAt
-              ? (b.createdAt as { seconds: number }).seconds * 1000
-              : b.createdAt && b.createdAt instanceof Date
-                ? b.createdAt.getTime()
-                : 0;
+          const getTimestamp = (
+            dateValue: Date | { seconds: number } | string | undefined
+          ): number => {
+            if (!dateValue) return 0;
+            if (typeof dateValue === 'object' && 'seconds' in dateValue) {
+              return dateValue.seconds * 1000;
+            }
+            if (typeof dateValue === 'object' && dateValue.getTime) {
+              return dateValue.getTime();
+            }
+            return 0;
+          };
+
+          const aTime = getTimestamp(a.createdAt);
+          const bTime = getTimestamp(b.createdAt);
           return bTime - aTime;
         }
         return (a.email || '').localeCompare(b.email || '');

@@ -61,6 +61,7 @@ const DashboardChats: React.FC = () => {
     setShowUserSearch(false);
     navigate({
       to: ROUTES.DASHBOARD_CHAT_VIEW,
+      params: { chatId: 'new' },
       search: {
         userId: user.id,
         userEmail: user.email,

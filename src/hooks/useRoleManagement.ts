@@ -61,7 +61,7 @@ export const useRoleManagement = (
   }, []);
 
   const handleError = useCallback(
-    (error: any, message: string) => {
+    (error: unknown, message: string) => {
       console.error(message, error);
       updateState({ error: message, loading: false });
       toast.error(message);
@@ -102,7 +102,7 @@ export const useRoleManagement = (
 
         if (result.success) {
           toast.success(result.message);
-          await refreshData();
+          await loadUsers();
           return true;
         } else {
           toast.error(result.message);
@@ -115,7 +115,7 @@ export const useRoleManagement = (
         setLoading(false);
       }
     },
-    [currentUser, setLoading, handleError, refreshData]
+    [currentUser, setLoading, handleError]
   );
 
   const revokeRole = useCallback(
@@ -136,7 +136,7 @@ export const useRoleManagement = (
 
         if (result.success) {
           toast.success(result.message);
-          await refreshData();
+          await loadUsers();
           return true;
         } else {
           toast.error(result.message);

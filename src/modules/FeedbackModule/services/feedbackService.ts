@@ -37,7 +37,7 @@ class FeedbackService {
     label: string,
     message?: string,
     user?: User | null,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<string> {
     if (!this.db) {
       throw new Error(
@@ -54,9 +54,9 @@ class FeedbackService {
       emoji,
       label,
       message: message || '',
-      userId: user?.uid || null,
-      userEmail: user?.email || null,
-      userName: user?.displayName || null,
+      userId: user?.uid || undefined,
+      userEmail: user?.email || undefined,
+      userName: user?.displayName || undefined,
       isAuthenticated: !!user,
       timestamp: new Date(),
       userAgent: pageInfo.userAgent,
