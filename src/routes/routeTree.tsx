@@ -1,7 +1,7 @@
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import PublicRoute from '@/components/Auth/PublicRoute';
+import DashboardLayout from '@/components/common/DashboardLayout';
 import AuthPage from '@/pages/Auth';
-import Chat from '@/pages/Chat';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
 import React, { lazy } from 'react';
@@ -24,11 +24,22 @@ const chatSearchSchema = z
   .optional();
 
 // Lazy load components
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
-
-// Admin page components
 const AdminDashboard = lazy(() => import('@/pages/Admin'));
+const EditProfile = lazy(() => import('@/pages/EditProfile'));
+const ChatView = lazy(() => import('@/components/Chat/ChatView'));
+
+// Dashboard page components
+const DashboardOverview = lazy(
+  () => import('@/pages/Dashboard/DashboardOverview')
+);
+const DashboardChats = lazy(() => import('@/pages/Dashboard/DashboardChats'));
+const DashboardChatEmbeds = lazy(
+  () => import('@/pages/Dashboard/DashboardChatEmbeds')
+);
+const DashboardAccount = lazy(
+  () => import('@/pages/Dashboard/DashboardAccount')
+);
 
 // Policy page components
 const PrivacyPolicy = lazy(() => import('@/pages/Policy/PrivacyPolicy'));
@@ -38,7 +49,7 @@ const DataDeletionPolicy = lazy(
 );
 const CookiePolicy = lazy(() => import('@/pages/Policy/CookiePolicy'));
 
-// Error boundary component with correct props interface
+// Error boundary component
 const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
   <div
     style={{
@@ -104,12 +115,6 @@ const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
             fontWeight: '500',
             transition: 'all 0.2s ease',
           }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'var(--color-primary-hover)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'var(--color-primary)';
-          }}
         >
           Try Again
         </button>
@@ -126,12 +131,6 @@ const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
             fontWeight: '500',
             transition: 'all 0.2s ease',
           }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'var(--color-border-light)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'var(--color-surface-light)';
-          }}
         >
           Go to Login
         </button>
@@ -140,19 +139,7 @@ const ErrorFallback = ({ error, reset }: ErrorComponentProps) => (
   </div>
 );
 
-// Root route - redirect to dashboard
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: () => (
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  ),
-  errorComponent: ErrorFallback,
-});
-
-// Auth route - public route with auth guard (redirects authenticated users)
+// Auth route - public route with auth guard
 const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.AUTH,
@@ -164,113 +151,99 @@ const authRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// Anonymous chat route - allows anonymous access
-const anonymousChatRoute = createRoute({
+// Dashboard Layout Route (Parent for all dashboard routes)
+const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: ROUTES.ANONYMOUS_CHAT,
-  validateSearch: chatSearchSchema,
-  component: () => <Chat />,
-  errorComponent: ErrorFallback,
-});
-
-// Chat routes - with auth protection
-const chatRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.CHAT,
-  validateSearch: chatSearchSchema,
+  path: '/dashboard',
   component: () => (
     <ProtectedRoute>
-      <Chat />
+      <DashboardLayout />
     </ProtectedRoute>
   ),
   errorComponent: ErrorFallback,
 });
 
-// Dashboard route
-const dashboardRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.DASHBOARD,
+// Dashboard nested routes
+const dashboardOverviewRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/',
   component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <Dashboard />
-      </React.Suspense>
-    </ProtectedRoute>
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <DashboardOverview />
+    </React.Suspense>
   ),
   errorComponent: ErrorFallback,
 });
 
-// Dashboard Chats route
 const dashboardChatsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.DASHBOARD_CHATS,
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/chats',
   component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <Dashboard />
-      </React.Suspense>
-    </ProtectedRoute>
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <DashboardChats />
+    </React.Suspense>
   ),
   errorComponent: ErrorFallback,
 });
 
-// Dashboard Chat Embeds route
+const dashboardChatViewRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/chats/view/$chatId',
+  validateSearch: chatSearchSchema,
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <ChatView />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 const dashboardChatEmbedsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.DASHBOARD_CHAT_EMBEDS,
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/embeds',
   component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <Dashboard />
-      </React.Suspense>
-    </ProtectedRoute>
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <DashboardChatEmbeds />
+    </React.Suspense>
   ),
   errorComponent: ErrorFallback,
 });
 
-// Dashboard Account route
 const dashboardAccountRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/account',
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <DashboardAccount />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const dashboardProfileRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/profile',
+  component: () => (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <EditProfile />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Root route - redirect to dashboard
+const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: ROUTES.DASHBOARD_ACCOUNT,
+  path: '/',
   component: () => (
     <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <Dashboard />
-      </React.Suspense>
+      <DashboardLayout />
     </ProtectedRoute>
   ),
   errorComponent: ErrorFallback,
 });
 
-// Individual Chat View route
-const chatViewRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.DASHBOARD_CHAT_VIEW,
-  component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <Dashboard />
-      </React.Suspense>
-    </ProtectedRoute>
-  ),
-  errorComponent: ErrorFallback,
-});
-
-// Profile route - handled by Dashboard
-const editProfileRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.EDIT_PROFILE,
-  component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <Dashboard />
-      </React.Suspense>
-    </ProtectedRoute>
-  ),
-  errorComponent: ErrorFallback,
-});
-
-// Embed demo route
+// Standalone routes (outside dashboard layout)
 const embedDemoRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.EMBED_DEMO,
@@ -284,7 +257,6 @@ const embedDemoRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// Admin dashboard route
 const adminDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
@@ -295,6 +267,37 @@ const adminDashboardRoute = createRoute({
       </React.Suspense>
     </ProtectedRoute>
   ),
+  errorComponent: ErrorFallback,
+});
+
+// Anonymous routes (no authentication required)
+const anonymousRoomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.ANONYMOUS_ROOM,
+  component: () => {
+    const AnonymousRoomPage = React.lazy(() => import('@/pages/AnonymousRoom'));
+    return (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <AnonymousRoomPage />
+      </React.Suspense>
+    );
+  },
+  errorComponent: ErrorFallback,
+});
+
+const anonymousRoomWithIdRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/room/$roomId',
+  component: () => {
+    const AnonymousRoomChatPage = React.lazy(
+      () => import('@/pages/AnonymousRoom/AnonymousRoomChat')
+    );
+    return (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <AnonymousRoomChatPage />
+      </React.Suspense>
+    );
+  },
   errorComponent: ErrorFallback,
 });
 
@@ -343,57 +346,35 @@ const cookiePolicyRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// Anonymous chat room route (no authentication required)
-const anonymousRoomRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.ANONYMOUS_ROOM,
-  component: () => {
-    const AnonymousRoomPage = React.lazy(() => import('@/pages/AnonymousRoom'));
-    return (
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <AnonymousRoomPage />
-      </React.Suspense>
-    );
-  },
-  errorComponent: ErrorFallback,
-});
-
-// Anonymous chat room with room ID route (no authentication required)
-const anonymousRoomWithIdRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/room/$roomId',
-  component: () => {
-    const AnonymousRoomChatPage = React.lazy(
-      () => import('@/pages/AnonymousRoom/AnonymousRoomChat')
-    );
-    return (
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <AnonymousRoomChatPage />
-      </React.Suspense>
-    );
-  },
-  errorComponent: ErrorFallback,
-});
-
+// Create the route tree with proper nesting
 export const appRouteTree = rootRoute.addChildren([
+  // Root redirect to dashboard
   indexRoute,
+
+  // Auth route
   authRoute,
-  anonymousChatRoute,
-  dashboardRoute,
-  dashboardChatsRoute,
-  dashboardChatEmbedsRoute,
-  dashboardAccountRoute,
-  chatViewRoute,
-  editProfileRoute,
+
+  // Dashboard layout with nested routes
+  dashboardLayoutRoute.addChildren([
+    dashboardOverviewRoute,
+    dashboardChatsRoute,
+    dashboardChatViewRoute,
+    dashboardChatEmbedsRoute,
+    dashboardAccountRoute,
+    dashboardProfileRoute,
+  ]),
+
+  // Standalone routes
   embedDemoRoute,
   adminDashboardRoute,
-  chatRoute,
+
+  // Anonymous routes
+  anonymousRoomRoute,
+  anonymousRoomWithIdRoute,
+
   // Policy routes
   privacyPolicyRoute,
   termsOfServiceRoute,
   dataDeletionPolicyRoute,
   cookiePolicyRoute,
-  // Anonymous room routes
-  anonymousRoomRoute,
-  anonymousRoomWithIdRoute,
 ]);

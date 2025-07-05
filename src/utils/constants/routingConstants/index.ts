@@ -23,29 +23,23 @@ export const ROUTES = {
   // Main Routes
   ROOT: '/',
   DASHBOARD: '/dashboard',
-  EDIT_PROFILE: '/edit-profile',
 
-  // Dashboard Sections
+  // Dashboard Nested Routes (using proper nested structure)
   DASHBOARD_CHATS: '/dashboard/chats',
   DASHBOARD_CHAT_VIEW: '/dashboard/chats/view/$chatId',
-  DASHBOARD_CHAT_EMBEDS: '/dashboard/chat-embeds',
+  DASHBOARD_CHAT_EMBEDS: '/dashboard/embeds',
   DASHBOARD_ACCOUNT: '/dashboard/account',
+  EDIT_PROFILE: '/dashboard/profile',
 
-  // Chat Routes
-  CHAT: '/chat',
-  ANONYMOUS_CHAT: '/anonymous-chat',
-
-  // Anonymous Room Routes
+  // Anonymous Room Routes (no authentication required)
   ANONYMOUS_ROOM: '/room',
   ANONYMOUS_ROOM_WITH_ID: '/room/$roomId',
 
-  // Demo Routes
+  // Standalone Routes (outside dashboard layout)
   EMBED_DEMO: '/embed-demo',
-
-  // Admin Routes
   ADMIN: '/admin',
 
-  // Policy Routes
+  // Policy Routes (public access)
   PRIVACY_POLICY: '/privacy-policy',
   TERMS_OF_SERVICE: '/terms-of-service',
   DATA_DELETION_POLICY: '/data-deletion-policy',
@@ -61,8 +55,6 @@ export const ROUTE_LABELS = {
   [ROUTES.DASHBOARD_CHAT_VIEW]: 'Chat View',
   [ROUTES.DASHBOARD_CHAT_EMBEDS]: 'Chat Embeds',
   [ROUTES.DASHBOARD_ACCOUNT]: 'Account',
-  [ROUTES.CHAT]: 'Chat',
-  [ROUTES.ANONYMOUS_CHAT]: 'Anonymous Chat',
   [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',
   [ROUTES.EMBED_DEMO]: 'Embed Demo',
   [ROUTES.ADMIN]: 'Admin Dashboard',
@@ -92,16 +84,22 @@ export const NAVIGATION_ITEMS = [
     route: ROUTES.DASHBOARD_CHATS,
   },
   {
-    key: 'profile',
-    label: 'Profile',
-    icon: 'pi pi-user',
-    route: ROUTES.EDIT_PROFILE,
+    key: 'embeds',
+    label: 'Chat Embeds',
+    icon: 'pi pi-code',
+    route: ROUTES.DASHBOARD_CHAT_EMBEDS,
   },
   {
-    key: 'embed-demo',
-    label: 'Embed Demo',
-    icon: 'pi pi-code',
-    route: ROUTES.EMBED_DEMO,
+    key: 'account',
+    label: 'Account',
+    icon: 'pi pi-user',
+    route: ROUTES.DASHBOARD_ACCOUNT,
+  },
+  {
+    key: 'profile',
+    label: 'Profile',
+    icon: 'pi pi-user-edit',
+    route: ROUTES.EDIT_PROFILE,
   },
 ] as const;
 
