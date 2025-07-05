@@ -1,7 +1,7 @@
 import ENV_KEYS from '@/utils/envKeys';
 import { getLocalStorageUser } from '@/utils/helpers/localStorage';
 import { W_LOCATION } from '@/utils/helpers/windowLocation';
-import { init, replayIntegration, User } from '@sentry/react';
+import { init, Integration, replayIntegration, User } from '@sentry/react';
 
 const sentryInit = async () => {
   let sentryEnvironment = ENV_KEYS.sentryEnvironment;
@@ -9,7 +9,7 @@ const sentryInit = async () => {
     sentryEnvironment = W_LOCATION.GET_HOST();
   }
 
-  const integrations: unknown[] = [
+  const integrations: Integration[] = [
     replayIntegration({
       maskAllInputs: true,
       blockAllMedia: true,

@@ -61,7 +61,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
 
   // Plan configurations
   const planConfigs = {
-    FREE: {
+    [SubscriptionPlan.FREE]: {
       name: 'Free Plan',
       price: 0,
       billing: 'Forever',
@@ -118,7 +118,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
         },
       ] as PlanFeature[],
     },
-    PRO: {
+    [SubscriptionPlan.PRO]: {
       name: 'Pro Plan',
       price: 9.99,
       billing: 'per month',
@@ -175,7 +175,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
         },
       ] as PlanFeature[],
     },
-    PREMIUM: {
+    [SubscriptionPlan.PREMIUM]: {
       name: 'Premium Plan',
       price: 19.99,
       billing: 'per month',
@@ -232,7 +232,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
         },
       ] as PlanFeature[],
     },
-    ENTERPRISE: {
+    [SubscriptionPlan.ENTERPRISE]: {
       name: 'Enterprise Plan',
       price: 49.99,
       billing: 'per month',
@@ -335,7 +335,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
       toast.current?.show({
         severity: 'success',
         summary: 'Plan Updated',
-        detail: `Successfully upgraded to ${planConfigs[selectedPlan as keyof typeof planConfigs].name}`,
+        detail: `Successfully upgraded to ${planConfigs[selectedPlan].name}`,
         life: 5000,
       });
 
@@ -345,7 +345,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
       // In real app, this would update the user's subscription in the backend
       // and refresh the user data
     } catch (error) {
-      // eslint-disable-line @typescript-eslint/no-unused-vars
       toast.current?.show({
         severity: 'error',
         summary: 'Upgrade Failed',
@@ -365,17 +364,18 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
     setIsProcessing(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       toast.current?.show({
-        severity: 'info',
+        severity: 'success',
         summary: 'Subscription Cancelled',
-        detail:
-          'Your subscription will be cancelled at the end of the current billing period.',
+        detail: 'Your subscription has been cancelled successfully.',
         life: 5000,
       });
 
       setShowCancelConfirm(false);
+
+      // In real app, this would cancel the subscription in the backend
     } catch (error) {
       toast.current?.show({
         severity: 'error',
@@ -529,7 +529,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
                   severity='info'
                   className='mb-2'
                 />
-                {planKey !== 'FREE' && (
+                {planKey !== SubscriptionPlan.FREE && (
                   <div>
                     <Button
                       label='Cancel Subscription'
@@ -552,7 +552,8 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
                 }
                 onClick={() => handlePlanUpgrade(planKey)}
                 disabled={
-                  planKey === 'FREE' && currentSubscription.plan === 'FREE'
+                  planKey === SubscriptionPlan.FREE &&
+                  currentSubscription.plan === SubscriptionPlan.FREE
                 }
               />
             )}
@@ -623,7 +624,9 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
                       <strong>
                         {planConfigs[currentSubscription.plan].name}
                       </strong>
-                      {getStatusTag(currentSubscription.status)}
+                      {getStatusTag(
+                        currentSubscription.isActive ? 'active' : 'inactive'
+                      )}
                     </div>
                     <p className='text-600'>
                       {planConfigs[currentSubscription.plan].description}

@@ -125,13 +125,12 @@ const EditProfile: React.FC = () => {
       birthInfo: {
         placeOfBirth: '',
         nationality: '',
+        timezone: '',
       },
       preferences: {
         theme: '',
         language: '',
-        timezone: '',
-        emailNotifications: false,
-        pushNotifications: false,
+        notifications: false,
       },
     },
   });
@@ -188,9 +187,33 @@ const EditProfile: React.FC = () => {
     }
   };
 
+  // Form submission handler
+  const onSubmit = async (data: ProfileFormData) => {
+    try {
+      // Update the zustand state (this will also persist to storage)
+      await updateProfile(data as UserProfileData);
+
+      // Show success message
+      await copyToClipboardWithToast({
+        value: 'Profile updated successfully!',
+        successMessage: 'Profile updated successfully!',
+        errorMessage: 'Profile updated but failed to copy message',
+      });
+
+      // Navigate back to dashboard
+      navigate({ to: ROUTES.DASHBOARD });
+    } catch {
+      await copyToClipboardWithToast({
+        value: 'Error updating profile',
+        successMessage: 'Error updating profile',
+        errorMessage: 'Error updating profile',
+      });
+    }
+  };
+
   // Keyboard shortcuts setup
   useKeyboardShortcuts({
-    onSubmit: () => handleSubmit(onSubmit)(),
+    onSubmit: handleSubmit(onSubmit),
     onReset: () => reset(),
     onCancel: handleCancel,
     onShowHelp: () => setShowHelpModal(true),
@@ -224,30 +247,6 @@ const EditProfile: React.FC = () => {
     { label: 'GMT (UTC+0)', value: 'GMT (UTC+0)' },
     { label: 'CET (UTC+1)', value: 'CET (UTC+1)' },
   ];
-
-  // Form submission handler
-  const onSubmit = async (data: ProfileFormData) => {
-    try {
-      // Update the zustand state (this will also persist to storage)
-      await updateProfile(data as UserProfileData);
-
-      // Show success message
-      await copyToClipboardWithToast({
-        value: 'Profile updated successfully!',
-        successMessage: 'Profile updated successfully!',
-        errorMessage: 'Profile updated but failed to copy message',
-      });
-
-      // Navigate back to dashboard
-      navigate({ to: ROUTES.DASHBOARD });
-    } catch {
-      await copyToClipboardWithToast({
-        value: 'Error updating profile',
-        successMessage: 'Error updating profile',
-        errorMessage: 'Error updating profile',
-      });
-    }
-  };
 
   // Loading state
   if (!profile) {
@@ -284,7 +283,7 @@ const EditProfile: React.FC = () => {
             <div className={CSS_CLASSES.TYPOGRAPHY.TEXT_CENTER}>
               <div className={CSS_CLASSES.SPACING.MB_4}>
                 <Avatar
-                  image={profile.photoURL || undefined}
+                  image={profile.avatar || undefined}
                   label={
                     profile.generalInfo.firstName?.charAt(0) ||
                     profile.email?.charAt(0) ||

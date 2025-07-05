@@ -96,8 +96,17 @@ export class AdminUserService {
         subscription: {
           plan: SubscriptionPlan.ENTERPRISE,
           startDate: new Date(),
+          endDate: null,
           isActive: true,
+          trialEndDate: null,
           features: SUBSCRIPTION_FEATURES[SubscriptionPlan.ENTERPRISE],
+          downgradePlan: null,
+          autoDowngradeDate: null,
+          setBy: null,
+          setAt: null,
+          notes: null,
+          paymentMethod: null,
+          transactionId: null,
         },
         roleAssignment: {
           userId: firebaseUser.uid,
@@ -127,7 +136,7 @@ export class AdminUserService {
         {
           userId: firebaseUser.uid,
           newRole: request.role || UserRole.ADMIN,
-          reason: userData.roleAssignment!.reason,
+          reason: userData.roleAssignment?.reason || 'No reason provided',
         },
         'SYSTEM'
       );
@@ -235,8 +244,13 @@ export class AdminUserService {
           adminNotes: `Promoted to ${newRole} - ${reason}`,
           tags: [...(userData.tags || []), 'admin'],
           subscription: {
-            ...userData.subscription,
-            plan: SubscriptionPlan.ENTERPRISE, // Admins get enterprise plan
+            plan: SubscriptionPlan.ENTERPRISE,
+            startDate: new Date(),
+            isActive: true,
+            features: SUBSCRIPTION_FEATURES[SubscriptionPlan.ENTERPRISE],
+            setBy: promotedBy,
+            setAt: new Date(),
+            notes: `Promoted to ${newRole} - ${reason}`,
           },
         };
 
