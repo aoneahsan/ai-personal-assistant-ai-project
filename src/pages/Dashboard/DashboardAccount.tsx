@@ -1,6 +1,8 @@
 import { DashboardPageWrapper } from '@/components/common';
 import { useToast } from '@/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { PAGE_TITLES, TOOLTIP_LABELS } from '@/utils/constants/generic/labels';
+import { UI_ICONS } from '@/utils/constants/generic/ui';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { useUserProfileZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
@@ -51,7 +53,7 @@ const DashboardAccount: React.FC = () => {
   const editProfileAction = (
     <Button
       label='Edit Profile'
-      icon='pi pi-pencil'
+      icon={UI_ICONS.EDIT}
       className='p-button-rounded'
       onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
     />
@@ -59,10 +61,10 @@ const DashboardAccount: React.FC = () => {
 
   return (
     <DashboardPageWrapper
-      title='Account Information'
+      title={PAGE_TITLES.DASHBOARD_ACCOUNT}
       onRefresh={handleRefresh}
       refreshing={refreshing}
-      refreshTooltip='Refresh Account Data'
+      refreshTooltip={TOOLTIP_LABELS.REFRESH_DATA}
       actions={editProfileAction}
     >
       <Card className='shadow-3 border-round-2xl'>
@@ -129,7 +131,7 @@ const DashboardAccount: React.FC = () => {
                     </div>
                   </div>
                   <Button
-                    icon='pi pi-chevron-right'
+                    icon={UI_ICONS.FORWARD}
                     className='p-button-rounded p-button-text'
                     onClick={setting.action}
                   />

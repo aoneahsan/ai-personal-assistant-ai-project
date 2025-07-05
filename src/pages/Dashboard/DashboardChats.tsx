@@ -11,6 +11,14 @@ import {
   ChatService,
   UserSearchResult,
 } from '@/services/chatService';
+import {
+  BUTTON_LABELS,
+  EMPTY_STATE_MESSAGES,
+  PAGE_TITLES,
+  SUCCESS_LABELS,
+  TOOLTIP_LABELS,
+} from '@/utils/constants/generic/labels';
+import { UI_ICONS } from '@/utils/constants/generic/ui';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
@@ -60,7 +68,10 @@ const DashboardChats: React.FC = () => {
         userAvatar: user.photoURL,
       },
     });
-    showSuccess('Chat Started', `Started new chat with ${user.displayName}`);
+    showSuccess(
+      SUCCESS_LABELS.CHAT_CREATED,
+      `Started new chat with ${user.displayName}`
+    );
   };
 
   // Handle chat row click
@@ -72,11 +83,11 @@ const DashboardChats: React.FC = () => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'system':
-        return 'pi pi-cog';
+        return UI_ICONS.SETTINGS;
       case 'support':
-        return 'pi pi-question-circle';
+        return UI_ICONS.HELP;
       default:
-        return 'pi pi-user';
+        return UI_ICONS.PROFILE;
     }
   };
 
@@ -128,7 +139,7 @@ const DashboardChats: React.FC = () => {
         className='text-sm mb-1'
         style={{ color: theme.textPrimary }}
       >
-        {rowData.lastMessage || 'No messages yet'}
+        {rowData.lastMessage || EMPTY_STATE_MESSAGES.NO_MESSAGES}
       </div>
       <div
         className='text-xs'
@@ -186,8 +197,8 @@ const DashboardChats: React.FC = () => {
 
   const startNewChatAction = (
     <Button
-      label='Start New Chat'
-      icon='pi pi-plus'
+      label={BUTTON_LABELS.START_NEW_CHAT}
+      icon={UI_ICONS.CHAT}
       className='p-button-rounded'
       onClick={() => setShowUserSearch(true)}
     />
@@ -209,10 +220,10 @@ const DashboardChats: React.FC = () => {
       return (
         <Card className='shadow-3 border-round-2xl'>
           <EmptyState
-            icon='pi pi-comments'
-            title='No conversations yet'
-            description='Start a new conversation to see it here'
-            actionLabel='Start New Chat'
+            icon={UI_ICONS.CHATS}
+            title={EMPTY_STATE_MESSAGES.NO_CONVERSATIONS}
+            description={EMPTY_STATE_MESSAGES.START_CONVERSATION}
+            actionLabel={BUTTON_LABELS.START_NEW_CHAT}
             onAction={() => setShowUserSearch(true)}
           />
         </Card>
@@ -262,10 +273,10 @@ const DashboardChats: React.FC = () => {
 
   return (
     <DashboardPageWrapper
-      title='My Chats'
+      title={PAGE_TITLES.DASHBOARD_CHATS}
       onRefresh={refresh}
       refreshing={refreshing}
-      refreshTooltip='Refresh Chats'
+      refreshTooltip={TOOLTIP_LABELS.REFRESH_CHATS}
       actions={startNewChatAction}
     >
       {renderContent()}

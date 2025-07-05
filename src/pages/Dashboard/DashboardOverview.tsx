@@ -2,6 +2,7 @@ import { DashboardPageWrapper } from '@/components/common';
 import { useAsyncData } from '@/hooks';
 import { ChatService } from '@/services/chatService';
 import { EmbedConfig, EmbedService } from '@/services/embedService';
+import { PAGE_TITLES, TOOLTIP_LABELS } from '@/utils/constants/generic/labels';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { Card } from 'primereact/card';
 import React, { useMemo } from 'react';
@@ -65,10 +66,10 @@ const DashboardOverview: React.FC = () => {
 
   return (
     <DashboardPageWrapper
-      title='Dashboard Overview'
+      title={PAGE_TITLES.DASHBOARD_OVERVIEW}
       onRefresh={refresh}
       refreshing={refreshing}
-      refreshTooltip='Refresh Dashboard'
+      refreshTooltip={TOOLTIP_LABELS.REFRESH_DASHBOARD}
     >
       <div className='grid'>
         {/* Statistics Cards */}

@@ -5,6 +5,13 @@ import {
 } from '@/components/common';
 import { useAsyncData, useToast } from '@/hooks';
 import { EmbedConfig, EmbedService } from '@/services/embedService';
+import {
+  BUTTON_LABELS,
+  EMPTY_STATE_MESSAGES,
+  PAGE_TITLES,
+  TOOLTIP_LABELS,
+} from '@/utils/constants/generic/labels';
+import { UI_ICONS } from '@/utils/constants/generic/ui';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
@@ -39,7 +46,8 @@ const DashboardChatEmbeds: React.FC = () => {
     dependencies: [userData?.id],
   });
 
-  const handleCopyEmbedCode = (embedId: string) => {
+  const handleCopyEmbedCode = (embedId: string | undefined) => {
+    if (!embedId) return;
     const embedCode = `<script src="https://yoursite.com/embed/${embedId}"></script>`;
     navigator.clipboard.writeText(embedCode);
     showCopySuccess('Embed code');
@@ -47,8 +55,10 @@ const DashboardChatEmbeds: React.FC = () => {
 
   const renderName = (rowData: EmbedConfig) => (
     <div>
-      <div className='font-medium'>{rowData.name}</div>
-      <div className='text-sm text-500'>{rowData.description}</div>
+      <div className='font-medium'>{rowData.title || 'Untitled Embed'}</div>
+      <div className='text-sm text-500'>
+        {rowData.description || 'No description'}
+      </div>
     </div>
   );
 
@@ -60,18 +70,18 @@ const DashboardChatEmbeds: React.FC = () => {
   );
 
   const renderCreatedAt = (rowData: EmbedConfig) =>
-    new Date(rowData.createdAt).toLocaleDateString();
+    new Date(rowData.createdAt || Date.now()).toLocaleDateString();
 
   const renderActions = (rowData: EmbedConfig) => (
     <div className='flex gap-2'>
       <Button
-        icon='pi pi-copy'
+        icon={UI_ICONS.COPY}
         className='p-button-rounded p-button-text'
         onClick={() => handleCopyEmbedCode(rowData.id)}
-        tooltip='Copy Embed Code'
+        tooltip={TOOLTIP_LABELS.COPY_ITEM}
       />
       <Button
-        icon='pi pi-external-link'
+        icon={UI_ICONS.EMBED}
         className='p-button-rounded p-button-text'
         onClick={() => window.open(ROUTES.EMBED_DEMO, '_blank')}
         tooltip='Preview Embed'
@@ -81,8 +91,8 @@ const DashboardChatEmbeds: React.FC = () => {
 
   const createNewEmbedAction = (
     <Button
-      label='Create New Embed'
-      icon='pi pi-plus'
+      label={BUTTON_LABELS.CREATE_NEW_EMBED}
+      icon={UI_ICONS.CODE}
       className='p-button-rounded'
       onClick={() => navigate({ to: ROUTES.EMBED_DEMO })}
     />
@@ -104,10 +114,10 @@ const DashboardChatEmbeds: React.FC = () => {
       return (
         <Card className='shadow-3 border-round-2xl'>
           <EmptyState
-            icon='pi pi-code'
-            title='No embeds created yet'
-            description='Create your first chat embed to get started'
-            actionLabel='Create New Embed'
+            icon={UI_ICONS.CODE}
+            title={EMPTY_STATE_MESSAGES.NO_EMBEDS}
+            description={EMPTY_STATE_MESSAGES.CREATE_FIRST_EMBED}
+            actionLabel={BUTTON_LABELS.CREATE_NEW_EMBED}
             onAction={() => navigate({ to: ROUTES.EMBED_DEMO })}
           />
         </Card>
@@ -124,7 +134,7 @@ const DashboardChatEmbeds: React.FC = () => {
           className='p-datatable-customers'
         >
           <Column
-            field='name'
+            field='title'
             header='Name'
             body={renderName}
           />
@@ -150,10 +160,10 @@ const DashboardChatEmbeds: React.FC = () => {
 
   return (
     <DashboardPageWrapper
-      title='Chat Embeds'
+      title={PAGE_TITLES.DASHBOARD_CHAT_EMBEDS}
       onRefresh={refresh}
       refreshing={refreshing}
-      refreshTooltip='Refresh Embeds'
+      refreshTooltip={TOOLTIP_LABELS.REFRESH_EMBEDS}
       actions={createNewEmbedAction}
     >
       {renderContent()}

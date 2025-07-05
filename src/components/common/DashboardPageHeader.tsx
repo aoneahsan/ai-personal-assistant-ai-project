@@ -1,5 +1,7 @@
 import { RefreshButton } from '@/components/common';
 import { useTheme } from '@/hooks/useTheme';
+import { TOOLTIP_LABELS } from '@/utils/constants/generic/labels';
+import { CSS_CLASSES } from '@/utils/constants/generic/styles';
 import React from 'react';
 
 export interface DashboardPageHeaderProps {
@@ -15,7 +17,7 @@ const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
   title,
   onRefresh,
   refreshing = false,
-  refreshTooltip = 'Refresh Data',
+  refreshTooltip = TOOLTIP_LABELS.REFRESH_DATA,
   actions,
   children,
 }) => {
@@ -24,12 +26,12 @@ const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
   return (
     <div className='flex align-items-center justify-content-between mb-4'>
       <h2
-        className='text-2xl font-bold m-0'
+        className={`${CSS_CLASSES.TYPOGRAPHY.HEADING_MEDIUM} ${CSS_CLASSES.SPACING.M_0}`}
         style={{ color: theme.textPrimary }}
       >
         {title}
       </h2>
-      <div className='flex align-items-center gap-2'>
+      <div className={`flex align-items-center ${CSS_CLASSES.GRID.GAP_2}`}>
         {onRefresh && (
           <RefreshButton
             onRefresh={onRefresh}
