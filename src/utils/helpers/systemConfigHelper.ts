@@ -28,31 +28,20 @@ export class SystemConfigHelper {
       }
 
       // Check targeting conditions
-      if (featureFlag.targetingConditions) {
-        const conditions = featureFlag.targetingConditions;
+      if (featureFlag.conditions) {
+        const conditions = featureFlag.conditions;
 
         // Check role-based targeting
-        if (conditions.roles && conditions.roles.length > 0) {
-          const userRole = user.role;
-          if (!userRole || !conditions.roles.includes(userRole)) {
-            return false;
-          }
-        }
-
-        // Check subscription-based targeting
-        if (
-          conditions.subscriptionPlans &&
-          conditions.subscriptionPlans.length > 0
-        ) {
-          const userPlan = user.subscription?.plan;
-          if (!userPlan || !conditions.subscriptionPlans.includes(userPlan)) {
+        if (conditions.userEmails && conditions.userEmails.length > 0) {
+          const userEmail = user.email;
+          if (!userEmail || !conditions.userEmails.includes(userEmail)) {
             return false;
           }
         }
 
         // Check user ID targeting
         if (conditions.userIds && conditions.userIds.length > 0) {
-          if (!conditions.userIds.includes(user.id)) {
+          if (!user.id || !conditions.userIds.includes(user.id)) {
             return false;
           }
         }
@@ -61,7 +50,7 @@ export class SystemConfigHelper {
       // Check rollout percentage
       if (featureFlag.rolloutPercentage < 100) {
         // Use consistent hash-based rollout
-        const hash = this.getUserHash(user.id, flagName);
+        const hash = user.id ? this.getUserHash(user.id, flagName) : 0;
         return hash < featureFlag.rolloutPercentage;
       }
 
@@ -158,10 +147,13 @@ export class SystemConfigHelper {
   /**
    * Get system setting value
    */
-  static getSettingValue<T = any>(settingName: string, defaultValue?: T): T {
+  static getSettingValue<T = unknown>(
+    settingName: string,
+    defaultValue?: T
+  ): T {
     try {
       const config = systemConfigService.getConfiguration();
-      const setting = config.settings.find((s) => s.name === settingName);
+      const setting = config.settings.find((s) => s.key === settingName);
 
       if (!setting) {
         return defaultValue as T;
@@ -173,7 +165,8 @@ export class SystemConfigHelper {
           return (setting.value === 'true' || setting.value === true) as T;
         case 'number':
           return Number(setting.value) as T;
-        case 'json':
+        case 'object':
+        case 'array':
           try {
             return JSON.parse(setting.value as string) as T;
           } catch {
@@ -191,15 +184,15 @@ export class SystemConfigHelper {
   /**
    * Get public system settings (for client-side usage)
    */
-  static getPublicSettings(): Record<string, any> {
+  static getPublicSettings(): Record<string, unknown> {
     try {
       const config = systemConfigService.getConfiguration();
-      const publicSettings: Record<string, any> = {};
+      const publicSettings: Record<string, unknown> = {};
 
       config.settings
         .filter((setting) => setting.isPublic)
         .forEach((setting) => {
-          publicSettings[setting.name] = this.getSettingValue(setting.name);
+          publicSettings[setting.key] = this.getSettingValue(setting.key);
         });
 
       return publicSettings;
@@ -307,8 +300,7 @@ export class SystemConfigHelper {
         subscriptionPlans: config.subscriptionPlans.length,
         featureFlags: config.featureFlags.length,
         settings: config.settings.length,
-        activeFeatureFlags: config.featureFlags.filter((f) => f.isEnabled)
-          .length,
+        activeFeatureFlags: config.featureFlags.filter((f) => f.enabled).length,
         publicSettings: config.settings.filter((s) => s.isPublic).length,
         lastUpdated: config.lastUpdated,
       };
@@ -336,10 +328,12 @@ export class SystemConfigHelper {
     if (!flag) return false;
 
     // Check if user is in targeting conditions (if they exist)
-    if (flag.conditions && flag.conditions.length > 0) {
-      return flag.conditions.some(
-        (condition) => condition.userIds && condition.userIds.includes(userId)
-      );
+    if (
+      flag.conditions &&
+      flag.conditions.userIds &&
+      flag.conditions.userIds.length > 0
+    ) {
+      return flag.conditions.userIds.includes(userId);
     }
 
     return flag.enabled;

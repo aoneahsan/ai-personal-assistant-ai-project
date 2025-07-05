@@ -222,7 +222,7 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
   loadProfileFromStorage: async () => {
     const savedProfile = await getUserProfileData();
     if (savedProfile) {
-      set({ profile: savedProfile as UserProfileData });
+      set({ profile: savedProfile as unknown as UserProfileData });
     }
   },
 }));
