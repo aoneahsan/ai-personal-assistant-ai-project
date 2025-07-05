@@ -1,4 +1,4 @@
-import AuthStateDebug from '@/components/Auth/AuthStateDebug';
+import AuthStateDebug from '@/components/Admin/Auth/AuthStateDebug';
 import AppSwipeHOC from '@/hoc/AppSwipeHOC';
 import { useTheme } from '@/hooks/useTheme';
 import NotFound from '@/pages/NotFound';

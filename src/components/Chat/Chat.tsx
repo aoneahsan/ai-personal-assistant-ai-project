@@ -8,7 +8,7 @@ import { useUserDataZState } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
+import AnonymousUserIndicator from '../Admin/Auth/AnonymousUserIndicator';
 import './Chat.scss';
 import ChatHeader from './ChatHeader';
 import MessageEditDialog from './MessageEditDialog';
@@ -23,6 +23,11 @@ interface ChatProps {
   chatUser?: ChatUser;
   initialMessages?: Message[];
   onBack?: () => void;
+}
+
+// Define interface for Capacitor file with actualUrl property
+interface CapacitorFile extends File {
+  actualUrl?: string;
 }
 
 const Chat: React.FC<ChatProps> = ({
@@ -219,7 +224,7 @@ const Chat: React.FC<ChatProps> = ({
     },
   ];
 
-  const toggleAudioPlayback = (messageId: string, audioUrl: string) => {
+  const toggleAudioPlayback = (messageId: string) => {
     // Stop all other audio first
     Object.keys(audioRefs.current).forEach((id) => {
       if (id !== messageId && audioRefs.current[id]) {
@@ -362,7 +367,7 @@ const Chat: React.FC<ChatProps> = ({
 
   const handleFileUpload = (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      const file = files[i] as CapacitorFile;
       let messageType: Message['type'] = 'file';
 
       if (file.type.startsWith('image/')) {
@@ -372,7 +377,7 @@ const Chat: React.FC<ChatProps> = ({
       }
 
       // Check if the file has an actualUrl property (from Capacitor file manager)
-      const fileUrl = (file as any).actualUrl || URL.createObjectURL(file);
+      const fileUrl = file.actualUrl || URL.createObjectURL(file);
 
       const newMessage: Message = {
         id: Date.now().toString() + Math.random(),

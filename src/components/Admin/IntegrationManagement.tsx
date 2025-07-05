@@ -15,6 +15,15 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import React, { useEffect, useRef, useState } from 'react';
 
+interface IntegrationTestResults {
+  success: boolean;
+  message: string;
+  responseTime?: number;
+  data?: Record<string, unknown>;
+  error?: string;
+  timestamp: Date;
+}
+
 interface Integration {
   id: string;
   name: string;
@@ -31,7 +40,7 @@ interface Integration {
   version: string;
   lastSync: Date;
   lastError?: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   webhookUrl?: string;
   apiKey?: string;
   credentials?: {
@@ -87,7 +96,9 @@ export const IntegrationManagement: React.FC = () => {
   const [editingIntegration, setEditingIntegration] = useState<
     Partial<Integration>
   >({});
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<IntegrationTestResults | null>(
+    null
+  );
 
   useEffect(() => {
     loadIntegrations();

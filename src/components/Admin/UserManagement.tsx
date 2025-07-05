@@ -16,7 +16,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UserFilters {
   global: { value: string; matchMode: string };
@@ -27,24 +27,18 @@ interface UserFilters {
 
 export const UserManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
-  const [users, setUsers] = useState<IPCAUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<IPCAUser | null>(null);
-  const [selectedUsers, setSelectedUsers] = useState<IPCAUser[]>([]);
   const [loading, setLoading] = useState(false);
-  const [globalFilterValue, setGlobalFilterValue] = useState('');
+  const [users, setUsers] = useState<IPCAUser[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<IPCAUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<IPCAUser | null>(null);
+  const [editingUser, setEditingUser] = useState<IPCAUser | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState<IPCAUser | null>(null);
   const [banReason, setBanReason] = useState('');
   const [banUntil, setBanUntil] = useState<Date | null>(null);
+  const [globalFilterValue, setGlobalFilterValue] = useState('');
 
-  const {
-    loading: roleLoading,
-    assignRole,
-    revokeRole,
-    loadUsers,
-    refreshData,
-  } = useRoleManagement();
+  const { loadUsers } = useRoleManagement();
 
   const [filters, setFilters] = useState<UserFilters>({
     global: { value: '', matchMode: FilterMatchMode.CONTAINS },
@@ -53,11 +47,7 @@ export const UserManagement: React.FC = () => {
     isActive: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
 
-  useEffect(() => {
-    loadUsersData();
-  }, []);
-
-  const loadUsersData = async () => {
+  const loadUsersData = useCallback(async () => {
     setLoading(true);
     try {
       await loadUsers();
@@ -150,7 +140,11 @@ export const UserManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadUsers]);
+
+  useEffect(() => {
+    loadUsersData();
+  }, [loadUsersData]);
 
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -228,7 +222,10 @@ export const UserManagement: React.FC = () => {
         />
       );
 
-    const severityMap = {
+    const severityMap: Record<
+      SubscriptionPlan,
+      'secondary' | 'info' | 'success' | 'warning'
+    > = {
       [SubscriptionPlan.FREE]: 'secondary',
       [SubscriptionPlan.PRO]: 'info',
       [SubscriptionPlan.PREMIUM]: 'success',
@@ -238,7 +235,7 @@ export const UserManagement: React.FC = () => {
     return (
       <Tag
         value={user.subscription.plan.toUpperCase()}
-        severity={severityMap[user.subscription.plan] as any}
+        severity={severityMap[user.subscription.plan]}
       />
     );
   };

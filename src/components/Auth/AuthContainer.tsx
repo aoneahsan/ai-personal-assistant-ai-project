@@ -11,12 +11,14 @@ import ForgotPasswordForm from './ForgotPasswordForm';
 import LoginForm from './LoginForm';
 import SignUpForm from './SignUpForm';
 
-export enum AuthMode {
-  WELCOME = 'welcome',
-  LOGIN = 'login',
-  SIGNUP = 'signup',
-  FORGOT_PASSWORD = 'forgot-password',
-}
+const AuthMode = {
+  WELCOME: 'welcome',
+  LOGIN: 'login',
+  SIGNUP: 'signup',
+  FORGOT_PASSWORD: 'forgot-password',
+} as const;
+
+type AuthMode = (typeof AuthMode)[keyof typeof AuthMode];
 
 interface AuthContainerProps {
   initialMode?: AuthMode;
@@ -49,7 +51,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
     if (onAuthSuccess) {
       onAuthSuccess();
     } else {
-      navigate({ to: '/anonymous-chat' });
+      navigate({ to: ROUTES.ANONYMOUS_ROOM });
     }
   }, [navigate, onAuthSuccess]);
 

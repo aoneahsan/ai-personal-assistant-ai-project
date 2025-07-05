@@ -268,7 +268,7 @@ export const FeatureFlagManagement: React.FC = () => {
         },
       ];
       setFeatureFlags(mockFlags);
-    } catch (error) {
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -278,84 +278,11 @@ export const FeatureFlagManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedEnvironment]);
+  }, []);
 
   useEffect(() => {
     loadFeatureFlags();
   }, [loadFeatureFlags]);
-
-  const loadTemplates = async () => {
-    try {
-      const mockTemplates: FeatureFlagTemplate[] = [
-        {
-          id: 'boolean_toggle',
-          name: 'Boolean Toggle',
-          description: 'Simple on/off feature flag',
-          type: 'boolean',
-          category: 'Basic',
-          defaultConfig: {
-            type: 'boolean',
-            defaultValue: false,
-            variations: [
-              {
-                name: 'Enabled',
-                value: true,
-                description: 'Feature enabled',
-                weight: 50,
-              },
-              {
-                name: 'Disabled',
-                value: false,
-                description: 'Feature disabled',
-                weight: 50,
-              },
-            ],
-          },
-        },
-        {
-          id: 'ab_test',
-          name: 'A/B Test',
-          description: 'Split traffic between two variants',
-          type: 'string',
-          category: 'Experimentation',
-          defaultConfig: {
-            type: 'string',
-            defaultValue: 'control',
-            variations: [
-              {
-                name: 'Control',
-                value: 'control',
-                description: 'Original version',
-                weight: 50,
-              },
-              {
-                name: 'Variant',
-                value: 'variant',
-                description: 'New version',
-                weight: 50,
-              },
-            ],
-          },
-        },
-        {
-          id: 'gradual_rollout',
-          name: 'Gradual Rollout',
-          description: 'Gradually increase feature exposure',
-          type: 'percentage',
-          category: 'Rollout',
-          defaultConfig: {
-            type: 'percentage',
-            defaultValue: 0,
-            rolloutPercentage: 0,
-          },
-        },
-      ];
-
-      setTemplates(mockTemplates);
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    }
-  };
 
   const getStatusColor = (status: FeatureFlag['status']) => {
     switch (status) {
@@ -475,19 +402,19 @@ export const FeatureFlagManagement: React.FC = () => {
   const toggleFlag = async (flag: FeatureFlag) => {
     try {
       const newStatus = flag.status === 'active' ? 'inactive' : 'active';
-      const updatedFlag = { ...flag, status: newStatus, updatedAt: new Date() };
-
-      setFeatureFlags(
-        featureFlags.map((f) => (f.id === flag.id ? updatedFlag : f))
+      const updatedFlags = featureFlags.map((f) =>
+        f.id === flag.id
+          ? { ...f, status: newStatus, updatedAt: new Date() }
+          : f
       );
+      setFeatureFlags(updatedFlags);
 
       toast.current?.show({
         severity: 'success',
         summary: 'Flag Updated',
-        detail: `${flag.name} has been ${newStatus}`,
+        detail: `Flag ${flag.name} ${newStatus === 'active' ? 'enabled' : 'disabled'}`,
       });
-    } catch (error) {
-      console.error('Error toggling flag:', error);
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -497,49 +424,39 @@ export const FeatureFlagManagement: React.FC = () => {
   };
 
   const saveFlag = async () => {
-    if (!selectedFlag || !editingFlag) return;
-
     try {
-      const updatedFlag = {
-        ...selectedFlag,
-        ...editingFlag,
-        updatedAt: new Date(),
-      };
-
-      setFeatureFlags(
-        featureFlags.map((f) => (f.id === selectedFlag.id ? updatedFlag : f))
+      const updatedFlags = featureFlags.map((f) =>
+        f.id === selectedFlag?.id
+          ? { ...f, ...editingFlag, updatedAt: new Date() }
+          : f
       );
-
+      setFeatureFlags(updatedFlags);
       setShowEditDialog(false);
-      setSelectedFlag(null);
       setEditingFlag({});
 
       toast.current?.show({
         severity: 'success',
-        summary: 'Flag Saved',
+        summary: 'Flag Updated',
         detail: 'Feature flag updated successfully',
       });
-    } catch (error) {
-      console.error('Error saving flag:', error);
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to save flag',
+        detail: 'Failed to update flag',
       });
     }
   };
 
   const createFlag = async () => {
-    if (!editingFlag.name || !editingFlag.key) return;
-
     try {
-      const newFlag: FeatureFlag = {
-        id: `flag_${Date.now()}`,
-        name: editingFlag.name,
-        key: editingFlag.key,
+      const newFlag = {
+        id: Date.now().toString(),
+        name: editingFlag.name || 'New Flag',
+        key: editingFlag.key || 'new_flag',
         description: editingFlag.description || '',
         type: editingFlag.type || 'boolean',
-        status: 'inactive',
+        status: 'inactive' as const,
         defaultValue: editingFlag.defaultValue || false,
         variations: editingFlag.variations || [],
         targeting: {
@@ -548,7 +465,10 @@ export const FeatureFlagManagement: React.FC = () => {
           fallback: 'Disabled',
         },
         rolloutPercentage: 0,
-        environment: selectedEnvironment as any,
+        environment: selectedEnvironment as
+          | 'development'
+          | 'staging'
+          | 'production',
         tags: editingFlag.tags || [],
         createdBy: 'admin@example.com',
         createdAt: new Date(),
@@ -570,8 +490,7 @@ export const FeatureFlagManagement: React.FC = () => {
         summary: 'Flag Created',
         detail: 'Feature flag created successfully',
       });
-    } catch (error) {
-      console.error('Error creating flag:', error);
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',

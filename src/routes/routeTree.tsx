@@ -1,5 +1,5 @@
-import ProtectedRoute from '@/components/Auth/ProtectedRoute';
-import PublicRoute from '@/components/Auth/PublicRoute';
+import ProtectedRoute from '@/components/Admin/Auth/ProtectedRoute';
+import PublicRoute from '@/components/Admin/Auth/PublicRoute';
 import DashboardLayout from '@/components/common/DashboardLayout';
 import AuthPage from '@/pages/Auth';
 import { LOADING_MESSAGES } from '@/utils/constants/generic/labels';

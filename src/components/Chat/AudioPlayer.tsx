@@ -5,6 +5,14 @@ import H5AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
 import { FaEllipsisV, FaPause, FaPlay } from 'react-icons/fa';
 
+interface TranscriptSegment {
+  text: string;
+  startTime?: number;
+  endTime?: number;
+  confidence?: number;
+  speakerId?: string;
+}
+
 interface AudioPlayerProps {
   audioUrl: string;
   duration: number;
@@ -12,7 +20,7 @@ interface AudioPlayerProps {
   messageId: string;
   onTogglePlay: () => void;
   onShowTranscript: () => void;
-  transcript?: any[];
+  transcript?: TranscriptSegment[];
   fileName?: string;
 }
 
@@ -96,7 +104,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       icon: 'pi pi-copy',
       command: () => {
         if (transcript) {
-          const fullText = transcript.map((seg: any) => seg.text).join(' ');
+          const fullText = transcript
+            .map((seg: TranscriptSegment) => seg.text)
+            .join(' ');
           navigator.clipboard.writeText(fullText);
         }
       },

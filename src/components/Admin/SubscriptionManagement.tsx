@@ -29,7 +29,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 interface AdminSubscriptionManagementProps {
   className?: string;
@@ -140,12 +140,7 @@ export const AdminSubscriptionManagement: React.FC<
     { label: 'Reject', value: SubscriptionRequestStatus.REJECTED },
   ];
 
-  useEffect(() => {
-    loadRequests();
-    loadStats();
-  }, []);
-
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     setLoading(true);
     try {
       const allRequests = await getAllSubscriptionRequests(
@@ -163,16 +158,21 @@ export const AdminSubscriptionManagement: React.FC<
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const statsData = await getSubscriptionStats();
       setStats(statsData);
     } catch (error) {
       console.error('Error loading stats:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadRequests();
+    loadStats();
+  }, [loadRequests, loadStats]);
 
   const handleReviewRequest = (request: SubscriptionRequest) => {
     setSelectedRequest(request);

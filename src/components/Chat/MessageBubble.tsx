@@ -1,15 +1,35 @@
-import { FirestoreMessage } from '@/services/chatService';
 import { featureFlagService } from '@/services/featureFlagService';
-import { ChatFeatureFlag } from '@/types/user/subscription';
+import { ChatFeatureFlag, FirestoreMessage, Message } from '@/types';
 import { useUserDataZState } from '@/zustandStates/userState';
-import { Button } from 'primereact/button';
-import { Menu } from 'primereact/menu';
-import { Tag } from 'primereact/tag';
+import { ContextMenu } from 'primereact/contextmenu';
+import { MenuItem } from 'primereact/menuitem';
 import React, { useRef } from 'react';
-import { FaDownload, FaFile, FaVideo } from 'react-icons/fa';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
-import { Message } from './types';
+
+// Extended message interface with additional properties
+interface ExtendedMessage extends Message {
+  isEdited?: boolean;
+  lastEditedAt?: Date;
+  editHistory?: Array<{
+    editedAt: Date;
+    editedBy: string;
+    previousText: string;
+    editReason?: string;
+  }>;
+  isDeleted?: boolean;
+  deletedAt?: Date;
+  deletedBy?: string;
+}
+
+// Template item interface for context menu
+interface MenuItemTemplate {
+  label: string;
+  icon: string;
+  className?: string;
+  command?: () => void;
+  template?: (item: MenuItemTemplate) => React.ReactNode;
+}
 
 interface MessageBubbleProps {
   message: Message;
@@ -32,26 +52,27 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onViewHistory,
   onUpgrade,
 }) => {
-  const contextMenuRef = useRef<Menu>(null);
+  const contextMenuRef = useRef<ContextMenu>(null);
   const currentUser = useUserDataZState((state) => state.data);
+  const isOwnMessage = message.sender === 'me';
+  const extendedMessage = message as ExtendedMessage;
 
-  // Convert Message to FirestoreMessage for compatibility
+  // Convert Message to FirestoreMessage format for compatibility
   const firestoreMessage: FirestoreMessage = {
     id: message.id,
-    chatId: '', // This would be populated in a real scenario
-    senderId: message.sender === 'me' ? currentUser?.id || '' : 'other',
-    senderEmail: message.sender === 'me' ? currentUser?.email || '' : '',
     text: message.text,
+    senderId: isOwnMessage ? currentUser?.id || '' : 'other-user',
+    senderEmail: isOwnMessage ? currentUser?.email || '' : 'other@example.com',
     type: message.type,
     timestamp: message.timestamp,
     status: message.status || 'sent',
     // Add edit/delete properties if they exist
-    isEdited: (message as any).isEdited,
-    lastEditedAt: (message as any).lastEditedAt,
-    editHistory: (message as any).editHistory,
-    isDeleted: (message as any).isDeleted,
-    deletedAt: (message as any).deletedAt,
-    deletedBy: (message as any).deletedBy,
+    isEdited: extendedMessage.isEdited,
+    lastEditedAt: extendedMessage.lastEditedAt,
+    editHistory: extendedMessage.editHistory,
+    isDeleted: extendedMessage.isDeleted,
+    deletedAt: extendedMessage.deletedAt,
+    deletedBy: extendedMessage.deletedBy,
     // Media properties with proper typing
     fileData: message.fileData
       ? {
@@ -112,12 +133,20 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   };
 
-  const getContextMenuItems = () => {
+  const createPremiumTemplate = (item: MenuItemTemplate): React.ReactNode => (
+    <div className='p-menuitem-link premium-feature'>
+      <i className={item.icon}></i>
+      <span>{item.label}</span>
+      <span className='premium-feature-badge'>PRO</span>
+    </div>
+  );
+
+  const getContextMenuItems = (): MenuItem[] => {
     const canEdit = featureFlagService.canEditMessages(currentUser);
     const canDelete = featureFlagService.canDeleteMessages(currentUser);
     const canHistory = featureFlagService.canViewMessageHistory(currentUser);
 
-    const items = [];
+    const items: MenuItem[] = [];
 
     // Copy message option (always available)
     items.push({
@@ -131,7 +160,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     });
 
     // Edit message option
-    if (message.type === 'text' && !(message as any).isDeleted) {
+    if (message.type === 'text' && !extendedMessage.isDeleted) {
       if (canEdit.hasAccess) {
         items.push({
           label: 'Edit Message',
@@ -139,24 +168,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           command: () => onEditMessage?.(firestoreMessage),
         });
       } else {
-        items.push({
+        const editItem: MenuItemTemplate = {
           label: 'Edit Message',
           icon: 'pi pi-pencil',
           className: 'premium-feature',
           command: () => onUpgrade?.(ChatFeatureFlag.MESSAGE_EDITING),
-          template: (item: any) => (
-            <div className='p-menuitem-link premium-feature'>
-              <i className={item.icon}></i>
-              <span>{item.label}</span>
-              <span className='premium-feature-badge'>PRO</span>
-            </div>
-          ),
+        };
+        items.push({
+          ...editItem,
+          template: () => createPremiumTemplate(editItem),
         });
       }
     }
 
     // Delete message option
-    if (!(message as any).isDeleted) {
+    if (!extendedMessage.isDeleted) {
       if (canDelete.hasAccess) {
         items.push({
           label: 'Delete Message',
@@ -164,24 +190,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           command: () => onDeleteMessage?.(firestoreMessage),
         });
       } else {
-        items.push({
+        const deleteItem: MenuItemTemplate = {
           label: 'Delete Message',
           icon: 'pi pi-trash',
           className: 'premium-feature',
           command: () => onUpgrade?.(ChatFeatureFlag.MESSAGE_DELETION),
-          template: (item: any) => (
-            <div className='p-menuitem-link premium-feature'>
-              <i className={item.icon}></i>
-              <span>{item.label}</span>
-              <span className='premium-feature-badge'>PRO</span>
-            </div>
-          ),
+        };
+        items.push({
+          ...deleteItem,
+          template: () => createPremiumTemplate(deleteItem),
         });
       }
     }
 
     // View history option (only for edited messages)
-    if ((message as any).isEdited) {
+    if (extendedMessage.isEdited) {
       if (canHistory.hasAccess) {
         items.push({
           label: 'View Edit History',
@@ -189,18 +212,15 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           command: () => onViewHistory?.(firestoreMessage),
         });
       } else {
-        items.push({
+        const historyItem: MenuItemTemplate = {
           label: 'View Edit History',
           icon: 'pi pi-history',
           className: 'premium-feature',
           command: () => onUpgrade?.(ChatFeatureFlag.MESSAGE_HISTORY),
-          template: (item: any) => (
-            <div className='p-menuitem-link premium-feature'>
-              <i className={item.icon}></i>
-              <span>{item.label}</span>
-              <span className='premium-feature-badge'>PRO</span>
-            </div>
-          ),
+        };
+        items.push({
+          ...historyItem,
+          template: () => createPremiumTemplate(historyItem),
         });
       }
     }
@@ -243,7 +263,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   ];
 
   const renderEditIndicator = () => {
-    if (!(message as any).isEdited) return null;
+    if (!extendedMessage.isEdited) return null;
 
     return (
       <div className='message-edit-indicator'>
@@ -436,7 +456,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   // At the end of the component, add the context menu
   const renderContextMenu = () => (
-    <Menu
+    <ContextMenu
       ref={contextMenuRef}
       model={getContextMenuItems()}
       popup
