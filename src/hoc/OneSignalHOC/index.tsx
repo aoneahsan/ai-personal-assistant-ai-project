@@ -119,11 +119,10 @@ const OneSignalHOC: React.FC = () => {
               OneSignalWeb.User.PushSubscription.addEventListener(
                 'change',
                 (event) => {
-                  consoleInfo({
-                    message:
-                      'OneSignalWeb.User.PushSubscription.addEventListener - event',
-                    event,
-                  });
+                  consoleInfo(
+                    'OneSignalWeb.User.PushSubscription.addEventListener - event',
+                    event
+                  );
                 }
               );
             } catch {
@@ -148,10 +147,7 @@ const OneSignalHOC: React.FC = () => {
                   const requestPermission =
                     await OneSignalMobile.Notifications.requestPermission(true);
 
-                  consoleInfo({
-                    message: 'requestPermission',
-                    requestPermission,
-                  });
+                  consoleInfo('requestPermission', requestPermission);
                 } catch {
                   // Intentionally ignore permission request errors
                 }
@@ -160,10 +156,7 @@ const OneSignalHOC: React.FC = () => {
                   const permissionNative =
                     await OneSignalMobile.Notifications.permissionNative();
 
-                  consoleInfo({
-                    message: 'permissionNative',
-                    permissionNative,
-                  });
+                  consoleInfo('permissionNative', permissionNative);
                 } catch {
                   // Intentionally ignore permission native errors
                 }
@@ -172,10 +165,7 @@ const OneSignalHOC: React.FC = () => {
                   const getPermissionAsync =
                     await OneSignalMobile.Notifications.getPermissionAsync();
 
-                  consoleInfo({
-                    message: 'getPermissionAsync',
-                    getPermissionAsync,
-                  });
+                  consoleInfo('getPermissionAsync', getPermissionAsync);
                 } catch {
                   // Intentionally ignore get permission async errors
                 }
@@ -227,11 +217,10 @@ const OneSignalHOC: React.FC = () => {
                   OneSignalMobile.User.pushSubscription.addEventListener(
                     'change',
                     (event) => {
-                      consoleInfo({
-                        message:
-                          'OneSignalMobile.User.pushSubscription.addEventListener - event',
-                        event,
-                      });
+                      consoleInfo(
+                        'OneSignalMobile.User.pushSubscription.addEventListener - event',
+                        event
+                      );
                     }
                   );
                 } catch {
@@ -242,10 +231,7 @@ const OneSignalHOC: React.FC = () => {
                   const getOptedInAsync =
                     await OneSignalMobile.User.pushSubscription.getOptedInAsync();
 
-                  consoleInfo({
-                    message: 'getOptedInAsync',
-                    getOptedInAsync,
-                  });
+                  consoleInfo('getOptedInAsync', getOptedInAsync);
                 } catch {
                   // Intentionally ignore get opted in async errors
                 }

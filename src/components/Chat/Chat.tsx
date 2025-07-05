@@ -8,7 +8,7 @@ import { useUserDataZState } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import AnonymousUserIndicator from '../Admin/Auth/AnonymousUserIndicator';
+import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
 import './Chat.scss';
 import ChatHeader from './ChatHeader';
 import MessageEditDialog from './MessageEditDialog';
@@ -45,7 +45,10 @@ const Chat: React.FC<ChatProps> = ({
   // Get search params safely from URL
   const getSearchParams = () => {
     try {
-      const urlParams = new URLSearchParams(location.search);
+      // Convert location.search to string to handle TanStack Router compatibility
+      const searchString =
+        typeof location.search === 'string' ? location.search : '';
+      const urlParams = new URLSearchParams(searchString);
       return {
         chatId: urlParams.get('chatId'),
         userId: urlParams.get('userId'),

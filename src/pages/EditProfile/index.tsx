@@ -8,8 +8,11 @@ import {
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import { BUTTON_LABELS, PAGE_TITLES } from '@/utils/constants/generic/labels';
-import { CSS_CLASSES } from '@/utils/constants/generic/styles';
+import { PAGE_TITLES } from '@/utils/constants/generic/labels';
+import {
+  COMPONENT_STYLES,
+  CSS_CLASSES,
+} from '@/utils/constants/generic/styles';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import {
@@ -96,11 +99,13 @@ const EditProfile: React.FC = () => {
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting, isDirty, isSaving },
+    formState: { isSubmitting, isDirty },
     reset,
+    setValue,
+    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: profile || undefined,
+    defaultValues: profile,
   });
 
   // Update form when profile state changes
@@ -243,7 +248,7 @@ const EditProfile: React.FC = () => {
         {/* Header */}
         <div
           className={
-            CSS_CLASSES.FLEX.FLEX_COLUMN +
+            CSS_CLASSES.FLEX.FLEX_COL +
             ' sm:flex-row align-items-start sm:align-items-center justify-content-between mb-3 sm:mb-4 gap-3'
           }
         >
@@ -342,10 +347,7 @@ const EditProfile: React.FC = () => {
                   >
                     F2
                   </kbd>
-                  <span
-                    className='text-xs'
-                    style={{ color: theme.textSecondary }}
-                  >
+                  <span className={CSS_CLASSES.COLORS.TEXT_SECONDARY}>
                     Save
                   </span>
                 </div>
@@ -356,10 +358,7 @@ const EditProfile: React.FC = () => {
                   >
                     Ctrl+1-5
                   </kbd>
-                  <span
-                    className='text-xs'
-                    style={{ color: theme.textSecondary }}
-                  >
+                  <span className={CSS_CLASSES.COLORS.TEXT_SECONDARY}>
                     Jump to sections
                   </span>
                 </div>
@@ -628,7 +627,7 @@ const EditProfile: React.FC = () => {
           {/* Form Actions */}
           <div
             className={
-              CSS_CLASSES.FLEX.FLEX_COLUMN +
+              CSS_CLASSES.FLEX.FLEX_COL +
               ' sm:flex-row justify-content-between align-items-start sm:align-items-center mt-4 gap-3'
             }
           >
@@ -638,7 +637,7 @@ const EditProfile: React.FC = () => {
               }
             >
               <i className='pi pi-info-circle text-blue-500'></i>
-              <span className={CSS_CLASSES.TYPOGRAPHY.TEXT_COLOR_SECONDARY}>
+              <span className={CSS_CLASSES.COLORS.TEXT_SECONDARY}>
                 Use keyboard shortcuts for faster editing
               </span>
               <Badge
@@ -659,27 +658,26 @@ const EditProfile: React.FC = () => {
               }
             >
               <Button
-                type='button'
-                label={BUTTON_LABELS.CANCEL}
+                label='Cancel'
                 icon='pi pi-times'
-                className={CSS_CLASSES.BUTTON.OUTLINED + ' p-button-sm'}
+                className={COMPONENT_STYLES.BUTTON.OUTLINE + ' p-button-sm'}
                 onClick={handleCancel}
-                tooltip='Ctrl+Z'
               />
               <Button
-                type='button'
                 label='Reset'
                 icon='pi pi-refresh'
                 className={
-                  CSS_CLASSES.BUTTON.OUTLINED + ' p-button-warning p-button-sm'
+                  COMPONENT_STYLES.BUTTON.OUTLINE +
+                  ' p-button-warning p-button-sm'
                 }
                 onClick={() => reset()}
-                tooltip='Ctrl+R'
+                tooltip='Reset form'
                 tooltipOptions={{
                   position: 'top',
-                  event: 'hover focus',
+                  event: 'both',
+                  hideDelay: 300,
                 }}
-                disabled={!isDirty || isSaving}
+                disabled={!isDirty || isSubmitting}
               />
               <Button
                 type='submit'

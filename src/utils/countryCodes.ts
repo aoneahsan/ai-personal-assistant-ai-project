@@ -74,11 +74,12 @@ export const getUserCurrentLocationInfo =
             }
           })
           .catch((error) => {
+            consoleError('Error in getUserCurrentLocationInfo:', error);
             reject(new Error(`Geocode failed: ${error.message}`));
           });
       });
     } catch (error) {
-      consoleError({ message: 'Error in getUserCurrentLocationInfo:', error });
+      consoleError('Error in getUserCurrentLocationInfo:', error);
       return null; // Return null in case of an error
     }
   };

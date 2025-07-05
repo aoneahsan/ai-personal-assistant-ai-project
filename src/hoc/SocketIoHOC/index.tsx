@@ -18,11 +18,9 @@ const SocketIoHOC: React.FC<{ children?: React.ReactNode }> = (props) => {
       (async () => {
         // establish socketIo connection
         const _socketIoObj = getSocketIoInstance();
-        consoleInfo({ _socketIoObj });
+        consoleInfo('Socket IO Object', { _socketIoObj });
       })();
     }
-
-     
   }, [userEmail]);
 
   return <>{props?.children}</>;
