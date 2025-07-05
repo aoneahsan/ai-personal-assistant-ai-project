@@ -1,4 +1,5 @@
-import { RefreshButton } from '@/components/common';
+import { DashboardPageWrapper } from '@/components/common';
+import { useToast } from '@/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { useUserProfileZState } from '@/zustandStates/userState';
@@ -6,13 +7,12 @@ import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
-import { Toast } from 'primereact/toast';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 const DashboardAccount: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const toast = useRef<Toast>(null);
+  const { showRefreshSuccess, showLoadError, showInfo } = useToast();
   const [refreshing, setRefreshing] = useState(false);
 
   const { profile: userProfileData } = useUserProfileZState();
@@ -22,51 +22,49 @@ const DashboardAccount: React.FC = () => {
     try {
       setRefreshing(true);
       // Add any refresh logic here if needed
-      toast.current?.show({
-        severity: 'success',
-        summary: 'Account Refreshed',
-        detail: 'Account data has been successfully refreshed',
-        life: 3000,
-      });
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate refresh
+      showRefreshSuccess('Account');
     } catch (error) {
-      console.error('Error refreshing account:', error);
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to refresh account data. Please try again.',
-        life: 5000,
-      });
+      showLoadError('account data');
     } finally {
       setRefreshing(false);
     }
   };
 
+  const handleSecurityClick = () => {
+    showInfo('Coming Soon', 'Security settings will be available soon');
+  };
+
+  const accountSettings = [
+    {
+      title: 'Profile Settings',
+      description: 'Update your profile information',
+      action: () => navigate({ to: ROUTES.EDIT_PROFILE }),
+    },
+    {
+      title: 'Security',
+      description: 'Manage your account security',
+      action: handleSecurityClick,
+    },
+  ];
+
+  const editProfileAction = (
+    <Button
+      label='Edit Profile'
+      icon='pi pi-pencil'
+      className='p-button-rounded'
+      onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
+    />
+  );
+
   return (
-    <div>
-      <Toast ref={toast} />
-
-      <div className='flex align-items-center justify-content-between mb-4'>
-        <h2
-          className='text-2xl font-bold m-0'
-          style={{ color: theme.textPrimary }}
-        >
-          Account Information
-        </h2>
-        <div className='flex align-items-center gap-2'>
-          <RefreshButton
-            onRefresh={handleRefresh}
-            loading={refreshing}
-            tooltip='Refresh Account Data'
-          />
-          <Button
-            label='Edit Profile'
-            icon='pi pi-pencil'
-            className='p-button-rounded'
-            onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
-          />
-        </div>
-      </div>
-
+    <DashboardPageWrapper
+      title='Account Information'
+      onRefresh={handleRefresh}
+      refreshing={refreshing}
+      refreshTooltip='Refresh Account Data'
+      actions={editProfileAction}
+    >
       <Card className='shadow-3 border-round-2xl'>
         <div className='grid'>
           <div className='col-12 md:col-6'>
@@ -111,61 +109,37 @@ const DashboardAccount: React.FC = () => {
               Account Settings
             </h3>
             <div className='space-y-3'>
-              <div className='flex align-items-center justify-content-between p-3 border-round-lg surface-border border-1'>
-                <div>
-                  <div
-                    className='font-medium'
-                    style={{ color: theme.textPrimary }}
-                  >
-                    Profile Settings
+              {accountSettings.map((setting, index) => (
+                <div
+                  key={index}
+                  className='flex align-items-center justify-content-between p-3 border-round-lg surface-border border-1'
+                >
+                  <div>
+                    <div
+                      className='font-medium'
+                      style={{ color: theme.textPrimary }}
+                    >
+                      {setting.title}
+                    </div>
+                    <div
+                      className='text-sm'
+                      style={{ color: theme.textSecondary }}
+                    >
+                      {setting.description}
+                    </div>
                   </div>
-                  <div
-                    className='text-sm'
-                    style={{ color: theme.textSecondary }}
-                  >
-                    Update your profile information
-                  </div>
+                  <Button
+                    icon='pi pi-chevron-right'
+                    className='p-button-rounded p-button-text'
+                    onClick={setting.action}
+                  />
                 </div>
-                <Button
-                  icon='pi pi-chevron-right'
-                  className='p-button-rounded p-button-text'
-                  onClick={() => navigate({ to: ROUTES.EDIT_PROFILE })}
-                />
-              </div>
-
-              <div className='flex align-items-center justify-content-between p-3 border-round-lg surface-border border-1'>
-                <div>
-                  <div
-                    className='font-medium'
-                    style={{ color: theme.textPrimary }}
-                  >
-                    Security
-                  </div>
-                  <div
-                    className='text-sm'
-                    style={{ color: theme.textSecondary }}
-                  >
-                    Manage your account security
-                  </div>
-                </div>
-                <Button
-                  icon='pi pi-chevron-right'
-                  className='p-button-rounded p-button-text'
-                  onClick={() => {
-                    toast.current?.show({
-                      severity: 'info',
-                      summary: 'Coming Soon',
-                      detail: 'Security settings will be available soon',
-                      life: 3000,
-                    });
-                  }}
-                />
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </Card>
-    </div>
+    </DashboardPageWrapper>
   );
 };
 

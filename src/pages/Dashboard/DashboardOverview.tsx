@@ -1,132 +1,92 @@
-import { RefreshButton } from '@/components/common';
-import { useTheme } from '@/hooks/useTheme';
-import { ChatConversation, ChatService } from '@/services/chatService';
+import { DashboardPageWrapper } from '@/components/common';
+import { useAsyncData } from '@/hooks';
+import { ChatService } from '@/services/chatService';
 import { EmbedConfig, EmbedService } from '@/services/embedService';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { Card } from 'primereact/card';
-import { Toast } from 'primereact/toast';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 
 const DashboardOverview: React.FC = () => {
-  const { theme } = useTheme();
-  const toast = useRef<Toast>(null);
-  const [userChats, setUserChats] = useState<ChatConversation[]>([]);
-  const [userEmbeds, setUserEmbeds] = useState<EmbedConfig[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
   const userData = useUserDataZState((state) => state.data);
   const chatService = new ChatService();
   const embedService = new EmbedService();
 
-  // Load user data
-  const loadUserData = async (showFullLoader = false) => {
-    try {
-      if (showFullLoader) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+  // Load user data using the shared hook
+  const fetchDashboardData = async () => {
+    if (!userData?.id) return { chats: [], embeds: [] };
 
-      if (userData?.id) {
-        const conversations = await chatService.getUserConversations(
-          userData.id
-        );
-        setUserChats(conversations);
+    const conversations = await chatService.getUserConversations(userData.id);
+    // const embeds = await embedService.getUserEmbeds(userData.id);
+    const embeds: EmbedConfig[] = []; // Placeholder until getUserEmbeds is implemented
 
-        // const embeds = await embedService.getUserEmbeds(userData.id);
-        const embeds: EmbedConfig[] = []; // Placeholder until getUserEmbeds is implemented
-        setUserEmbeds(embeds);
+    return { chats: conversations, embeds };
+  };
 
-        if (showFullLoader) {
-          toast.current?.show({
-            severity: 'success',
-            summary: 'Data Refreshed',
-            detail: 'All data has been successfully refreshed',
-            life: 3000,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to load data. Please try again.',
-        life: 5000,
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  const { data, loading, refresh, refreshing } = useAsyncData(
+    fetchDashboardData,
+    {
+      entityName: 'dashboard data',
+      dependencies: [userData?.id],
     }
-  };
+  );
 
-  useEffect(() => {
-    loadUserData();
-  }, [userData?.id]);
+  const stats = useMemo(() => {
+    if (!data) return { chats: 0, embeds: 0, activeEmbeds: 0 };
 
-  // Handle refresh
-  const handleRefresh = async () => {
-    await loadUserData(true);
-  };
+    return {
+      chats: data.chats.length,
+      embeds: data.embeds.length,
+      activeEmbeds: data.embeds.filter((e) => e.isActive).length,
+    };
+  }, [data]);
+
+  const statisticsCards = [
+    {
+      title: 'Active Chats',
+      value: stats.chats,
+      color: 'text-blue-500',
+    },
+    {
+      title: 'Chat Embeds',
+      value: stats.embeds,
+      color: 'text-green-500',
+    },
+    {
+      title: 'Active Embeds',
+      value: stats.activeEmbeds,
+      color: 'text-purple-500',
+    },
+    {
+      title: 'Account Status',
+      value: <i className='pi pi-check-circle'></i>,
+      color: 'text-orange-500',
+    },
+  ];
 
   return (
-    <div className='grid'>
-      <Toast ref={toast} />
-
-      <div className='col-12'>
-        <div className='flex align-items-center justify-content-between mb-4'>
-          <h2
-            className='text-2xl font-bold m-0'
-            style={{ color: theme.textPrimary }}
+    <DashboardPageWrapper
+      title='Dashboard Overview'
+      onRefresh={refresh}
+      refreshing={refreshing}
+      refreshTooltip='Refresh Dashboard'
+    >
+      <div className='grid'>
+        {/* Statistics Cards */}
+        {statisticsCards.map((stat, index) => (
+          <div
+            key={index}
+            className='col-12 md:col-6 lg:col-3'
           >
-            Dashboard Overview
-          </h2>
-          <RefreshButton
-            onRefresh={handleRefresh}
-            loading={refreshing}
-            tooltip='Refresh Dashboard'
-          />
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className='col-12 md:col-6 lg:col-3'>
-        <Card className='text-center shadow-3 border-round-2xl'>
-          <div className='text-900 font-medium mb-2'>Active Chats</div>
-          <div className='text-5xl font-bold text-blue-500'>
-            {loading ? '...' : userChats.length}
+            <Card className='text-center shadow-3 border-round-2xl'>
+              <div className='text-900 font-medium mb-2'>{stat.title}</div>
+              <div className={`text-5xl font-bold ${stat.color}`}>
+                {loading ? '...' : stat.value}
+              </div>
+            </Card>
           </div>
-        </Card>
+        ))}
       </div>
-
-      <div className='col-12 md:col-6 lg:col-3'>
-        <Card className='text-center shadow-3 border-round-2xl'>
-          <div className='text-900 font-medium mb-2'>Chat Embeds</div>
-          <div className='text-5xl font-bold text-green-500'>
-            {loading ? '...' : userEmbeds.length}
-          </div>
-        </Card>
-      </div>
-
-      <div className='col-12 md:col-6 lg:col-3'>
-        <Card className='text-center shadow-3 border-round-2xl'>
-          <div className='text-900 font-medium mb-2'>Active Embeds</div>
-          <div className='text-5xl font-bold text-purple-500'>
-            {loading ? '...' : userEmbeds.filter((e) => e.isActive).length}
-          </div>
-        </Card>
-      </div>
-
-      <div className='col-12 md:col-6 lg:col-3'>
-        <Card className='text-center shadow-3 border-round-2xl'>
-          <div className='text-900 font-medium mb-2'>Account Status</div>
-          <div className='text-5xl font-bold text-orange-500'>
-            <i className='pi pi-check-circle'></i>
-          </div>
-        </Card>
-      </div>
-    </div>
+    </DashboardPageWrapper>
   );
 };
 
