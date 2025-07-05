@@ -1,7 +1,10 @@
 import AuthStateDebug from '@/components/Auth/AuthStateDebug';
 import AppSwipeHOC from '@/hoc/AppSwipeHOC';
+import { useTheme } from '@/hooks/useTheme';
 import NotFound from '@/pages/NotFound';
 import { unifiedAuthService } from '@/services/authService';
+import { LOADING_MESSAGES } from '@/utils/constants/generic/labels';
+import { CSS_CLASSES } from '@/utils/constants/generic/styles';
 import ENV_KEYS from '@/utils/envKeys';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { createRootRoute, Outlet, useRouter } from '@tanstack/react-router';
@@ -13,6 +16,7 @@ const RootComponent = () => {
   const router = useRouter();
   const [initError, setInitError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const { theme } = useTheme();
 
   // Initialize authentication services on app start
   useEffect(() => {
@@ -47,16 +51,44 @@ const RootComponent = () => {
   // Show loading state while initializing
   if (isInitializing) {
     return (
-      <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
-        <div className='text-center'>
-          <ProgressSpinner
-            style={{ width: '50px', height: '50px' }}
-            strokeWidth='4'
-            fill='transparent'
-            animationDuration='1s'
-            className='mb-4'
-          />
-          <p className='text-gray-600 text-lg'>Starting application...</p>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100vw',
+          height: '100vh',
+          overflow: 'hidden',
+          background: theme.background,
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            className={`${CSS_CLASSES.FLEX.FLEX} ${CSS_CLASSES.FLEX.ITEMS_CENTER} ${CSS_CLASSES.FLEX.JUSTIFY_CENTER} ${CSS_CLASSES.LAYOUT.FULL_HEIGHT}`}
+          >
+            <div className={CSS_CLASSES.TYPOGRAPHY.TEXT_CENTER}>
+              <ProgressSpinner
+                style={{
+                  width: '3rem',
+                  height: '3rem',
+                  color: theme.primary,
+                }}
+                strokeWidth='4'
+                fill={theme.surface}
+                animationDuration='1s'
+              />
+              <p
+                className={CSS_CLASSES.SPACING.MT_3}
+                style={{ color: theme.textSecondary }}
+              >
+                {LOADING_MESSAGES.LOADING}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

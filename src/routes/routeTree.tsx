@@ -388,3 +388,6 @@ export const routeTree = rootRoute.addChildren([
   cookiePolicyRoute,
   subscriptionRequestRoute,
 ]);
+
+// Export as appRouteTree for backward compatibility
+export const appRouteTree = routeTree;

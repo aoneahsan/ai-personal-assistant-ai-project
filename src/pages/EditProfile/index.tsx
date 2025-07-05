@@ -8,6 +8,8 @@ import {
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
+import { BUTTON_LABELS, PAGE_TITLES } from '@/utils/constants/generic/labels';
+import { CSS_CLASSES } from '@/utils/constants/generic/styles';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import {
@@ -16,6 +18,7 @@ import {
 } from '@/zustandStates/userState';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
+import { Avatar } from 'primereact/avatar';
 import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -93,7 +96,7 @@ const EditProfile: React.FC = () => {
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty, isSaving },
     reset,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -238,22 +241,42 @@ const EditProfile: React.FC = () => {
     >
       <div className='max-w-full lg:max-w-6xl mx-auto'>
         {/* Header */}
-        <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between mb-3 sm:mb-4 gap-3'>
+        <div
+          className={
+            CSS_CLASSES.FLEX.FLEX_COLUMN +
+            ' sm:flex-row align-items-start sm:align-items-center justify-content-between mb-3 sm:mb-4 gap-3'
+          }
+        >
           <div>
-            <h1
-              className='text-xl sm:text-2xl lg:text-3xl font-bold m-0'
-              style={{ color: theme.textPrimary }}
-            >
-              Edit Profile
-            </h1>
-            <p
-              className='mt-1 sm:mt-2 mb-0 text-sm sm:text-base'
-              style={{ color: theme.textSecondary }}
-            >
-              Update your personal information
-            </p>
+            <div className={CSS_CLASSES.TYPOGRAPHY.TEXT_CENTER}>
+              <div className={CSS_CLASSES.SPACING.MB_4}>
+                <Avatar
+                  image={profile.generalInfo.phone || undefined}
+                  label={
+                    profile.generalInfo.firstName?.charAt(0) ||
+                    profile.email?.charAt(0) ||
+                    '?'
+                  }
+                  size='xlarge'
+                  shape='circle'
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    fontSize: '2rem',
+                    backgroundColor: theme.primary,
+                    color: 'white',
+                  }}
+                />
+              </div>
+              <h1 style={{ color: theme.textPrimary }}>
+                {PAGE_TITLES.EDIT_PROFILE}
+              </h1>
+              <p style={{ color: theme.textSecondary }}>
+                Update your profile information
+              </p>
+            </div>
           </div>
-          <div className='flex flex-wrap gap-2'>
+          <div className={CSS_CLASSES.FLEX.FLEX_WRAP + ' gap-2'}>
             <RefreshButton
               onRefresh={handleRefresh}
               loading={refreshing}
@@ -603,10 +626,19 @@ const EditProfile: React.FC = () => {
           <Divider />
 
           {/* Form Actions */}
-          <div className='flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center mt-4 gap-3'>
-            <div className='flex flex-wrap align-items-center gap-2'>
+          <div
+            className={
+              CSS_CLASSES.FLEX.FLEX_COLUMN +
+              ' sm:flex-row justify-content-between align-items-start sm:align-items-center mt-4 gap-3'
+            }
+          >
+            <div
+              className={
+                CSS_CLASSES.FLEX.FLEX_WRAP + ' align-items-center gap-2'
+              }
+            >
               <i className='pi pi-info-circle text-blue-500'></i>
-              <span className='text-xs sm:text-sm text-color-secondary'>
+              <span className={CSS_CLASSES.TYPOGRAPHY.TEXT_COLOR_SECONDARY}>
                 Use keyboard shortcuts for faster editing
               </span>
               <Badge
@@ -620,12 +652,17 @@ const EditProfile: React.FC = () => {
                 className='p-badge-sm'
               />
             </div>
-            <div className='flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto justify-content-end'>
+            <div
+              className={
+                CSS_CLASSES.FLEX.FLEX_WRAP +
+                ' gap-2 sm:gap-3 w-full sm:w-auto justify-content-end'
+              }
+            >
               <Button
                 type='button'
-                label='Cancel'
+                label={BUTTON_LABELS.CANCEL}
                 icon='pi pi-times'
-                className='p-button-outlined p-button-sm'
+                className={CSS_CLASSES.BUTTON.OUTLINED + ' p-button-sm'}
                 onClick={handleCancel}
                 tooltip='Ctrl+Z'
               />
@@ -633,9 +670,16 @@ const EditProfile: React.FC = () => {
                 type='button'
                 label='Reset'
                 icon='pi pi-refresh'
-                className='p-button-outlined p-button-warning p-button-sm'
+                className={
+                  CSS_CLASSES.BUTTON.OUTLINED + ' p-button-warning p-button-sm'
+                }
                 onClick={() => reset()}
                 tooltip='Ctrl+R'
+                tooltipOptions={{
+                  position: 'top',
+                  event: 'hover focus',
+                }}
+                disabled={!isDirty || isSaving}
               />
               <Button
                 type='submit'

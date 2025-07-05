@@ -12,7 +12,7 @@ import {
   getPlanDetails,
   isPlanUpgrade,
 } from '@/types/user/subscription';
-import { useUserState } from '@/zustandStates/userState';
+import { useUserDataZState } from '@/zustandStates/userState';
 import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -44,7 +44,7 @@ export const UserSubscriptionRequest: React.FC<
   UserSubscriptionRequestProps
 > = ({ className }) => {
   const toast = useRef<Toast>(null);
-  const { user } = useUserState();
+  const { user } = useUserDataZState();
 
   const [loading, setLoading] = useState(false);
   const [requestDialogVisible, setRequestDialogVisible] = useState(false);
