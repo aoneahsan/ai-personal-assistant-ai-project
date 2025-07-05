@@ -1,6 +1,6 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Button } from 'primereact/button';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FaCamera,
   FaStop,
@@ -37,6 +37,10 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const previewVideoRef = useRef<HTMLVideoElement>(null);
+
+  const handleStopRecording = useCallback(() => {
+    stopRecording();
+  }, []);
 
   const {
     status,
@@ -88,7 +92,7 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
         clearInterval(intervalRef.current);
       }
     };
-  }, [status, maxDuration]);
+  }, [status, maxDuration, handleStopRecording]);
 
   // Initialize camera when component mounts
   useEffect(() => {
@@ -110,10 +114,6 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
   const handleStartRecording = () => {
     setRecordingTime(0);
     startRecording();
-  };
-
-  const handleStopRecording = () => {
-    stopRecording();
   };
 
   const switchCamera = () => {

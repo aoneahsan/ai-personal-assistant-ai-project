@@ -14,6 +14,50 @@ import {
   TranscriptSegment,
 } from './types';
 
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognitionResult {
+  transcript: string;
+  confidence: number;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult[];
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onstart: () => void;
+  onend: () => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  start(): void;
+  stop(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
+  }
+}
+
 interface VoiceRecordingProps {
   onSendAudioMessage: (message: Message) => void;
   disabled?: boolean;
@@ -40,7 +84,7 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
     browserSupportsSpeechRecognition: false,
   });
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentRecognitionText = useRef<string>('');
   const recordingStartTime = useRef<number>(0);
@@ -56,8 +100,7 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
       console.log('Speech recognition is supported');
 
       const SpeechRecognition =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
+        window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
 
       recognition.continuous = true;
@@ -65,7 +108,7 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
       recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         console.log('Speech recognition result event:', event);
         let finalTranscript = '';
 
@@ -139,7 +182,7 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
         }
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         if (
           event.error === 'not-allowed' ||

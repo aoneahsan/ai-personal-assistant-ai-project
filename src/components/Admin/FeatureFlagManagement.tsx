@@ -70,15 +70,6 @@ interface FeatureFlag {
   };
 }
 
-interface FeatureFlagTemplate {
-  id: string;
-  name: string;
-  description: string;
-  type: FeatureFlag['type'];
-  category: string;
-  defaultConfig: Partial<FeatureFlag>;
-}
-
 export const FeatureFlagManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
   const [loading, setLoading] = useState(false);

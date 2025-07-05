@@ -24,6 +24,16 @@ import VideoRecorder from './VideoRecorder';
 import VoiceRecording from './VoiceRecording';
 import { Message } from './types';
 
+interface EmojiObject {
+  emoji: string;
+  names?: string[];
+  unified?: string;
+}
+
+interface ExtendedFile extends File {
+  actualUrl?: string;
+}
+
 interface MessageInputProps {
   currentMessage: string;
   onMessageChange: (message: string) => void;
@@ -66,7 +76,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
-  const handleEmojiClick = (emojiObject: any) => {
+  const handleEmojiClick = (emojiObject: EmojiObject) => {
     onMessageChange(currentMessage + emojiObject.emoji);
     emojiPanelRef.current?.hide();
   };
@@ -181,7 +191,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       // We'll bypass the FileList approach and send the message directly
       const mockFile = new File([new Blob()], fileInfo.name, {
         type: fileInfo.type,
-      });
+      }) as ExtendedFile;
       Object.defineProperty(mockFile, 'size', { value: fileInfo.size });
 
       const mockFileList = Object.create(FileList.prototype);
@@ -192,7 +202,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       });
 
       // Pass the actual file URL through a custom property
-      (mockFile as any).actualUrl = fileInfo.url;
+      mockFile.actualUrl = fileInfo.url;
 
       onFileUpload(mockFileList);
     }

@@ -77,7 +77,7 @@ const MessageEditDialog: React.FC<MessageEditDialogProps> = ({
       setEditedText('');
       setEditReason('');
       onHide();
-    } catch (error) {
+    } catch {
       toastRef.current?.show({
         severity: 'error',
         summary: 'Error',

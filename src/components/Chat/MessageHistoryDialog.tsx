@@ -4,6 +4,85 @@ import { Dialog } from 'primereact/dialog';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Tag } from 'primereact/tag';
 import { Timeline } from 'primereact/timeline';
+import React, { useCallback, useEffect, useState } from 'react';
+
+interface MessageHistoryDialogProps {
+  visible: boolean;
+  message: FirestoreMessage | null;
+  onHide: () => void;
+}
+
+interface HistoryItem {
+  type: 'created' | 'edited';
+  timestamp: Date;
+  text?: string;
+  previousText?: string;
+  editReason?: string;
+  editorEmail?: string;
+  isOriginal?: boolean;
+}
+
+const MessageHistoryDialog: React.FC<MessageHistoryDialogProps> = ({
+  visible,
+  message,
+  onHide,
+}) => {
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadHistoryData = useCallback(async () => {
+    if (!message) return;
+
+    setIsLoading(true);
+    try {
+      const editHistory = await chatService.getMessageEditHistory(message.id!);
+
+      const items: HistoryItem[] = [];
+
+      // Add original message
+      items.push({
+        type: 'created',
+        timestamp: message.timestamp?.toDate?.() || new Date(),
+        text:
+          editHistory.length > 0 ? editHistory[0].previousText : message.text,
+        isOriginal: true,
+      });
+
+      // Add edit history
+      editHistory.forEach((edit, index) => {
+        items.push({
+          type: 'edited',
+          timestamp: edit.editedAt?.toDate?.() || new Date(),
+          text: index === editHistory.length - 1 ? message.text : undefined,
+          previousText: edit.previousText,
+          editReason: edit.editReason,
+          editorEmail: edit.editorEmail,
+        });
+      });
+
+      // Sort by timestamp
+      items.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+      setHistoryItems(items);
+    } catch (error) {
+      console.error('Error loading message history:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [message]);
+
+  useEffect(() => {
+    if (visible && message) {
+      loadHistoryData();
+    }
+  }, [visible, message, loadHistoryData]);
+
+import { FirestoreMessage, chatService } from '@/services/chatService';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import { Tag } from 'primereact/tag';
+import { Timeline } from 'primereact/timeline';
 import React, { useEffect, useState } from 'react';
 
 interface MessageHistoryDialogProps {

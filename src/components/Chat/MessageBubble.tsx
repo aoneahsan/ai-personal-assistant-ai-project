@@ -6,6 +6,9 @@ import { MenuItem } from 'primereact/menuitem';
 import React, { useRef } from 'react';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
+import { Button } from 'primereact/button';
+import { Tag } from 'primereact/tag';
+import { FaVideo, FaFile, FaDownload } from 'react-icons/fa';
 
 // Extended message interface with additional properties
 interface ExtendedMessage extends Message {

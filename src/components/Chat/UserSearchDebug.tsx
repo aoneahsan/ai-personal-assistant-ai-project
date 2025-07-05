@@ -8,7 +8,7 @@ import { Card } from 'primereact/card';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 interface UserDebugInfo extends IPCAUser {
@@ -24,19 +24,19 @@ const UserSearchDebug: React.FC = () => {
 
   const USERS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_users`;
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
       const usersCollection = collection(db, USERS_COLLECTION);
-      const snapshot = await getDocs(usersCollection);
+      const querySnapshot = await getDocs(usersCollection);
 
-      const usersData: UserDebugInfo[] = [];
-      snapshot.forEach((doc) => {
+      const loadedUsers: UserDebugInfo[] = [];
+      querySnapshot.forEach((doc) => {
         const userData = doc.data() as IPCAUser;
-        const normalizedEmail = userData.email?.toLowerCase?.() || '';
+        const normalizedEmail = userData.email?.toLowerCase();
         const hasEmailIssue = userData.email !== normalizedEmail;
 
-        usersData.push({
+        loadedUsers.push({
           ...userData,
           id: doc.id,
           normalizedEmail,
@@ -44,15 +44,32 @@ const UserSearchDebug: React.FC = () => {
         });
       });
 
-      setUsers(usersData);
-      consoleLog('👥 Loaded users for debug:', usersData);
+      // Sort by creation date (newest first) or by email if no date
+      loadedUsers.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          // Handle both Date objects and Firestore timestamps
+          const aTime =
+            a.createdAt instanceof Date
+              ? a.createdAt.getTime()
+              : a.createdAt.seconds * 1000;
+          const bTime =
+            b.createdAt instanceof Date
+              ? b.createdAt.getTime()
+              : b.createdAt.seconds * 1000;
+          return bTime - aTime;
+        }
+        return (a.email || '').localeCompare(b.email || '');
+      });
+
+      setUsers(loadedUsers);
+      consoleLog(`📊 Loaded ${loadedUsers.length} users from database`);
     } catch (error) {
       consoleError('❌ Error loading users:', error);
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const fixEmailCasing = async () => {
     setFixing(true);
@@ -95,7 +112,7 @@ const UserSearchDebug: React.FC = () => {
     if (visible) {
       loadUsers();
     }
-  }, [visible]);
+  }, [visible, loadUsers]);
 
   const emailTemplate = (rowData: UserDebugInfo) => {
     return (

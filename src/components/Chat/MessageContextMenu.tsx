@@ -153,12 +153,6 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
     },
   ];
 
-  const show = (event: React.MouseEvent) => {
-    if (menuRef.current) {
-      menuRef.current.show(event);
-    }
-  };
-
   return (
     <>
       <Menu
