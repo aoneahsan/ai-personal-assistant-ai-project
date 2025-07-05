@@ -1,94 +1,66 @@
-import { consoleLog } from '@/utils/helpers/consoleHelper';
-import {
-  useIsAuthenticatedZState,
-  useIsAuthSystemReady,
-} from '@/zustandStates/userState';
+import { BUTTON_LABELS } from '@/utils/constants/generic/labels';
+import { CSS_CLASSES } from '@/utils/constants/generic/styles';
+import { UI_ICONS } from '@/utils/constants/generic/ui';
+import { ROUTES } from '@/utils/constants/routingConstants';
+import { useUserDataZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useEffect, useRef, useState } from 'react';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
+import React from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   redirectTo?: string;
+  fallback?: React.ReactNode;
+  requireAuth?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  redirectTo = '/auth',
+  redirectTo = ROUTES.AUTH,
+  fallback,
+  requireAuth = true,
 }) => {
-  const isAuthenticated = useIsAuthenticatedZState();
-  const isAuthSystemReady = useIsAuthSystemReady();
+  const user = useUserDataZState((state) => state.data);
   const navigate = useNavigate();
-  const hasRedirectedRef = useRef(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  useEffect(() => {
-    // Only make routing decisions when auth system is fully ready
-    if (isAuthSystemReady && !hasRedirectedRef.current) {
-      if (!isAuthenticated) {
-        consoleLog('🔒 User is not authenticated, redirecting to auth page');
-        hasRedirectedRef.current = true;
-        setIsRedirecting(true);
+  // If auth is not required, always render children
+  if (!requireAuth) {
+    return <>{children}</>;
+  }
 
-        // Small delay to prevent rapid redirects
-        setTimeout(() => {
-          navigate({ to: redirectTo, replace: true });
-        }, 100);
-      } else {
-        consoleLog(
-          '✅ User is authenticated, rendering protected route:',
-          window.location.pathname
-        );
-      }
+  // If user is not authenticated
+  if (!user) {
+    if (fallback) {
+      return <>{fallback}</>;
     }
-  }, [isAuthenticated, isAuthSystemReady, navigate, redirectTo]);
 
-  // Reset redirect flag when auth state changes
-  useEffect(() => {
-    if (isAuthenticated && hasRedirectedRef.current) {
-      hasRedirectedRef.current = false;
-      setIsRedirecting(false);
-    }
-  }, [isAuthenticated]);
-
-  // Show loading state while auth system is initializing
-  if (!isAuthSystemReady) {
     return (
-      <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
-        <div className='text-center'>
-          <ProgressSpinner
-            style={{ width: '50px', height: '50px' }}
-            strokeWidth='4'
-            fill='transparent'
-            animationDuration='1s'
-            className='mb-4'
-          />
-          <p className='text-gray-600 text-lg'>
-            Initializing authentication...
-          </p>
-        </div>
+      <div
+        className={`${CSS_CLASSES.FLEX.FLEX} ${CSS_CLASSES.FLEX.ITEMS_CENTER} ${CSS_CLASSES.FLEX.JUSTIFY_CENTER} ${CSS_CLASSES.LAYOUT.FULL_HEIGHT}`}
+      >
+        <Card>
+          <div className={CSS_CLASSES.TYPOGRAPHY.TEXT_CENTER}>
+            <h3
+              className={`${CSS_CLASSES.TYPOGRAPHY.HEADING_MEDIUM} ${CSS_CLASSES.SPACING.MB_2}`}
+            >
+              Authentication Required
+            </h3>
+            <p className={CSS_CLASSES.SPACING.MB_4}>
+              You need to be logged in to access this page.
+            </p>
+            <Button
+              label={BUTTON_LABELS.SIGN_IN}
+              icon={UI_ICONS.LOGIN}
+              onClick={() => navigate({ to: redirectTo })}
+            />
+          </div>
+        </Card>
       </div>
     );
   }
 
-  // If user is not authenticated, show loading while redirect happens
-  if (!isAuthenticated || isRedirecting) {
-    return (
-      <div className='min-h-screen flex align-items-center justify-content-center bg-gray-50'>
-        <div className='text-center'>
-          <ProgressSpinner
-            style={{ width: '50px', height: '50px' }}
-            strokeWidth='4'
-            fill='transparent'
-            animationDuration='1s'
-            className='mb-4'
-          />
-          <p className='text-gray-600 text-lg'>Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // If user is authenticated, render children
   return <>{children}</>;
 };
 

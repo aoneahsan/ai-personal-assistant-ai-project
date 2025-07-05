@@ -1,6 +1,11 @@
 import { useTheme } from '@/hooks/useTheme';
 import { AuthProvider, unifiedAuthService } from '@/services/authService';
 import { TOAST_MESSAGES, VALIDATION_MESSAGES } from '@/utils/constants/generic';
+import {
+  BUTTON_LABELS,
+  LOADING_MESSAGES,
+} from '@/utils/constants/generic/labels';
+import { CSS_CLASSES } from '@/utils/constants/generic/styles';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
@@ -126,7 +131,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <div className='p-6'>
             {/* Back Button */}
             {onBackToWelcome && (
-              <div className='mb-4'>
+              <div className={CSS_CLASSES.SPACING.MB_4}>
                 <Button
                   icon='pi pi-arrow-left'
                   className='p-button-text p-button-rounded'
@@ -350,7 +355,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
               {/* Submit Button */}
               <Button
                 type='submit'
-                label={isLoading ? 'Signing In...' : 'Sign In'}
+                label={
+                  isLoading
+                    ? LOADING_MESSAGES.SIGNING_IN
+                    : BUTTON_LABELS.SIGN_IN
+                }
                 icon={isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-sign-in'}
                 loading={isLoading}
                 className='w-full p-button-lg font-semibold'

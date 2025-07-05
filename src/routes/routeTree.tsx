@@ -2,6 +2,7 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import PublicRoute from '@/components/Auth/PublicRoute';
 import DashboardLayout from '@/components/common/DashboardLayout';
 import AuthPage from '@/pages/Auth';
+import { LOADING_MESSAGES } from '@/utils/constants/generic/labels';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
 import React, { lazy } from 'react';
@@ -154,7 +155,7 @@ const authRoute = createRoute({
 // Dashboard Layout Route (Parent for all dashboard routes)
 const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/dashboard',
+  path: ROUTES.DASHBOARD,
   component: () => (
     <ProtectedRoute>
       <DashboardLayout />
@@ -168,7 +169,7 @@ const dashboardOverviewRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/',
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <DashboardOverview />
     </React.Suspense>
   ),
@@ -179,7 +180,7 @@ const dashboardChatsRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/chats',
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <DashboardChats />
     </React.Suspense>
   ),
@@ -191,7 +192,7 @@ const dashboardChatViewRoute = createRoute({
   path: '/chats/view/$chatId',
   validateSearch: chatSearchSchema,
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <ChatView />
     </React.Suspense>
   ),
@@ -202,7 +203,7 @@ const dashboardChatEmbedsRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/embeds',
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <DashboardChatEmbeds />
     </React.Suspense>
   ),
@@ -213,56 +214,60 @@ const dashboardAccountRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/account',
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <DashboardAccount />
     </React.Suspense>
   ),
   errorComponent: ErrorFallback,
 });
 
-const dashboardProfileRoute = createRoute({
-  getParentRoute: () => dashboardLayoutRoute,
-  path: '/profile',
-  component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
-      <EditProfile />
-    </React.Suspense>
-  ),
-  errorComponent: ErrorFallback,
-});
-
-// Root route - redirect to dashboard
+// Root index route - redirect to dashboard
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: () => (
-    <ProtectedRoute>
-      <DashboardLayout />
-    </ProtectedRoute>
-  ),
-  errorComponent: ErrorFallback,
-});
-
-// Standalone routes (outside dashboard layout)
-const embedDemoRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.EMBED_DEMO,
-  component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <EmbedDemo />
+    <ProtectedRoute redirectTo={ROUTES.AUTH}>
+      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+        <DashboardOverview />
       </React.Suspense>
     </ProtectedRoute>
   ),
   errorComponent: ErrorFallback,
 });
 
-const adminDashboardRoute = createRoute({
+// Edit Profile route - protected route
+const editProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.EDIT_PROFILE,
+  component: () => (
+    <ProtectedRoute>
+      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+        <EditProfile />
+      </React.Suspense>
+    </ProtectedRoute>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Embed Demo route - public route
+const embedDemoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.EMBED_DEMO,
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <EmbedDemo />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Admin Dashboard route - protected route
+const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
   component: () => (
     <ProtectedRoute>
-      <React.Suspense fallback={<div>Loading...</div>}>
+      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
         <AdminDashboard />
       </React.Suspense>
     </ProtectedRoute>
@@ -270,15 +275,15 @@ const adminDashboardRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// Anonymous routes (no authentication required)
+// Anonymous room routes - public routes
 const anonymousRoomRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ANONYMOUS_ROOM,
   component: () => {
-    const AnonymousRoomPage = React.lazy(() => import('@/pages/AnonymousRoom'));
+    const AnonymousRoom = lazy(() => import('@/pages/AnonymousRoom'));
     return (
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <AnonymousRoomPage />
+      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+        <AnonymousRoom />
       </React.Suspense>
     );
   },
@@ -287,26 +292,24 @@ const anonymousRoomRoute = createRoute({
 
 const anonymousRoomWithIdRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/room/$roomId',
+  path: ROUTES.ANONYMOUS_ROOM_WITH_ID,
   component: () => {
-    const AnonymousRoomChatPage = React.lazy(
-      () => import('@/pages/AnonymousRoom/AnonymousRoomChat')
-    );
+    const AnonymousRoom = lazy(() => import('@/pages/AnonymousRoom'));
     return (
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <AnonymousRoomChatPage />
+      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+        <AnonymousRoom />
       </React.Suspense>
     );
   },
   errorComponent: ErrorFallback,
 });
 
-// Policy routes - public access
+// Policy routes - public routes
 const privacyPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.PRIVACY_POLICY,
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <PrivacyPolicy />
     </React.Suspense>
   ),
@@ -317,7 +320,7 @@ const termsOfServiceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.TERMS_OF_SERVICE,
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <TermsOfService />
     </React.Suspense>
   ),
@@ -328,7 +331,7 @@ const dataDeletionPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.DATA_DELETION_POLICY,
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <DataDeletionPolicy />
     </React.Suspense>
   ),
@@ -339,42 +342,49 @@ const cookiePolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.COOKIE_POLICY,
   component: () => (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <CookiePolicy />
     </React.Suspense>
   ),
   errorComponent: ErrorFallback,
 });
 
-// Create the route tree with proper nesting
-export const appRouteTree = rootRoute.addChildren([
-  // Root redirect to dashboard
+// Subscription request route - public route
+const subscriptionRequestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/subscription-request',
+  component: () => {
+    const SubscriptionRequest = lazy(
+      () => import('@/pages/SubscriptionRequest')
+    );
+    return (
+      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+        <SubscriptionRequest />
+      </React.Suspense>
+    );
+  },
+  errorComponent: ErrorFallback,
+});
+
+// Create the route tree
+export const routeTree = rootRoute.addChildren([
   indexRoute,
-
-  // Auth route
   authRoute,
-
-  // Dashboard layout with nested routes
   dashboardLayoutRoute.addChildren([
     dashboardOverviewRoute,
     dashboardChatsRoute,
     dashboardChatViewRoute,
     dashboardChatEmbedsRoute,
     dashboardAccountRoute,
-    dashboardProfileRoute,
   ]),
-
-  // Standalone routes
+  editProfileRoute,
   embedDemoRoute,
-  adminDashboardRoute,
-
-  // Anonymous routes
+  adminRoute,
   anonymousRoomRoute,
   anonymousRoomWithIdRoute,
-
-  // Policy routes
   privacyPolicyRoute,
   termsOfServiceRoute,
   dataDeletionPolicyRoute,
   cookiePolicyRoute,
+  subscriptionRequestRoute,
 ]);

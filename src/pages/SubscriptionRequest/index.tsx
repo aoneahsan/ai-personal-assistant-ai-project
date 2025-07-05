@@ -1,4 +1,8 @@
 import { UserSubscriptionRequest } from '@/components/SubscriptionManagement/UserSubscriptionRequest';
+import { useTheme } from '@/hooks/useTheme';
+import { BUTTON_LABELS, PAGE_TITLES } from '@/utils/constants/generic/labels';
+import { CSS_CLASSES } from '@/utils/constants/generic/styles';
+import { ROUTES } from '@/utils/constants/routingConstants';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
@@ -8,21 +12,43 @@ import React from 'react';
 const SubscriptionRequestPage: React.FC = () => {
   const user = useUserDataZState((state) => state.data);
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   if (!user) {
     return (
-      <div className='flex justify-center items-center min-h-screen'>
-        <Card>
-          <div className='text-center p-4'>
-            <h2 className='text-2xl font-bold mb-4'>Please Log In</h2>
-            <p className='text-gray-600 mb-4'>
-              You need to be logged in to manage your subscription.
+      <div
+        className={`${CSS_CLASSES.LAYOUT.FULL_HEIGHT} ${CSS_CLASSES.FLEX.FLEX} ${CSS_CLASSES.FLEX.ITEMS_CENTER} ${CSS_CLASSES.FLEX.JUSTIFY_CENTER}`}
+        style={{ background: theme.background }}
+      >
+        <Card
+          className={`${CSS_CLASSES.LAYOUT.MAX_WIDTH_MD} ${CSS_CLASSES.LAYOUT.FULL_WIDTH} ${CSS_CLASSES.SPACING.MX_4}`}
+        >
+          <div className={CSS_CLASSES.TYPOGRAPHY.TEXT_CENTER}>
+            <h2
+              className={`${CSS_CLASSES.TYPOGRAPHY.HEADING_MEDIUM} ${CSS_CLASSES.SPACING.MB_4}`}
+            >
+              {PAGE_TITLES.SUBSCRIPTION_REQUEST}
+            </h2>
+            <p className={CSS_CLASSES.SPACING.MB_4}>
+              Please log in to request a subscription upgrade. Once logged in,
+              you can access the subscription management features in your
+              dashboard.
             </p>
-            <Button
-              label='Go to Login'
-              icon='pi pi-sign-in'
-              onClick={() => navigate({ to: '/auth' })}
-            />
+            <div
+              className={`${CSS_CLASSES.FLEX.FLEX} ${CSS_CLASSES.FLEX.FLEX_COL} ${CSS_CLASSES.GRID.GAP_3} sm:flex-row sm:justify-content-center`}
+            >
+              <Button
+                label={BUTTON_LABELS.SIGN_IN}
+                icon='pi pi-sign-in'
+                onClick={() => navigate({ to: ROUTES.AUTH })}
+              />
+              <Button
+                label='Go to Dashboard'
+                icon='pi pi-home'
+                severity='secondary'
+                onClick={() => navigate({ to: ROUTES.DASHBOARD })}
+              />
+            </div>
           </div>
         </Card>
       </div>
@@ -46,7 +72,7 @@ const SubscriptionRequestPage: React.FC = () => {
             label='Back to Dashboard'
             icon='pi pi-arrow-left'
             severity='secondary'
-            onClick={() => navigate({ to: '/dashboard' })}
+            onClick={() => navigate({ to: ROUTES.DASHBOARD })}
           />
         </div>
       </Card>

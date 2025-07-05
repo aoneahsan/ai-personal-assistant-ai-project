@@ -77,12 +77,28 @@ export const useAuthGuard = ({
 };
 
 // Convenience hooks for specific use cases
-export const useRequireAuth = (redirectTo: string = '/auth') => {
-  return useAuthGuard({ requireAuth: true, redirectTo });
+export const useRequireAuth = (redirectTo: string = ROUTES.AUTH) => {
+  const user = useUserDataZState((state) => state.data);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate({ to: redirectTo });
+    }
+  }, [user, navigate, redirectTo]);
+
+  return { user };
 };
 
-export const useRequireGuest = (
-  redirectTo: string = ROUTES.DASHBOARD_CHATS
-) => {
-  return useAuthGuard({ requireAuth: false, redirectTo });
+export const useRequireGuest = (redirectTo: string = ROUTES.DASHBOARD) => {
+  const user = useUserDataZState((state) => state.data);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate({ to: redirectTo });
+    }
+  }, [user, navigate, redirectTo]);
+
+  return { user };
 };
