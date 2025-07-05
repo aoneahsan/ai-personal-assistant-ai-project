@@ -1,4 +1,4 @@
-import AuthContainer, { AuthMode } from '@/components/Admin/Auth/AuthContainer';
+import AuthContainer, { AuthMode } from '@/components/Auth/AuthContainer';
 import React from 'react';
 
 const AuthPage: React.FC = () => {

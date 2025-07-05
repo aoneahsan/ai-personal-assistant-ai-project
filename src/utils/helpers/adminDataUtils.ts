@@ -7,12 +7,14 @@ export interface AdminTableFilters {
 }
 
 // Create default filters for admin tables
-export const createDefaultFilters = (additionalFields: string[] = []): AdminTableFilters => {
+export const createDefaultFilters = (
+  additionalFields: string[] = []
+): AdminTableFilters => {
   const baseFilters: AdminTableFilters = {
     global: { value: '', matchMode: FilterMatchMode.CONTAINS },
   };
 
-  additionalFields.forEach(field => {
+  additionalFields.forEach((field) => {
     baseFilters[field] = { value: null, matchMode: FilterMatchMode.EQUALS };
   });
 
@@ -22,7 +24,7 @@ export const createDefaultFilters = (additionalFields: string[] = []): AdminTabl
 // Format date for display in admin tables
 export const formatAdminDate = (date: Date | string | undefined): string => {
   if (!date) return 'Never';
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
 
@@ -38,7 +40,7 @@ export const formatAdminDate = (date: Date | string | undefined): string => {
 // Format time ago for display
 export const formatTimeAgo = (date: Date | string | undefined): string => {
   if (!date) return 'Never';
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
 
@@ -52,7 +54,7 @@ export const formatTimeAgo = (date: Date | string | undefined): string => {
   if (diffDays < 7) return `${diffDays}d ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
   if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
-  
+
   return `${Math.floor(diffDays / 365)}y ago`;
 };
 
@@ -88,33 +90,31 @@ export const adminButtonStyles = {
 };
 
 // Generate common admin filters
-export const generateAdminFilters = (searchValue: string, filters: AdminTableFilters) => {
+export const generateAdminFilters = (
+  searchValue: string,
+  filters: AdminTableFilters
+) => {
   const newFilters = { ...filters };
   newFilters.global.value = searchValue;
   return newFilters;
 };
 
-// Common admin search header
-export const renderAdminSearchHeader = (
+// Common admin search header configuration
+export const getAdminSearchHeaderConfig = (
   title: string,
   searchValue: string,
-  onSearchChange: (value: string) => void,
   placeholder: string = 'Search...'
-) => (
-  <div className='flex flex-wrap gap-2 align-items-center justify-content-between'>
-    <h4 className='m-0'>{title}</h4>
-    <span className='p-input-icon-left'>
-      <i className='pi pi-search' />
-      <input
-        type='text'
-        value={searchValue}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder={placeholder}
-        className='p-inputtext p-component p-inputtext-sm'
-      />
-    </span>
-  </div>
-);
+) => ({
+  title,
+  searchValue,
+  placeholder,
+  wrapperClassName:
+    'flex flex-wrap gap-2 align-items-center justify-content-between',
+  titleClassName: 'm-0',
+  searchClassName: 'p-input-icon-left',
+  inputClassName: 'p-inputtext p-component p-inputtext-sm',
+  iconClassName: 'pi pi-search',
+});
 
 // Validation helpers for admin forms
 export const validateEmail = (email: string): boolean => {
@@ -122,17 +122,29 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-export const validateRequired = (value: string | number | boolean | null | undefined): boolean => {
-  return value !== null && value !== undefined && value !== '';
+export const validateRequired = (
+  value: string | number | boolean | null | undefined
+): boolean => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value !== '';
+  if (typeof value === 'number') return !isNaN(value);
+  if (typeof value === 'boolean') return true; // boolean values are always considered valid
+  return false;
 };
 
-export const validateMinLength = (value: string, minLength: number): boolean => {
-  return value && value.length >= minLength;
+export const validateMinLength = (
+  value: string,
+  minLength: number
+): boolean => {
+  return typeof value === 'string' && value.length >= minLength;
 };
 
 // Common admin error handling
-export const handleAdminError = (error: Error | string | unknown, defaultMessage: string): string => {
+export const handleAdminError = (
+  error: Error | string | unknown,
+  defaultMessage: string
+): string => {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === 'string') return error;
   return defaultMessage;
-}; 
+};
