@@ -2,8 +2,11 @@ import { FilterMatchMode } from 'primereact/api';
 
 // Generic filter type for admin tables
 export interface AdminTableFilters {
-  global: { value: string; matchMode: string };
-  [key: string]: { value: string | number | boolean | null; matchMode: string };
+  global: { value: string; matchMode: FilterMatchMode };
+  [key: string]: {
+    value: string | number | boolean | null;
+    matchMode: FilterMatchMode;
+  };
 }
 
 // Create default filters for admin tables

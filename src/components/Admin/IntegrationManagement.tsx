@@ -519,7 +519,8 @@ export const IntegrationManagement: React.FC = () => {
 
   const toggleIntegration = async (integration: Integration) => {
     try {
-      const newStatus = integration.status === 'active' ? 'inactive' : 'active';
+      const newStatus: Integration['status'] =
+        integration.status === 'active' ? 'inactive' : 'active';
       const updatedIntegration = { ...integration, status: newStatus };
 
       setIntegrations(

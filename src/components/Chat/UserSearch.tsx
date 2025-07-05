@@ -53,7 +53,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
     try {
       const result = await chatService.findUserByEmail(searchEmail.trim());
 
-      if (result.isFound && result.id) {
+      if (result.isFound && result.id && result.email) {
         // Create or get conversation with the found user
         const currentUser = unifiedAuthService.getCurrentUserData();
         if (!currentUser) {
@@ -63,8 +63,8 @@ const UserSearch: React.FC<UserSearchProps> = ({
         const chatId = await chatService.createOrGetConversation(
           currentUser.id,
           currentUser.email,
-          result.id,
-          result.email
+          result.id as string,
+          result.email as string
         );
 
         onUserFound(result, chatId);
@@ -82,7 +82,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
   };
 
   const handleStartChat = async () => {
-    if (!searchResult) return;
+    if (!searchResult || !searchResult.id || !searchResult.email) return;
 
     setIsSearching(true);
     try {
@@ -94,8 +94,8 @@ const UserSearch: React.FC<UserSearchProps> = ({
       const chatId = await chatService.createOrGetConversation(
         currentUser.id,
         currentUser.email,
-        searchResult.id,
-        searchResult.email
+        searchResult.id as string,
+        searchResult.email as string
       );
 
       onUserFound(searchResult, chatId);

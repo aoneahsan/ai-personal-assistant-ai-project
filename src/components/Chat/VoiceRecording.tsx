@@ -23,15 +23,20 @@ interface SpeechRecognitionErrorEvent {
   error: string;
 }
 
-interface SpeechRecognitionResult {
+interface SpeechRecognitionAlternative {
   transcript: string;
   confidence: number;
+}
+
+interface SpeechRecognitionResult {
   isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternative;
 }
 
 interface SpeechRecognitionResultList {
   length: number;
-  [index: number]: SpeechRecognitionResult[];
+  [index: number]: SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionConstructor {
