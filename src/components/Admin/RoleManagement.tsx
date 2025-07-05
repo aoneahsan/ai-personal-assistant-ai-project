@@ -51,16 +51,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   // Use role management hook
   const {
     loading,
-    error,
     users,
     roleHistory,
     availableRoles,
     assignRole,
     revokeRole,
-    loadUsers,
-    loadUsersByRole,
     loadRoleHistory,
-    refreshData,
     validateRoleAssignment,
   } = useRoleManagement({ autoRefresh: true, refreshInterval: 30000 });
 
@@ -97,7 +93,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           detail: 'Role assigned successfully',
         });
       }
-    } catch (error) {
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -121,7 +117,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           detail: 'Role revoked successfully',
         });
       }
-    } catch (error) {
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',

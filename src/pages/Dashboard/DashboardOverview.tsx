@@ -1,7 +1,7 @@
 import { DashboardPageWrapper } from '@/components/common';
 import { useAsyncData } from '@/hooks';
 import { ChatService } from '@/services/chatService';
-import { EmbedConfig, EmbedService } from '@/services/embedService';
+import { EmbedConfig } from '@/services/embedService';
 import { PAGE_TITLES, TOOLTIP_LABELS } from '@/utils/constants/generic/labels';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { Card } from 'primereact/card';
@@ -10,7 +10,6 @@ import React, { useMemo } from 'react';
 const DashboardOverview: React.FC = () => {
   const userData = useUserDataZState((state) => state.data);
   const chatService = new ChatService();
-  const embedService = new EmbedService();
 
   // Load user data using the shared hook
   const fetchDashboardData = async () => {

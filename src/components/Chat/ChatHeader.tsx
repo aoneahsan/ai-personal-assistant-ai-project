@@ -60,7 +60,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     menuRef.current?.toggle(e);
   };
 
-  const handleConfirmAction = (action: string, message: string) => {
+  const handleConfirmAction = (action: string) => {
     setConfirmAction(action);
     setShowConfirmDialog(true);
   };
@@ -135,20 +135,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     {
       label: 'Clear Chat',
       icon: 'pi pi-eraser',
-      command: () =>
-        handleConfirmAction(
-          'clear',
-          'Are you sure you want to clear this chat? This action cannot be undone.'
-        ),
+      command: () => handleConfirmAction('clear'),
     },
     {
       label: 'Delete Chat',
       icon: 'pi pi-trash',
-      command: () =>
-        handleConfirmAction(
-          'delete',
-          'Are you sure you want to delete this chat? This action cannot be undone.'
-        ),
+      command: () => handleConfirmAction('delete'),
     },
     {
       separator: true,
@@ -156,11 +148,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     {
       label: 'Block Contact',
       icon: 'pi pi-ban',
-      command: () =>
-        handleConfirmAction(
-          'block',
-          `Are you sure you want to block ${chatUser.name}? You will no longer receive messages from this contact.`
-        ),
+      command: () => handleConfirmAction('block'),
       className: 'text-red-500',
     },
   ];

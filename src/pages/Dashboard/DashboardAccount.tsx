@@ -26,7 +26,7 @@ const DashboardAccount: React.FC = () => {
       // Add any refresh logic here if needed
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate refresh
       showRefreshSuccess('Account');
-    } catch (error) {
+    } catch {
       showLoadError('account data');
     } finally {
       setRefreshing(false);

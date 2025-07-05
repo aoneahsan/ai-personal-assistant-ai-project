@@ -26,7 +26,7 @@ interface ThemeOption {
 
 const ThemeSettings: React.FC<ThemeSettingsProps> = ({ visible, onHide }) => {
   // Use the theme hook to get current theme and change function
-  const { theme, currentTheme, changeTheme, isLoading } = useTheme();
+  const { currentTheme, changeTheme, isLoading } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>(currentTheme);
 
   // Update selected theme when current theme changes

@@ -4,7 +4,7 @@ import {
   SkeletonLoader,
 } from '@/components/common';
 import { useAsyncData, useToast } from '@/hooks';
-import { EmbedConfig, EmbedService } from '@/services/embedService';
+import { EmbedConfig } from '@/services/embedService';
 import {
   BUTTON_LABELS,
   EMPTY_STATE_MESSAGES,
@@ -27,7 +27,6 @@ const DashboardChatEmbeds: React.FC = () => {
   const { showCopySuccess } = useToast();
 
   const userData = useUserDataZState((state) => state.data);
-  const embedService = new EmbedService();
 
   // Load user embeds using the shared hook
   const fetchUserEmbeds = async (): Promise<EmbedConfig[]> => {

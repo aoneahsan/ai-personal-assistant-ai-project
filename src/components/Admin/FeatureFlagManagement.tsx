@@ -18,7 +18,7 @@ import { ProgressBar } from 'primereact/progressbar';
 import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 interface FeatureFlag {
   id: string;
@@ -27,10 +27,10 @@ interface FeatureFlag {
   description: string;
   type: 'boolean' | 'string' | 'number' | 'json' | 'percentage';
   status: 'active' | 'inactive' | 'scheduled' | 'expired';
-  defaultValue: any;
+  defaultValue: string | number | boolean | object | null;
   variations: Array<{
     name: string;
-    value: any;
+    value: string | number | boolean | object | null;
     description: string;
     weight: number;
   }>;
@@ -47,7 +47,7 @@ interface FeatureFlag {
           | 'contains'
           | 'greater_than'
           | 'less_than';
-        value: any;
+        value: string | number | boolean;
       }>;
       variation: string;
       weight: number;
@@ -83,18 +83,11 @@ export const FeatureFlagManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
   const [loading, setLoading] = useState(false);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([]);
-  const [templates, setTemplates] = useState<FeatureFlagTemplate[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<FeatureFlag | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
   const [editingFlag, setEditingFlag] = useState<Partial<FeatureFlag>>({});
-  const [newVariation, setNewVariation] = useState({
-    name: '',
-    value: '',
-    description: '',
-    weight: 0,
-  });
   const [selectedEnvironment, setSelectedEnvironment] =
     useState<string>('production');
 
@@ -112,40 +105,18 @@ export const FeatureFlagManagement: React.FC = () => {
     { label: 'Percentage', value: 'percentage' },
   ];
 
-  const targetingAttributes = [
-    { label: 'User Role', value: 'userRole' },
-    { label: 'Subscription Plan', value: 'subscriptionPlan' },
-    { label: 'Country', value: 'country' },
-    { label: 'Email Domain', value: 'emailDomain' },
-    { label: 'Registration Date', value: 'registrationDate' },
-    { label: 'Last Login', value: 'lastLogin' },
-  ];
-
-  const operators = [
-    { label: 'Equals', value: 'equals' },
-    { label: 'Not Equals', value: 'not_equals' },
-    { label: 'Contains', value: 'contains' },
-    { label: 'Greater Than', value: 'greater_than' },
-    { label: 'Less Than', value: 'less_than' },
-  ];
-
-  useEffect(() => {
-    loadFeatureFlags();
-    loadTemplates();
-  }, [selectedEnvironment]);
-
-  const loadFeatureFlags = async () => {
+  const loadFeatureFlags = useCallback(async () => {
     setLoading(true);
     try {
       // Simulate API call
-      const mockFlags: FeatureFlag[] = [
+      const mockFlags = [
         {
           id: '1',
           name: 'New Chat Interface',
           key: 'new_chat_interface',
           description: 'Enable the new chat interface with improved UX',
-          type: 'boolean',
-          status: 'active',
+          type: 'boolean' as const,
+          status: 'active' as const,
           defaultValue: false,
           variations: [
             {
@@ -170,7 +141,7 @@ export const FeatureFlagManagement: React.FC = () => {
                 conditions: [
                   {
                     attribute: 'subscriptionPlan',
-                    operator: 'equals',
+                    operator: 'equals' as const,
                     value: 'PREMIUM',
                   },
                 ],
@@ -181,7 +152,7 @@ export const FeatureFlagManagement: React.FC = () => {
             fallback: 'Disabled',
           },
           rolloutPercentage: 25,
-          environment: 'production',
+          environment: 'production' as const,
           tags: ['ui', 'chat', 'experimental'],
           createdBy: 'admin@example.com',
           createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
@@ -296,21 +267,22 @@ export const FeatureFlagManagement: React.FC = () => {
           },
         },
       ];
-
-      setFeatureFlags(
-        mockFlags.filter((f) => f.environment === selectedEnvironment)
-      );
+      setFeatureFlags(mockFlags);
     } catch (error) {
-      console.error('Error loading feature flags:', error);
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to load feature flags',
+        life: 3000,
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedEnvironment]);
+
+  useEffect(() => {
+    loadFeatureFlags();
+  }, [loadFeatureFlags]);
 
   const loadTemplates = async () => {
     try {

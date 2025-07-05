@@ -6,12 +6,10 @@ import React, { useRef, useState } from 'react';
 
 interface MediaMessageDisplayProps {
   message: FirestoreMessage;
-  isOwnMessage: boolean;
 }
 
 const MediaMessageDisplay: React.FC<MediaMessageDisplayProps> = ({
   message,
-  isOwnMessage,
 }) => {
   const [showTranscript, setShowTranscript] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
