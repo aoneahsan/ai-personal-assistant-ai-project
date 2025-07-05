@@ -19,9 +19,15 @@ interface IntegrationTestResults {
   success: boolean;
   message: string;
   responseTime?: number;
+  statusCode?: number;
   data?: Record<string, unknown>;
   error?: string;
   timestamp: Date;
+  details?: {
+    timestamp: string;
+    endpoint: string;
+    method: string;
+  };
 }
 
 interface Integration {
@@ -337,7 +343,7 @@ export const IntegrationManagement: React.FC = () => {
   const getTypeColor = (type: Integration['type']) => {
     switch (type) {
       case 'oauth':
-        return 'primary';
+        return 'secondary';
       case 'api_key':
         return 'info';
       case 'webhook':
@@ -345,7 +351,7 @@ export const IntegrationManagement: React.FC = () => {
       case 'database':
         return 'secondary';
       case 'storage':
-        return 'help';
+        return 'info';
       case 'notification':
         return 'success';
       default:
@@ -474,7 +480,7 @@ export const IntegrationManagement: React.FC = () => {
       // Simulate API test call
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const mockResults = {
+      const mockResults: IntegrationTestResults = {
         success: integration.status !== 'error',
         responseTime: Math.floor(Math.random() * 500) + 100,
         statusCode: integration.status === 'error' ? 401 : 200,
@@ -482,6 +488,7 @@ export const IntegrationManagement: React.FC = () => {
           integration.status === 'error'
             ? 'Authentication failed'
             : 'Connection successful',
+        timestamp: new Date(),
         details: {
           timestamp: new Date().toISOString(),
           endpoint: `https://api.${integration.provider.toLowerCase()}.com/test`,
@@ -490,11 +497,12 @@ export const IntegrationManagement: React.FC = () => {
       };
 
       setTestResults(mockResults);
-    } catch (error) {
+    } catch (error: unknown) {
       setTestResults({
         success: false,
         message: 'Test failed',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date(),
       });
     }
   };

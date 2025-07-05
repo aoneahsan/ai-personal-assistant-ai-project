@@ -149,7 +149,7 @@ export const useRoleManagement = (
         setLoading(false);
       }
     },
-    [currentUser, setLoading, handleError, refreshData]
+    [currentUser, setLoading, handleError]
   );
 
   // ==================== Data Loading ====================

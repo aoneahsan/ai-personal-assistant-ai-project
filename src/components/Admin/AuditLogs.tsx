@@ -212,13 +212,13 @@ export const AuditLogs: React.FC = () => {
       case 'auth':
         return 'info';
       case 'user':
-        return 'primary';
+        return 'secondary';
       case 'role':
         return 'warning';
       case 'system':
         return 'secondary';
       case 'data':
-        return 'help';
+        return 'info';
       case 'security':
         return 'danger';
       default:

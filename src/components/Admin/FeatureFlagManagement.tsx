@@ -807,7 +807,9 @@ export const FeatureFlagManagement: React.FC = () => {
                   <label className='block mb-2'>Start Date</label>
                   <Calendar
                     value={
-                      editingFlag.scheduledStart || selectedFlag.scheduledStart
+                      editingFlag.scheduledStart ||
+                      selectedFlag.scheduledStart ||
+                      undefined
                     }
                     onChange={(e) =>
                       setEditingFlag({
@@ -824,7 +826,9 @@ export const FeatureFlagManagement: React.FC = () => {
                   <label className='block mb-2'>End Date</label>
                   <Calendar
                     value={
-                      editingFlag.scheduledEnd || selectedFlag.scheduledEnd
+                      editingFlag.scheduledEnd ||
+                      selectedFlag.scheduledEnd ||
+                      undefined
                     }
                     onChange={(e) =>
                       setEditingFlag({ ...editingFlag, scheduledEnd: e.value })

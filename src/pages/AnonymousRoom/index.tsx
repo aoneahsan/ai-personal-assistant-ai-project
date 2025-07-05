@@ -37,26 +37,26 @@ const AnonymousRoom: React.FC = () => {
   };
 
   const handleJoinRoom = () => {
-    const roomName = roomName.trim();
+    const trimmedRoomName = roomName.trim();
 
-    if (!roomName) {
+    if (!trimmedRoomName) {
       toast.error(TOAST_MESSAGES.ERROR.ENTER_ROOM_NAME);
       return;
     }
 
-    if (roomName.length !== 8) {
+    if (trimmedRoomName.length !== 8) {
       toast.error(TOAST_MESSAGES.ERROR.ROOM_NAME_LENGTH);
       return;
     }
 
     // Check if room name contains only letters and numbers
-    if (!/^[a-zA-Z0-9]+$/.test(roomName)) {
+    if (!/^[a-zA-Z0-9]+$/.test(trimmedRoomName)) {
       toast.error(TOAST_MESSAGES.ERROR.ROOM_NAME_ALPHANUMERIC);
       return;
     }
 
     setIsJoining(true);
-    const formattedRoomName = roomName.toUpperCase();
+    const formattedRoomName = trimmedRoomName.toUpperCase();
 
     // Navigate to the room
     navigate({
