@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSystemConfigStore } from '../zustandStates/systemConfigState';
-import { useUserStore } from '../zustandStates/userState';
+import { useUserDataZState } from '../zustandStates/userState';
 
 interface SystemConfigInitializationState {
   isInitializing: boolean;
@@ -26,7 +26,7 @@ export const useSystemConfigInitialization = () => {
     subscribeToChanges,
   } = useSystemConfigStore();
 
-  const { user } = useUserStore();
+  const user = useUserDataZState((state) => state.data);
 
   // Maximum retry attempts
   const MAX_RETRIES = 3;

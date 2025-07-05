@@ -3,14 +3,14 @@ import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import React from 'react';
 import { useSystemConfigInitialization } from '../hooks/useSystemConfigInitialization';
-import { useUserStore } from '../zustandStates/userState';
+import { useUserDataZState } from '../zustandStates/userState';
 
 interface AppInitializerProps {
   children: React.ReactNode;
 }
 
 const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
-  const { user } = useUserStore();
+  const user = useUserDataZState((state) => state.data);
   const {
     isInitializing,
     initializationComplete,

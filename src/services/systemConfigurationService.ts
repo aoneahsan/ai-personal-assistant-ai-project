@@ -12,7 +12,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { db } from '../axiosInstance/firebaseConfig';
+import { db } from '../services/firebase';
 import {
   PERMISSION_CATEGORIES,
   SETTINGS_CATEGORIES,
