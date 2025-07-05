@@ -83,7 +83,14 @@ export const AdminSubscriptionManagement: React.FC<
   const [updateDialogVisible, setUpdateDialogVisible] = useState(false);
 
   // Stats
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<{
+    totalRequests: number;
+    pendingRequests: number;
+    approvedRequests: number;
+    rejectedRequests: number;
+    planDistribution: Record<string, number>;
+    dynamicPlans?: unknown[];
+  }>({
     totalRequests: 0,
     pendingRequests: 0,
     approvedRequests: 0,

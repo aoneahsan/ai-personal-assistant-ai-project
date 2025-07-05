@@ -142,7 +142,9 @@ export const UserManagement: React.FC = () => {
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const newFilters = { ...filters };
-    newFilters['global'].value = value;
+    if (newFilters['global'] && 'value' in newFilters['global']) {
+      newFilters['global'].value = value;
+    }
     setFilters(newFilters);
     setGlobalFilterValue(value);
   };
@@ -419,6 +421,7 @@ export const UserManagement: React.FC = () => {
           value={users}
           selection={selectedUsers}
           onSelectionChange={(e) => setSelectedUsers(e.value as IPCAUser[])}
+          selectionMode='multiple'
           dataKey='id'
           paginator
           rows={10}

@@ -19,6 +19,8 @@ interface ExtendedMessage extends Message {
   editHistory?: Array<{
     editedAt: Date;
     editedBy: string;
+    editorId: string;
+    editorEmail: string;
     previousText: string;
     editReason?: string;
   }>;
@@ -62,16 +64,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const isOwnMessage = message.sender === 'me';
   const extendedMessage = message as ExtendedMessage;
 
-  // Convert Message to FirestoreMessage format for compatibility
+  // Convert message to FirestoreMessage format with all required properties
   const firestoreMessage: FirestoreMessage = {
     id: message.id,
+    chatId: 'current-chat', // Add missing chatId property
     text: message.text,
-    senderId: isOwnMessage ? currentUser?.id || '' : 'other-user',
-    senderEmail: isOwnMessage ? currentUser?.email || '' : 'other@example.com',
+    senderId: message.sender === 'me' ? currentUser?.id || '' : 'other-user',
+    senderEmail:
+      message.sender === 'me' ? currentUser?.email || '' : 'other@example.com',
     type: message.type,
     timestamp: message.timestamp,
     status: message.status || 'sent',
-    // Add edit/delete properties if they exist
     isEdited: extendedMessage.isEdited,
     lastEditedAt: extendedMessage.lastEditedAt,
     editHistory: extendedMessage.editHistory,
@@ -166,7 +169,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
     // Edit message option
     if (message.type === 'text' && !extendedMessage.isDeleted) {
-      if (canEdit.hasAccess) {
+      if (canEdit) {
         items.push({
           label: 'Edit Message',
           icon: 'pi pi-pencil',
@@ -188,7 +191,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
     // Delete message option
     if (!extendedMessage.isDeleted) {
-      if (canDelete.hasAccess) {
+      if (canDelete) {
         items.push({
           label: 'Delete Message',
           icon: 'pi pi-trash',
@@ -210,7 +213,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
     // View history option (only for edited messages)
     if (extendedMessage.isEdited) {
-      if (canHistory.hasAccess) {
+      if (canHistory) {
         items.push({
           label: 'View Edit History',
           icon: 'pi pi-history',
@@ -464,7 +467,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     <ContextMenu
       ref={contextMenuRef}
       model={getContextMenuItems()}
-      popup
       className='message-context-menu'
     />
   );

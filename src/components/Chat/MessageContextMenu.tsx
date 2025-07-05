@@ -27,14 +27,13 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
   const menuRef = useRef<Menu>(null);
   const toastRef = useRef<Toast>(null);
 
-  const canEditAccess = featureFlagService.canEditMessages(currentUser);
-  const canDeleteAccess = featureFlagService.canDeleteMessages(currentUser);
-  const canViewHistoryAccess =
-    featureFlagService.canViewMessageHistory(currentUser);
+  const canEdit = featureFlagService.canEditMessages(currentUser);
+  const canDelete = featureFlagService.canDeleteMessages(currentUser);
+  const canViewHistory = featureFlagService.canViewMessageHistory(currentUser);
 
   const canUserEdit =
     message && currentUser
-      ? canEditAccess.hasAccess &&
+      ? canEdit &&
         message.senderId === currentUser.id &&
         !message.isDeleted &&
         message.type === 'text'
@@ -42,15 +41,11 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
 
   const canUserDelete =
     message && currentUser
-      ? canDeleteAccess.hasAccess &&
-        message.senderId === currentUser.id &&
-        !message.isDeleted
+      ? canDelete && message.senderId === currentUser.id && !message.isDeleted
       : false;
 
   const canUserViewHistory =
-    message && currentUser
-      ? canViewHistoryAccess.hasAccess && message.isEdited
-      : false;
+    message && currentUser ? canViewHistory && message.isEdited : false;
 
   const showUpgradeToast = (
     feature: ChatFeatureFlag,
@@ -66,10 +61,10 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
   };
 
   const handleEditClick = () => {
-    if (!canEditAccess.hasAccess) {
+    if (!canEdit) {
       showUpgradeToast(
         ChatFeatureFlag.MESSAGE_EDITING,
-        canEditAccess.upgradeMessage || ''
+        'Upgrade to Pro to edit messages'
       );
       onUpgrade(ChatFeatureFlag.MESSAGE_EDITING);
       return;
@@ -81,10 +76,10 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
   };
 
   const handleDeleteClick = () => {
-    if (!canDeleteAccess.hasAccess) {
+    if (!canDelete) {
       showUpgradeToast(
         ChatFeatureFlag.MESSAGE_DELETION,
-        canDeleteAccess.upgradeMessage || ''
+        'Upgrade to Pro to delete messages'
       );
       onUpgrade(ChatFeatureFlag.MESSAGE_DELETION);
       return;
@@ -96,10 +91,10 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
   };
 
   const handleViewHistoryClick = () => {
-    if (!canViewHistoryAccess.hasAccess) {
+    if (!canViewHistory) {
       showUpgradeToast(
         ChatFeatureFlag.MESSAGE_HISTORY,
-        canViewHistoryAccess.upgradeMessage || ''
+        'Upgrade to Premium to view message history'
       );
       onUpgrade(ChatFeatureFlag.MESSAGE_HISTORY);
       return;
@@ -114,22 +109,22 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
     {
       label: 'Edit Message',
       icon: 'pi pi-pencil',
-      disabled: !canUserEdit && canEditAccess.hasAccess,
-      className: !canEditAccess.hasAccess ? 'p-menuitem-premium' : '',
+      disabled: !canUserEdit && canEdit,
+      className: !canEdit ? 'p-menuitem-premium' : '',
       command: handleEditClick,
     },
     {
       label: 'Delete Message',
       icon: 'pi pi-trash',
-      disabled: !canUserDelete && canDeleteAccess.hasAccess,
-      className: !canDeleteAccess.hasAccess ? 'p-menuitem-premium' : '',
+      disabled: !canUserDelete && canDelete,
+      className: !canDelete ? 'p-menuitem-premium' : '',
       command: handleDeleteClick,
     },
     {
       label: 'View Edit History',
       icon: 'pi pi-history',
-      disabled: !canUserViewHistory && canViewHistoryAccess.hasAccess,
-      className: !canViewHistoryAccess.hasAccess ? 'p-menuitem-premium' : '',
+      disabled: !canUserViewHistory && canViewHistory,
+      className: !canViewHistory ? 'p-menuitem-premium' : '',
       command: handleViewHistoryClick,
     },
     {

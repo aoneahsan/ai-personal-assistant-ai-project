@@ -92,17 +92,25 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
             <i className='pi pi-lock text-primary text-2xl'></i>
             <div>
               <h4 className='m-0 text-900 text-lg'>
-                {upgradeInfo.feature
-                  .replace(/_/g, ' ')
-                  .replace(/\b\w/g, (l) => l.toUpperCase())}
+                {feature
+                  ?.replace(/_/g, ' ')
+                  .replace(/\b\w/g, (l: string) => l.toUpperCase())}
               </h4>
               <p className='m-0 text-600'>{featureDescriptions[feature]}</p>
             </div>
           </div>
 
           <Tag
-            value={`Requires ${upgradeInfo.planName} Plan`}
-            severity={planColors[upgradeInfo.requiredPlan]}
+            value={`Requires ${upgradeInfo.requiredPlan.charAt(0).toUpperCase() + upgradeInfo.requiredPlan.slice(1).toLowerCase()} Plan`}
+            severity={
+              planColors[upgradeInfo.requiredPlan] as
+                | 'success'
+                | 'secondary'
+                | 'warning'
+                | 'info'
+                | 'danger'
+                | 'contrast'
+            }
             icon='pi pi-star'
             className='font-medium'
           />
@@ -155,9 +163,9 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
                   <div className='flex-grow-1'>
                     <div className='text-sm text-600'>
-                      {upgradeInfo.benefits
+                      {upgradeInfo.upgradeBenefits
                         .slice(0, 3)
-                        .map((benefit, index) => (
+                        .map((benefit: string, index: number) => (
                           <div
                             key={index}
                             className='flex align-items-center gap-2 mb-1'
@@ -166,9 +174,10 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
                             <span>{benefit}</span>
                           </div>
                         ))}
-                      {upgradeInfo.benefits.length > 3 && (
+                      {upgradeInfo.upgradeBenefits.length > 3 && (
                         <div className='text-500 text-xs mt-1'>
-                          +{upgradeInfo.benefits.length - 3} more features
+                          +{upgradeInfo.upgradeBenefits.length - 3} more
+                          features
                         </div>
                       )}
                     </div>
@@ -217,7 +226,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
             onClick={onHide}
           />
           <Button
-            label={`Upgrade to ${upgradeInfo.planName}`}
+            label={`Upgrade to ${upgradeInfo.requiredPlan.charAt(0).toUpperCase() + upgradeInfo.requiredPlan.slice(1).toLowerCase()}`}
             icon='pi pi-arrow-right'
             iconPos='right'
             className='p-button-primary'
