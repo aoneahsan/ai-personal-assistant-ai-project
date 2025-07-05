@@ -472,7 +472,7 @@ export class RoleService {
     // 1. Not explicitly banned
     // 2. Account is not suspended
     // 3. Email is verified (if required)
-    return !user.isBanned && !user.isSuspended && user.isActive !== false;
+    return !user.isBanned && user.isActive !== false;
   }
 
   /**

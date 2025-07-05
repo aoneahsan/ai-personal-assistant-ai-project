@@ -15,7 +15,7 @@ export class SystemConfigHelper {
     try {
       const config = systemConfigService.getConfiguration();
       const featureFlag = config.featureFlags.find(
-        (flag) => flag.name === flagName && flag.isEnabled
+        (flag) => flag.name === flagName && flag.enabled === true
       );
 
       if (!featureFlag) {
@@ -326,6 +326,24 @@ export class SystemConfigHelper {
       };
     }
   }
+
+  // Check if feature flag is enabled for specific user
+  static isFeatureEnabledForUser(flagName: string, userId: string): boolean {
+    const config = systemConfigService.getConfiguration();
+    const flag = config.featureFlags.find(
+      (f) => f.name === flagName && f.enabled === true
+    );
+    if (!flag) return false;
+
+    // Check if user is in targeting conditions (if they exist)
+    if (flag.conditions && flag.conditions.length > 0) {
+      return flag.conditions.some(
+        (condition) => condition.userIds && condition.userIds.includes(userId)
+      );
+    }
+
+    return flag.enabled;
+  }
 }
 
 // Export utility functions for direct usage
@@ -339,6 +357,7 @@ export const {
   isSubscriptionActive,
   getAvailableSubscriptionPlans,
   getSystemStats,
+  isFeatureEnabledForUser,
 } = SystemConfigHelper;
 
 export default SystemConfigHelper;

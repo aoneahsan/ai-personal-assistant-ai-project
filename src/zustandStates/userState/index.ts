@@ -184,7 +184,7 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
   updateProfile: async (newProfile: UserProfileData) => {
     set({ profile: newProfile });
     // Persist to storage
-    await saveUserProfileData(newProfile);
+    await saveUserProfileData(newProfile as unknown as Record<string, unknown>);
   },
   updatePartialProfile: async (partialProfile: Partial<UserProfileData>) => {
     const currentProfile = get().profile;
@@ -206,19 +206,23 @@ export const useUserProfileZState = create<UserProfileZState>((set, get) => ({
       };
       set({ profile: updatedProfile });
       // Persist to storage
-      await saveUserProfileData(updatedProfile);
+      await saveUserProfileData(
+        updatedProfile as unknown as Record<string, unknown>
+      );
     }
   },
   resetProfile: async () => {
     set({ profile: defaultProfile });
     // Remove from storage
-    await saveUserProfileData(defaultProfile);
+    await saveUserProfileData(
+      defaultProfile as unknown as Record<string, unknown>
+    );
   },
   // Add new method to load profile from storage
   loadProfileFromStorage: async () => {
     const savedProfile = await getUserProfileData();
     if (savedProfile) {
-      set({ profile: savedProfile });
+      set({ profile: savedProfile as UserProfileData });
     }
   },
 }));
