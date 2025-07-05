@@ -138,12 +138,14 @@ Password: ${password}
 IMPORTANT: Please save these credentials securely and change the password after first login!`,
         life: 0, // Keep visible until manually dismissed
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating default admin:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: `Failed to create default admin user: ${error.message}`,
+        detail: `Failed to create default admin user: ${errorMessage}`,
         life: 5000,
       });
     } finally {
@@ -233,12 +235,14 @@ IMPORTANT: Please save these credentials securely and change the password after 
         role: UserRole.ADMIN,
       });
       setVisible(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating admin user:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: `Failed to create admin user: ${error.message}`,
+        detail: `Failed to create admin user: ${errorMessage}`,
         life: 5000,
       });
     } finally {

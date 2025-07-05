@@ -441,7 +441,6 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <div className='permissions-matrix'>
             {availableRoles.map((role) => {
               const permissions = roleService.getRolePermissions(role);
-              const config = roleService.getRoleConfig(role);
 
               return (
                 <Card

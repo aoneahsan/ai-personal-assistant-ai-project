@@ -30,7 +30,7 @@ interface AuditLogEntry {
   severity: 'low' | 'medium' | 'high' | 'critical';
   category: 'auth' | 'user' | 'role' | 'system' | 'data' | 'security';
   result: 'success' | 'failure' | 'warning';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const AuditLogs: React.FC = () => {
