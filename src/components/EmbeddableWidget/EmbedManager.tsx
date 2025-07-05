@@ -19,7 +19,7 @@ import { Panel } from 'primereact/panel';
 import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCopy, FaEdit, FaEye, FaPlus, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './EmbedManager.scss';
@@ -36,6 +36,14 @@ interface EmbedFormData {
   style: EmbedConfig['style'];
   behavior: EmbedConfig['behavior'];
 }
+
+type DateType =
+  | Date
+  | { toDate: () => Date }
+  | string
+  | number
+  | null
+  | undefined;
 
 const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
   const currentUser = useUserDataZState((state) => state.data);
@@ -80,13 +88,7 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
     { label: 'Top Left', value: 'top-left' },
   ];
 
-  useEffect(() => {
-    if (visible && currentUser) {
-      loadEmbeds();
-    }
-  }, [visible, currentUser]);
-
-  const loadEmbeds = async () => {
+  const loadEmbeds = useCallback(async () => {
     if (!currentUser) return;
 
     setLoading(true);
@@ -101,7 +103,13 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (visible && currentUser) {
+      loadEmbeds();
+    }
+  }, [visible, currentUser, loadEmbeds]);
 
   const handleCreateEmbed = async () => {
     if (!currentUser) return;
@@ -261,9 +269,16 @@ const EmbedManager: React.FC<EmbedManagerProps> = ({ visible, onHide }) => {
     });
   };
 
-  const formatDate = (date: any) => {
+  const formatDate = (date: DateType): string => {
     if (!date) return 'N/A';
-    const d = date.toDate ? date.toDate() : new Date(date);
+    let d: Date;
+    if (typeof date === 'object' && date !== null && 'toDate' in date) {
+      d = date.toDate();
+    } else if (date instanceof Date) {
+      d = date;
+    } else {
+      d = new Date(date);
+    }
     return d.toLocaleDateString();
   };
 

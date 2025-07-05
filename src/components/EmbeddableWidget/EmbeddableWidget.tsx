@@ -5,7 +5,7 @@ import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { ScrollPanel } from 'primereact/scrollpanel';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BsChatDots } from 'react-icons/bs';
 import { FaPaperPlane, FaTimes } from 'react-icons/fa';
 import { IoMdRemove } from 'react-icons/io';
@@ -20,7 +20,7 @@ interface EmbeddableWidgetProps {
     name?: string;
     email?: string;
     phone?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -61,32 +61,7 @@ const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // Initialize widget
-  useEffect(() => {
-    initializeWidget();
-
-    return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
-    };
-  }, [embedId]);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Handle new messages when widget is minimized
-  useEffect(() => {
-    if (isMinimized && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === 'owner') {
-        setHasUnreadMessages(true);
-      }
-    }
-  }, [messages, isMinimized]);
-
-  const initializeWidget = async () => {
+  const initializeWidget = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -170,7 +145,32 @@ const EmbeddableWidget: React.FC<EmbeddableWidgetProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [embedId, userId]);
+
+  useEffect(() => {
+    initializeWidget();
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, [initializeWidget]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Handle new messages when widget is minimized
+  useEffect(() => {
+    if (isMinimized && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'owner') {
+        setHasUnreadMessages(true);
+      }
+    }
+  }, [messages, isMinimized]);
 
   const sendWelcomeMessage = async (welcomeText: string) => {
     if (!conversationId || !config) return;
