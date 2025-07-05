@@ -12,6 +12,7 @@ import {
   useRoleCheck,
 } from '@/components/common/RoleGuard';
 import { Permission } from '@/types/user/roles';
+import { useSystemConfigStore } from '@/zustandStates/systemConfigState';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import { Badge } from 'primereact/badge';
@@ -34,6 +35,175 @@ interface AdminDashboardStats {
   memoryUsage: number;
   cpuUsage: number;
 }
+
+// System Configuration Component
+const SystemConfigurationTab: React.FC = () => {
+  const { config, isLoading, refreshConfig } = useSystemConfigStore();
+
+  const handleRefresh = async () => {
+    try {
+      await refreshConfig();
+    } catch (error) {
+      console.error('Failed to refresh configuration:', error);
+    }
+  };
+
+  return (
+    <div className='system-configuration'>
+      <div className='flex justify-content-between align-items-center mb-4'>
+        <div>
+          <h3 className='text-2xl font-bold text-900 mb-2'>
+            System Configuration
+          </h3>
+          <p className='text-600 m-0'>
+            Manage system-wide settings, roles, permissions, and configurations
+          </p>
+        </div>
+        <Button
+          icon='pi pi-refresh'
+          label='Refresh'
+          onClick={handleRefresh}
+          loading={isLoading}
+          outlined
+          size='small'
+        />
+      </div>
+
+      <div className='grid'>
+        <div className='col-12 md:col-6 lg:col-4'>
+          <Card
+            title='Roles'
+            className='mb-4'
+          >
+            <div className='text-center'>
+              <div className='text-3xl font-bold text-blue-600 mb-2'>
+                {config.roles.length}
+              </div>
+              <p className='text-600 m-0'>System roles configured</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className='col-12 md:col-6 lg:col-4'>
+          <Card
+            title='Permissions'
+            className='mb-4'
+          >
+            <div className='text-center'>
+              <div className='text-3xl font-bold text-green-600 mb-2'>
+                {config.permissions.length}
+              </div>
+              <p className='text-600 m-0'>Permissions available</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className='col-12 md:col-6 lg:col-4'>
+          <Card
+            title='Subscription Plans'
+            className='mb-4'
+          >
+            <div className='text-center'>
+              <div className='text-3xl font-bold text-orange-600 mb-2'>
+                {config.subscriptionPlans.length}
+              </div>
+              <p className='text-600 m-0'>Plans available</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className='col-12 md:col-6 lg:col-4'>
+          <Card
+            title='Feature Flags'
+            className='mb-4'
+          >
+            <div className='text-center'>
+              <div className='text-3xl font-bold text-purple-600 mb-2'>
+                {config.featureFlags.length}
+              </div>
+              <p className='text-600 m-0'>Feature flags configured</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className='col-12 md:col-6 lg:col-4'>
+          <Card
+            title='Settings'
+            className='mb-4'
+          >
+            <div className='text-center'>
+              <div className='text-3xl font-bold text-teal-600 mb-2'>
+                {config.settings.length}
+              </div>
+              <p className='text-600 m-0'>System settings</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className='col-12 md:col-6 lg:col-4'>
+          <Card
+            title='Version'
+            className='mb-4'
+          >
+            <div className='text-center'>
+              <div className='text-3xl font-bold text-indigo-600 mb-2'>
+                {config.version}
+              </div>
+              <p className='text-600 m-0'>Current version</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      <Card
+        title='Configuration Details'
+        className='mt-4'
+      >
+        <div className='grid'>
+          <div className='col-12 md:col-6'>
+            <h4>Active Roles</h4>
+            <ul className='list-none p-0 m-0'>
+              {config.roles
+                .filter((role) => role.isActive)
+                .map((role) => (
+                  <li
+                    key={role.id}
+                    className='flex align-items-center gap-2 mb-2'
+                  >
+                    <i className={`pi ${role.icon} text-blue-600`}></i>
+                    <span className='font-semibold'>{role.displayName}</span>
+                    <span className='text-sm text-600'>
+                      - {role.description}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+
+          <div className='col-12 md:col-6'>
+            <h4>Active Subscription Plans</h4>
+            <ul className='list-none p-0 m-0'>
+              {config.subscriptionPlans
+                .filter((plan) => plan.isActive)
+                .map((plan) => (
+                  <li
+                    key={plan.id}
+                    className='flex align-items-center gap-2 mb-2'
+                  >
+                    <i className='pi pi-credit-card text-orange-600'></i>
+                    <span className='font-semibold'>{plan.displayName}</span>
+                    <span className='text-sm text-600'>
+                      - ${plan.price}/{plan.interval}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -149,7 +319,7 @@ const AdminDashboard: React.FC = () => {
           <h2>Please log in to access the admin panel</h2>
           <Button
             label='Go to Login'
-            onClick={() => navigate('/auth/login')}
+            onClick={() => navigate({ to: '/auth' })}
             className='mt-3'
           />
         </div>
@@ -166,7 +336,7 @@ const AdminDashboard: React.FC = () => {
             <p>You don't have permission to access the admin panel.</p>
             <Button
               label='Go Back'
-              onClick={() => navigate('/')}
+              onClick={() => navigate({ to: '/' })}
               className='mt-3'
             />
           </div>
@@ -200,55 +370,53 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
+        {/* Stats Cards */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6'>
           <Card className='text-center'>
-            <div className='flex flex-col items-center'>
-              <i className='pi pi-users text-4xl text-blue-500 mb-2' />
-              <h3 className='text-2xl font-bold'>
-                {stats.totalUsers.toLocaleString()}
-              </h3>
-              <p className='text-gray-600'>Total Users</p>
+            <div className='text-2xl font-bold text-blue-600'>
+              {stats.totalUsers.toLocaleString()}
+            </div>
+            <div className='text-sm text-gray-600'>Total Users</div>
+            <div className='flex items-center justify-center mt-2'>
+              <Chip
+                label={`+${stats.newUsersToday} today`}
+                className='text-xs bg-blue-100 text-blue-800'
+              />
+            </div>
+          </Card>
+
+          <Card className='text-center'>
+            <div className='text-2xl font-bold text-green-600'>
+              {stats.activeUsers.toLocaleString()}
+            </div>
+            <div className='text-sm text-gray-600'>Active Users</div>
+            <div className='flex items-center justify-center mt-2'>
               <Badge
-                value={`+${stats.newUsersToday}`}
+                value={`${Math.round((stats.activeUsers / stats.totalUsers) * 100)}%`}
                 severity='success'
               />
             </div>
           </Card>
 
           <Card className='text-center'>
-            <div className='flex flex-col items-center'>
-              <i className='pi pi-user-edit text-4xl text-green-500 mb-2' />
-              <h3 className='text-2xl font-bold'>
-                {stats.activeUsers.toLocaleString()}
-              </h3>
-              <p className='text-gray-600'>Active Users</p>
+            <div className='text-2xl font-bold text-purple-600'>
+              {stats.totalMessages.toLocaleString()}
+            </div>
+            <div className='text-sm text-gray-600'>Total Messages</div>
+            <div className='flex items-center justify-center mt-2'>
               <Badge
-                value={`${((stats.activeUsers / stats.totalUsers) * 100).toFixed(1)}%`}
+                value='Active'
                 severity='info'
               />
             </div>
           </Card>
 
           <Card className='text-center'>
-            <div className='flex flex-col items-center'>
-              <i className='pi pi-comments text-4xl text-purple-500 mb-2' />
-              <h3 className='text-2xl font-bold'>
-                {stats.totalMessages.toLocaleString()}
-              </h3>
-              <p className='text-gray-600'>Total Messages</p>
-              <Badge
-                value='24h'
-                severity='warning'
-              />
+            <div className='text-2xl font-bold text-orange-600'>
+              {stats.uptime}
             </div>
-          </Card>
-
-          <Card className='text-center'>
-            <div className='flex flex-col items-center'>
-              <i className='pi pi-heart text-4xl text-red-500 mb-2' />
-              <h3 className='text-2xl font-bold'>{stats.uptime}</h3>
-              <p className='text-gray-600'>System Uptime</p>
+            <div className='text-sm text-gray-600'>Uptime</div>
+            <div className='flex items-center justify-center mt-2'>
               <Badge
                 value={stats.systemHealth}
                 severity={getHealthColor(stats.systemHealth)}
@@ -258,73 +426,90 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* System Health */}
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6'>
-          <Card title='System Performance'>
-            <div className='space-y-4'>
-              <div>
-                <div className='flex justify-between items-center mb-2'>
-                  <span>Memory Usage</span>
-                  <span className='font-bold'>{stats.memoryUsage}%</span>
-                </div>
-                <ProgressBar
-                  value={stats.memoryUsage}
-                  color={getUsageColor(stats.memoryUsage)}
-                />
+        <Card
+          title='System Health'
+          className='mb-6'
+        >
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div>
+              <div className='flex justify-between items-center mb-2'>
+                <span className='font-medium'>Memory Usage</span>
+                <span className='text-sm text-gray-600'>
+                  {stats.memoryUsage}%
+                </span>
               </div>
-
-              <div>
-                <div className='flex justify-between items-center mb-2'>
-                  <span>CPU Usage</span>
-                  <span className='font-bold'>{stats.cpuUsage}%</span>
-                </div>
-                <ProgressBar
-                  value={stats.cpuUsage}
-                  color={getUsageColor(stats.cpuUsage)}
-                />
+              <ProgressBar
+                value={stats.memoryUsage}
+                color={getUsageColor(stats.memoryUsage)}
+                className='h-2'
+              />
+            </div>
+            <div>
+              <div className='flex justify-between items-center mb-2'>
+                <span className='font-medium'>CPU Usage</span>
+                <span className='text-sm text-gray-600'>{stats.cpuUsage}%</span>
               </div>
+              <ProgressBar
+                value={stats.cpuUsage}
+                color={getUsageColor(stats.cpuUsage)}
+                className='h-2'
+              />
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          <Card title='Quick Actions'>
-            <div className='grid grid-cols-2 gap-3'>
-              {hasPermission(Permission.VIEW_USERS) && (
-                <Button
-                  icon='pi pi-users'
-                  label='Manage Users'
-                  onClick={() => setActiveTab(1)}
-                  className='p-button-outlined'
-                />
-              )}
+        {/* Quick Actions */}
+        <Card
+          title='Quick Actions'
+          className='mb-6'
+        >
+          <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4'>
+            {hasPermission(Permission.VIEW_USERS) && (
+              <Button
+                icon='pi pi-users'
+                label='Users'
+                onClick={() => setActiveTab(1)}
+                className='p-button-outlined'
+              />
+            )}
 
-              {hasPermission(Permission.MANAGE_SETTINGS) && (
-                <Button
-                  icon='pi pi-cog'
-                  label='Settings'
-                  onClick={() => setActiveTab(3)}
-                  className='p-button-outlined'
-                />
-              )}
+            {hasPermission(Permission.MANAGE_SETTINGS) && (
+              <Button
+                icon='pi pi-cog'
+                label='Settings'
+                onClick={() => setActiveTab(3)}
+                className='p-button-outlined'
+              />
+            )}
 
-              {hasPermission(Permission.VIEW_ANALYTICS) && (
-                <Button
-                  icon='pi pi-chart-bar'
-                  label='Analytics'
-                  onClick={() => setActiveTab(2)}
-                  className='p-button-outlined'
-                />
-              )}
+            {hasPermission(Permission.VIEW_ANALYTICS) && (
+              <Button
+                icon='pi pi-chart-bar'
+                label='Analytics'
+                onClick={() => setActiveTab(2)}
+                className='p-button-outlined'
+              />
+            )}
 
-              {hasPermission(Permission.VIEW_LOGS) && (
-                <Button
-                  icon='pi pi-file-o'
-                  label='Audit Logs'
-                  onClick={() => setActiveTab(4)}
-                  className='p-button-outlined'
-                />
-              )}
-            </div>
-          </Card>
-        </div>
+            {hasPermission(Permission.VIEW_LOGS) && (
+              <Button
+                icon='pi pi-file-o'
+                label='Audit Logs'
+                onClick={() => setActiveTab(4)}
+                className='p-button-outlined'
+              />
+            )}
+
+            {hasPermission(Permission.MANAGE_SETTINGS) && (
+              <Button
+                icon='pi pi-wrench'
+                label='System Config'
+                onClick={() => setActiveTab(9)}
+                className='p-button-outlined'
+              />
+            )}
+          </div>
+        </Card>
 
         {/* Analytics Chart */}
         <Card
@@ -507,6 +692,15 @@ const AdminDashboard: React.FC = () => {
                 leftIcon='pi pi-credit-card'
               >
                 <AdminSubscriptionManagement />
+              </TabPanel>
+            )}
+
+            {hasPermission(Permission.MANAGE_SETTINGS) && (
+              <TabPanel
+                header='System Configuration'
+                leftIcon='pi pi-wrench'
+              >
+                <SystemConfigurationTab />
               </TabPanel>
             )}
           </TabView>

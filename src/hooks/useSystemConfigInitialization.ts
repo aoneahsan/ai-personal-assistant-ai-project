@@ -1,0 +1,131 @@
+import { useEffect, useState } from 'react';
+import { useSystemConfigStore } from '../zustandStates/systemConfigState';
+import { useUserStore } from '../zustandStates/userState';
+
+interface SystemConfigInitializationState {
+  isInitializing: boolean;
+  initializationComplete: boolean;
+  error: string | null;
+  retryCount: number;
+}
+
+export const useSystemConfigInitialization = () => {
+  const [state, setState] = useState<SystemConfigInitializationState>({
+    isInitializing: false,
+    initializationComplete: false,
+    error: null,
+    retryCount: 0,
+  });
+
+  const {
+    initializeConfig,
+    loadConfig,
+    isInitialized,
+    isLoading,
+    error: configError,
+    subscribeToChanges,
+  } = useSystemConfigStore();
+
+  const { user } = useUserStore();
+
+  // Maximum retry attempts
+  const MAX_RETRIES = 3;
+
+  const initializeSystemConfig = async (userId?: string) => {
+    if (state.isInitializing || state.initializationComplete) {
+      return;
+    }
+
+    setState((prev) => ({ ...prev, isInitializing: true, error: null }));
+
+    try {
+      // If we have a user ID, initialize with that user as the creator
+      if (userId) {
+        await initializeConfig(userId);
+      } else {
+        // Otherwise, just load existing configurations
+        await loadConfig();
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isInitializing: false,
+        initializationComplete: true,
+        error: null,
+        retryCount: 0,
+      }));
+    } catch (error) {
+      console.error('Failed to initialize system configuration:', error);
+      setState((prev) => ({
+        ...prev,
+        isInitializing: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to initialize system configuration',
+      }));
+    }
+  };
+
+  const retryInitialization = async () => {
+    if (state.retryCount >= MAX_RETRIES) {
+      console.error(
+        'Max retries reached for system configuration initialization'
+      );
+      return;
+    }
+
+    setState((prev) => ({ ...prev, retryCount: prev.retryCount + 1 }));
+
+    // Wait a bit before retrying
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * (state.retryCount + 1))
+    );
+
+    await initializeSystemConfig(user?.id);
+  };
+
+  // Initialize on mount or when user changes
+  useEffect(() => {
+    // Only initialize if not already initialized
+    if (!isInitialized && !state.isInitializing) {
+      initializeSystemConfig(user?.id);
+    }
+  }, [user?.id, isInitialized]);
+
+  // Subscribe to real-time configuration changes
+  useEffect(() => {
+    if (state.initializationComplete) {
+      const unsubscribe = subscribeToChanges((config) => {
+        console.log('System configuration updated:', config);
+      });
+
+      return unsubscribe;
+    }
+  }, [state.initializationComplete, subscribeToChanges]);
+
+  // Handle configuration errors
+  useEffect(() => {
+    if (configError && !state.error) {
+      setState((prev) => ({ ...prev, error: configError }));
+    }
+  }, [configError]);
+
+  return {
+    // Initialization state
+    isInitializing: state.isInitializing || isLoading,
+    initializationComplete: state.initializationComplete && isInitialized,
+    error: state.error || configError,
+    retryCount: state.retryCount,
+    canRetry: state.retryCount < MAX_RETRIES,
+
+    // Actions
+    retryInitialization,
+    forceInitialization: () => initializeSystemConfig(user?.id),
+
+    // System config state
+    isSystemConfigReady: isInitialized && state.initializationComplete,
+  };
+};
+
+export default useSystemConfigInitialization;
