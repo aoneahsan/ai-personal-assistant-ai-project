@@ -32,7 +32,8 @@
     "deploy:production": "npm run build:production && firebase deploy --only hosting:production",
     "build:staging": "npm run deploy:rules && vite build --mode staging",
     "build:production": "npm run deploy:rules && vite build --mode production",
-    "gen:web:assets": "capacitor-assets generate --web"
+    "gen:web:assets": "capacitor-assets generate --web",
+    "deploy:all": "npm run build && npm run deploy:rules && firebase deploy --only hosting:production && firebase deploy --only hosting:staging"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.18.0",

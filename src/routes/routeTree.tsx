@@ -4,7 +4,12 @@ import DashboardLayout from '@/components/common/DashboardLayout';
 import AuthPage from '@/pages/Auth';
 import { LOADING_MESSAGES } from '@/utils/constants/generic/labels';
 import { ROUTES } from '@/utils/constants/routingConstants';
-import { createRoute, ErrorComponentProps } from '@tanstack/react-router';
+import {
+  createRoute,
+  ErrorComponentProps,
+  useNavigate,
+} from '@tanstack/react-router';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { lazy } from 'react';
 import { z } from 'zod';
 import rootRoute from './rootRoute';
@@ -228,12 +233,30 @@ const indexRoute = createRoute({
   component: () => (
     <ProtectedRoute redirectTo={ROUTES.AUTH}>
       <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
-        <DashboardOverview />
+        <DashboardRedirect />
       </React.Suspense>
     </ProtectedRoute>
   ),
   errorComponent: ErrorFallback,
 });
+
+// Dashboard redirect component
+const DashboardRedirect = () => {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    navigate({ to: ROUTES.DASHBOARD });
+  }, [navigate]);
+
+  return (
+    <div className='flex justify-center items-center h-screen'>
+      <div className='text-center'>
+        <ProgressSpinner />
+        <p className='mt-3'>Redirecting to dashboard...</p>
+      </div>
+    </div>
+  );
+};
 
 // Edit Profile route - protected route
 const editProfileRoute = createRoute({
