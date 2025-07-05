@@ -344,7 +344,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
 
       // In real app, this would update the user's subscription in the backend
       // and refresh the user data
-    } catch (error) {
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Upgrade Failed',
@@ -376,7 +376,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
       setShowCancelConfirm(false);
 
       // In real app, this would cancel the subscription in the backend
-    } catch (error) {
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Cancellation Failed',

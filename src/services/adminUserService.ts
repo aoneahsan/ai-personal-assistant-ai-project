@@ -152,13 +152,13 @@ export class AdminUserService {
         message: 'Admin user created successfully',
         user: userData,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error creating admin user:', error);
 
       return {
         success: false,
         message: 'Failed to create admin user',
-        error: error.message || 'Unknown error occurred',
+        error: (error as Error).message || 'Unknown error occurred',
       };
     }
   }
@@ -275,13 +275,13 @@ export class AdminUserService {
         message: 'Failed to promote user',
         error: roleResult.message,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error promoting user to admin:', error);
 
       return {
         success: false,
         message: 'Failed to promote user to admin',
-        error: error.message || 'Unknown error occurred',
+        error: (error as Error).message || 'Unknown error occurred',
       };
     }
   }
@@ -295,13 +295,13 @@ export class AdminUserService {
       // This is a Firebase limitation - there's no direct way to check if email exists
       await signInWithEmailAndPassword(auth, email, 'dummy-password');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If the error is about wrong password, user exists
-      if (error.code === 'auth/wrong-password') {
+      if ((error as { code?: string }).code === 'auth/wrong-password') {
         return true;
       }
       // If user not found, user doesn't exist
-      if (error.code === 'auth/user-not-found') {
+      if ((error as { code?: string }).code === 'auth/user-not-found') {
         return false;
       }
       // For other errors, assume user doesn't exist

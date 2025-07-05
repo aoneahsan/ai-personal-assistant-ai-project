@@ -65,7 +65,7 @@ export interface SystemFeatureFlag {
     userEmails?: string[];
     userIds?: string[];
   };
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -76,7 +76,7 @@ export interface SystemSettings {
   id: string;
   category: string;
   key: string;
-  value: any;
+  value: unknown;
   type: 'string' | 'number' | 'boolean' | 'object' | 'array';
   description: string;
   isPublic: boolean; // If true, visible to all users

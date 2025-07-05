@@ -42,13 +42,14 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
     stopRecording();
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const {
+    mediaBlobUrl,
     status,
     startRecording,
     stopRecording,
-    mediaBlobUrl,
-    previewStream,
     clearBlobUrl,
+    previewStream,
   } = useReactMediaRecorder({
     video: {
       facingMode,

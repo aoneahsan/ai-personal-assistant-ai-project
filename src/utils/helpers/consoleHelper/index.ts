@@ -1,6 +1,8 @@
-const isProduction = import.meta.env.PROD;
+/**
+ * Console Helper - Centralized logging with environment-based controls
+ */
 
-/* eslint-disable no-console */
+const isProduction = import.meta.env.PROD;
 
 export const consoleError = (message: string, ...data: unknown[]): void => {
   if (isProduction) return;
@@ -25,7 +27,7 @@ export const consoleDebug = (message: string, ...data: unknown[]): void => {
   console.debug(message, ...data);
 };
 
-export const consoleDir = (...data: any[]) => {
+export const consoleDir = (...data: unknown[]) => {
   if (isProduction) return;
   console.dir(...data);
 };

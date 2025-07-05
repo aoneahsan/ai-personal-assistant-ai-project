@@ -18,6 +18,7 @@ interface UserProfileRoleProps {
 export const UserProfileRole: React.FC<UserProfileRoleProps> = ({
   user,
   showPermissions = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   showRoleHistory = false,
   className = '',
 }) => {

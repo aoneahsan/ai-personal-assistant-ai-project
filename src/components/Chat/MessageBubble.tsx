@@ -61,6 +61,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 }) => {
   const contextMenuRef = useRef<ContextMenu>(null);
   const currentUser = useUserDataZState((state) => state.data);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isOwnMessage = message.sender === 'me';
   const extendedMessage = message as ExtendedMessage;
 
@@ -115,7 +116,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDuration = (seconds: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -236,10 +238,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return items;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleUpgradeClick = (feature: ChatFeatureFlag) => {
     onUpgrade?.(feature);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getAudioMenuItems = () => [
     {
       label: 'Read Transcript',
@@ -292,7 +296,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onContextMenu={handleContextMenu}
       style={{ position: 'relative' }}
     >
-      {(message as any).isDeleted ? (
+      {(message as ExtendedMessage).isDeleted ? (
         <p className='message-text deleted-message'>
           <i className='pi pi-trash mr-2'></i>
           This message was deleted
