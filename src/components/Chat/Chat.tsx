@@ -23,6 +23,13 @@ interface ChatProps {
   chatUser?: ChatUser;
   initialMessages?: Message[];
   onBack?: () => void;
+  searchParams?: {
+    chatId?: string;
+    userId?: string;
+    userEmail?: string;
+    userName?: string;
+    userAvatar?: string;
+  };
 }
 
 // Define interface for Capacitor file with actualUrl property
@@ -34,6 +41,7 @@ const Chat: React.FC<ChatProps> = ({
   chatUser,
   initialMessages = [],
   onBack,
+  searchParams,
 }) => {
   const currentUser = useUserDataZState((state) => state.data);
   const location = useLocation();
@@ -42,8 +50,12 @@ const Chat: React.FC<ChatProps> = ({
   // Initialize theme to ensure CSS variables are loaded
   useTheme();
 
-  // Get search params safely from URL
+  // Use searchParams from props or fall back to URL parsing
   const getSearchParams = () => {
+    if (searchParams) {
+      return searchParams;
+    }
+
     try {
       // Convert location.search to string to handle TanStack Router compatibility
       const searchString =

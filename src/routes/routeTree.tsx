@@ -226,7 +226,7 @@ const dashboardAccountRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
-// Root index route - redirect to dashboard
+// Root index route - redirect to dashboard only if explicitly visiting root
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
@@ -245,7 +245,8 @@ const DashboardRedirect = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    navigate({ to: ROUTES.DASHBOARD });
+    // Use TanStack Router's navigate to redirect to dashboard
+    navigate({ to: ROUTES.DASHBOARD, replace: true });
   }, [navigate]);
 
   return (

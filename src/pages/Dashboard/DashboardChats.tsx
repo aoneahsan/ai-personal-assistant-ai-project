@@ -28,8 +28,9 @@ import { Card } from 'primereact/card';
 import { Chip } from 'primereact/chip';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
+import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 const DashboardChats: React.FC = () => {
   const navigate = useNavigate();
@@ -55,6 +56,20 @@ const DashboardChats: React.FC = () => {
     entityName: 'chats',
     dependencies: [userData?.id],
   });
+
+  // Separate user chats from system chats
+  const { userConversations, systemConversations } = useMemo(() => {
+    if (!userChats) return { userConversations: [], systemConversations: [] };
+
+    const userConvs = userChats.filter(
+      (chat) => chat.type === 'user' || !chat.type
+    );
+    const systemConvs = userChats.filter(
+      (chat) => chat.type === 'system' || chat.type === 'support'
+    );
+
+    return { userConversations: userConvs, systemConversations: systemConvs };
+  }, [userChats]);
 
   // Handle user found from search
   const handleUserFound = (user: UserSearchResult) => {
@@ -217,57 +232,99 @@ const DashboardChats: React.FC = () => {
       );
     }
 
-    if (!userChats || userChats.length === 0) {
-      return (
-        <Card className='shadow-3 border-round-2xl'>
-          <EmptyState
-            icon={UI_ICONS.CHATS}
-            title={EMPTY_STATE_MESSAGES.NO_CONVERSATIONS}
-            description={EMPTY_STATE_MESSAGES.START_CONVERSATION}
-            actionLabel={BUTTON_LABELS.START_NEW_CHAT}
-            onAction={() => setShowUserSearch(true)}
-          />
-        </Card>
-      );
-    }
-
     return (
       <Card className='shadow-3 border-round-2xl'>
-        <DataTable
-          value={userChats}
-          paginator
-          rows={10}
-          rowHover
-          className='p-datatable-customers'
-          onRowClick={(e) => handleChatClick(e.data.id)}
-          style={{ cursor: 'pointer' }}
-        >
-          <Column
-            field='participant'
-            header='Participant'
-            body={renderParticipant}
-          />
-          <Column
-            field='lastMessage'
-            header='Last Message'
-            body={renderLastMessage}
-          />
-          <Column
-            field='unreadCount'
-            header='Unread'
-            body={renderUnreadCount}
-          />
-          <Column
-            field='status'
-            header='Status'
-            body={renderStatus}
-          />
-          <Column
-            field='type'
-            header='Type'
-            body={renderType}
-          />
-        </DataTable>
+        <TabView>
+          <TabPanel
+            header={`My Chats (${userConversations.length})`}
+            leftIcon='pi pi-comments mr-2'
+          >
+            {userConversations.length === 0 ? (
+              <EmptyState
+                icon={UI_ICONS.CHATS}
+                title={EMPTY_STATE_MESSAGES.NO_CONVERSATIONS}
+                description={EMPTY_STATE_MESSAGES.START_CONVERSATION}
+                actionLabel={BUTTON_LABELS.START_NEW_CHAT}
+                onAction={() => setShowUserSearch(true)}
+              />
+            ) : (
+              <DataTable
+                value={userConversations}
+                paginator
+                rows={10}
+                rowHover
+                className='p-datatable-customers'
+                onRowClick={(e) => handleChatClick(e.data.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <Column
+                  field='participant'
+                  header='Participant'
+                  body={renderParticipant}
+                />
+                <Column
+                  field='lastMessage'
+                  header='Last Message'
+                  body={renderLastMessage}
+                />
+                <Column
+                  field='unreadCount'
+                  header='Unread'
+                  body={renderUnreadCount}
+                />
+                <Column
+                  field='status'
+                  header='Status'
+                  body={renderStatus}
+                />
+              </DataTable>
+            )}
+          </TabPanel>
+
+          <TabPanel
+            header={`Support & System (${systemConversations.length})`}
+            leftIcon='pi pi-cog mr-2'
+          >
+            {systemConversations.length === 0 ? (
+              <EmptyState
+                icon={UI_ICONS.SETTINGS}
+                title='No System Chats'
+                description='System and support conversations will appear here'
+              />
+            ) : (
+              <DataTable
+                value={systemConversations}
+                paginator
+                rows={10}
+                rowHover
+                className='p-datatable-customers'
+                onRowClick={(e) => handleChatClick(e.data.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <Column
+                  field='participant'
+                  header='Participant'
+                  body={renderParticipant}
+                />
+                <Column
+                  field='lastMessage'
+                  header='Last Message'
+                  body={renderLastMessage}
+                />
+                <Column
+                  field='unreadCount'
+                  header='Unread'
+                  body={renderUnreadCount}
+                />
+                <Column
+                  field='type'
+                  header='Type'
+                  body={renderType}
+                />
+              </DataTable>
+            )}
+          </TabPanel>
+        </TabView>
       </Card>
     );
   };

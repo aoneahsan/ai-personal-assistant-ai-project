@@ -25,11 +25,23 @@ const ChatView: React.FC = () => {
       }
     : undefined;
 
+  // Create a modified search object to pass to Chat component
+  const chatSearchParams = search
+    ? {
+        chatId: chatId === 'new' ? undefined : chatId, // Don't pass 'new' as chatId
+        userId: search.userId,
+        userEmail: search.userEmail,
+        userName: search.userName,
+        userAvatar: search.userAvatar,
+      }
+    : undefined;
+
   return (
     <div className='dashboard-chat-view'>
       <Chat
         chatUser={chatUser}
         onBack={handleBack}
+        searchParams={chatSearchParams}
       />
     </div>
   );
