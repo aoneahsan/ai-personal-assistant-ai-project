@@ -150,7 +150,7 @@ const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.AUTH,
   component: () => (
-    <PublicRoute>
+    <PublicRoute requireGuest={true}>
       <AuthPage />
     </PublicRoute>
   ),
