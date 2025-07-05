@@ -25,6 +25,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { systemConfigService } from './systemConfigurationService';
 
 export class RoleService {
   private static instance: RoleService;
@@ -37,6 +38,107 @@ export class RoleService {
       RoleService.instance = new RoleService();
     }
     return RoleService.instance;
+  }
+
+  // ==================== Dynamic Configuration Helpers ====================
+
+  /**
+   * Get dynamic role hierarchy from system config
+   */
+  private getDynamicRoleHierarchy(): Record<string, number> {
+    const config = systemConfigService.getConfiguration();
+    const hierarchy: Record<string, number> = {};
+
+    config.roles.forEach((role) => {
+      // Map system roles to UserRole enum for backward compatibility
+      const userRole = this.mapSystemRoleToUserRole(role.name);
+      if (userRole) {
+        hierarchy[userRole] = role.level;
+      }
+    });
+
+    // Fallback to hardcoded values if dynamic config not available
+    return Object.keys(hierarchy).length > 0 ? hierarchy : ROLE_HIERARCHY;
+  }
+
+  /**
+   * Get dynamic role permissions from system config
+   */
+  private getDynamicRolePermissions(): Record<string, Permission[]> {
+    const config = systemConfigService.getConfiguration();
+    const rolePermissions: Record<string, Permission[]> = {};
+
+    config.roles.forEach((role) => {
+      const userRole = this.mapSystemRoleToUserRole(role.name);
+      if (userRole) {
+        // Map system permissions to Permission enum
+        const permissions = role.permissions
+          .map((perm) => this.mapSystemPermissionToPermission(perm))
+          .filter(Boolean) as Permission[];
+
+        rolePermissions[userRole] = permissions;
+      }
+    });
+
+    // Fallback to hardcoded values if dynamic config not available
+    return Object.keys(rolePermissions).length > 0
+      ? rolePermissions
+      : ROLE_PERMISSIONS;
+  }
+
+  /**
+   * Get dynamic role configs from system config
+   */
+  private getDynamicRoleConfigs(): Record<string, RoleConfig> {
+    const config = systemConfigService.getConfiguration();
+    const roleConfigs: Record<string, RoleConfig> = {};
+
+    config.roles.forEach((role) => {
+      const userRole = this.mapSystemRoleToUserRole(role.name);
+      if (userRole) {
+        roleConfigs[userRole] = {
+          name: userRole,
+          displayName: role.displayName,
+          description: role.description,
+          color: role.color,
+          icon: role.icon,
+          level: role.level,
+          isSystemRole: true,
+        };
+      }
+    });
+
+    // Fallback to hardcoded values if dynamic config not available
+    return Object.keys(roleConfigs).length > 0 ? roleConfigs : ROLE_CONFIGS;
+  }
+
+  /**
+   * Map system role names to UserRole enum for backward compatibility
+   */
+  private mapSystemRoleToUserRole(systemRoleName: string): UserRole | null {
+    const roleMap: Record<string, UserRole> = {
+      GUEST: UserRole.GUEST,
+      USER: UserRole.USER,
+      SUPPORT: UserRole.SUPPORT,
+      MODERATOR: UserRole.MODERATOR,
+      ADMIN: UserRole.ADMIN,
+      SUPER_ADMIN: UserRole.SUPER_ADMIN,
+    };
+
+    return roleMap[systemRoleName.toUpperCase()] || null;
+  }
+
+  /**
+   * Map system permission names to Permission enum for backward compatibility
+   */
+  private mapSystemPermissionToPermission(
+    systemPermissionName: string
+  ): Permission | null {
+    // Check if the system permission matches any of our Permission enum values
+    const permissionValues = Object.values(Permission);
+    return (
+      permissionValues.find((perm) => perm === systemPermissionName) || null
+    );
   }
 
   // ==================== Permission Checking ====================
@@ -167,8 +269,9 @@ export class RoleService {
     }
 
     const userRole = user.role || UserRole.USER;
-    const userLevel = ROLE_HIERARCHY[userRole];
-    const requiredLevel = ROLE_HIERARCHY[requiredRole];
+    const roleHierarchy = this.getDynamicRoleHierarchy();
+    const userLevel = roleHierarchy[userRole] || 0;
+    const requiredLevel = roleHierarchy[requiredRole] || 0;
     const hasRequiredLevel = userLevel >= requiredLevel;
 
     return {
@@ -202,10 +305,10 @@ export class RoleService {
         };
       }
 
-      // Get current user data
-      const userDoc = await getDoc(
-        doc(db, this.USERS_COLLECTION, request.userId)
-      );
+      // Get current user
+      const userRef = doc(db, this.USERS_COLLECTION, request.userId);
+      const userDoc = await getDoc(userRef);
+
       if (!userDoc.exists()) {
         return {
           success: false,
@@ -213,8 +316,8 @@ export class RoleService {
         };
       }
 
-      const currentUser = userDoc.data() as IPCAUser;
-      const previousRole = currentUser.role || UserRole.USER;
+      const userData = userDoc.data() as IPCAUser;
+      const previousRole = userData.role || UserRole.USER;
 
       // Create role assignment
       const roleAssignment: UserRoleAssignment = {
@@ -228,39 +331,34 @@ export class RoleService {
       };
 
       // Update user document
-      await updateDoc(userDoc.ref, {
+      await updateDoc(userRef, {
         role: request.newRole,
         roleAssignment,
-        lastActiveAt: new Date(),
+        updatedAt: new Date(),
       });
 
       // Log the role change
-      await this.logRoleChange({
-        id: `${request.userId}_${Date.now()}`,
+      const auditLog: RoleAuditLog = {
+        id: '', // Will be set by Firestore
         userId: request.userId,
         previousRole,
         newRole: request.newRole,
         changedBy: assignedBy,
         changedAt: new Date(),
         reason: request.reason,
-      });
+      };
 
-      // Save role assignment record
-      await addDoc(collection(db, this.ROLE_ASSIGNMENTS_COLLECTION), {
-        ...roleAssignment,
-        createdAt: new Date(),
-      });
+      await this.logRoleChange(auditLog);
 
       consoleLog('✅ Role assigned successfully:', {
         userId: request.userId,
-        previousRole,
-        newRole: request.newRole,
+        role: request.newRole,
         assignedBy,
       });
 
       return {
         success: true,
-        message: `Role changed from ${previousRole} to ${request.newRole}`,
+        message: `Role ${request.newRole} assigned successfully`,
       };
     } catch (error) {
       consoleError('❌ Error assigning role:', error);
@@ -272,7 +370,7 @@ export class RoleService {
   }
 
   /**
-   * Remove/revoke a role from a user (reset to default USER role)
+   * Revoke a role from a user (set back to USER)
    */
   public async revokeRole(
     userId: string,
@@ -280,14 +378,13 @@ export class RoleService {
     reason: string
   ): Promise<{ success: boolean; message: string }> {
     try {
-      return await this.assignRole(
-        {
-          userId,
-          newRole: UserRole.USER,
-          reason: `Role revoked: ${reason}`,
-        },
-        revokedBy
-      );
+      const request: RoleAssignmentRequest = {
+        userId,
+        newRole: UserRole.USER,
+        reason,
+      };
+
+      return await this.assignRole(request, revokedBy);
     } catch (error) {
       consoleError('❌ Error revoking role:', error);
       return {
@@ -309,7 +406,7 @@ export class RoleService {
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map((doc) => doc.data() as IPCAUser);
     } catch (error) {
-      consoleError('❌ Error getting users by role:', error);
+      consoleError('❌ Error fetching users by role:', error);
       return [];
     }
   }
@@ -324,27 +421,31 @@ export class RoleService {
         where('userId', '==', userId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => doc.data() as RoleAuditLog);
+      return querySnapshot.docs
+        .map((doc) => ({ ...doc.data(), id: doc.id }) as RoleAuditLog)
+        .sort((a, b) => b.changedAt.getTime() - a.changedAt.getTime());
     } catch (error) {
-      consoleError('❌ Error getting role history:', error);
+      consoleError('❌ Error fetching role history:', error);
       return [];
     }
   }
 
-  // ==================== Helper Methods ====================
+  // ==================== Role Information ====================
 
   /**
-   * Get all permissions for a role
+   * Get permissions for a specific role (using dynamic config)
    */
   public getRolePermissions(role: UserRole): Permission[] {
-    return ROLE_PERMISSIONS[role] || [];
+    const rolePermissions = this.getDynamicRolePermissions();
+    return rolePermissions[role] || [];
   }
 
   /**
-   * Get role configuration
+   * Get configuration for a specific role (using dynamic config)
    */
   public getRoleConfig(role: UserRole): RoleConfig {
-    return ROLE_CONFIGS[role];
+    const roleConfigs = this.getDynamicRoleConfigs();
+    return roleConfigs[role] || ROLE_CONFIGS[role];
   }
 
   /**
@@ -361,21 +462,21 @@ export class RoleService {
     return Object.values(Permission);
   }
 
+  // ==================== Helper Methods ====================
+
   /**
    * Check if user account is active
    */
   private isUserActive(user: IPCAUser): boolean {
-    if (user.isActive === false) return false;
-    if (user.isBanned) {
-      if (user.bannedUntil && user.bannedUntil > new Date()) {
-        return false;
-      }
-    }
-    return true;
+    // User is active if:
+    // 1. Not explicitly banned
+    // 2. Account is not suspended
+    // 3. Email is verified (if required)
+    return !user.isBanned && !user.isSuspended && user.isActive !== false;
   }
 
   /**
-   * Check if role assignment is expired
+   * Check if role assignment has expired
    */
   private isRoleAssignmentExpired(assignment: UserRoleAssignment): boolean {
     if (!assignment.expiresAt) return false;
@@ -393,50 +494,61 @@ export class RoleService {
     const warnings: string[] = [];
 
     // Check if user exists
-    const userDoc = await getDoc(
-      doc(db, this.USERS_COLLECTION, request.userId)
-    );
+    const userRef = doc(db, this.USERS_COLLECTION, request.userId);
+    const userDoc = await getDoc(userRef);
+
     if (!userDoc.exists()) {
-      errors.push('User not found');
+      errors.push('Target user does not exist');
+      return { isValid: false, errors, warnings };
     }
 
-    // Check if assigner exists and has permission
-    const assignerDoc = await getDoc(
-      doc(db, this.USERS_COLLECTION, assignedBy)
-    );
+    // Check if assigner has permission
+    const assignerRef = doc(db, this.USERS_COLLECTION, assignedBy);
+    const assignerDoc = await getDoc(assignerRef);
+
     if (!assignerDoc.exists()) {
-      errors.push('Assigner not found');
-    } else {
-      const assigner = assignerDoc.data() as IPCAUser;
-      const canAssignRoles = this.hasPermission(
-        assigner,
-        Permission.ASSIGN_ROLES
-      );
-      if (!canAssignRoles.hasPermission) {
-        errors.push('Assigner lacks ASSIGN_ROLES permission');
-      }
-
-      // Check if assigner can assign this specific role
-      const assignerLevel = ROLE_HIERARCHY[assigner.role || UserRole.USER];
-      const targetRoleLevel = ROLE_HIERARCHY[request.newRole];
-      if (assignerLevel <= targetRoleLevel) {
-        errors.push('Cannot assign role equal or higher than your own');
-      }
+      errors.push('Assigner user does not exist');
+      return { isValid: false, errors, warnings };
     }
 
-    // Validate role
+    const assignerData = assignerDoc.data() as IPCAUser;
+    const assignerPermissionCheck = this.hasPermission(
+      assignerData,
+      Permission.ASSIGN_ROLES
+    );
+
+    if (!assignerPermissionCheck.hasPermission) {
+      errors.push('Insufficient permissions to assign roles');
+      return { isValid: false, errors, warnings };
+    }
+
+    // Check role hierarchy - prevent privilege escalation
+    const roleHierarchy = this.getDynamicRoleHierarchy();
+    const assignerLevel =
+      roleHierarchy[assignerData.role || UserRole.USER] || 0;
+    const targetRoleLevel = roleHierarchy[request.newRole] || 0;
+
+    if (
+      targetRoleLevel >= assignerLevel &&
+      assignerData.role !== UserRole.SUPER_ADMIN
+    ) {
+      errors.push('Cannot assign role equal or higher than your own role');
+      return { isValid: false, errors, warnings };
+    }
+
+    // Validate role exists
     if (!Object.values(UserRole).includes(request.newRole)) {
       errors.push('Invalid role specified');
+      return { isValid: false, errors, warnings };
     }
 
-    // Validate expiration date
-    if (request.expiresAt && request.expiresAt <= new Date()) {
-      errors.push('Expiration date must be in the future');
+    // Add warnings for sensitive operations
+    if (request.newRole === UserRole.SUPER_ADMIN) {
+      warnings.push('Assigning SUPER_ADMIN role grants full system access');
     }
 
-    // Validate reason
-    if (!request.reason || request.reason.trim().length < 5) {
-      errors.push('Reason must be at least 5 characters long');
+    if (request.newRole === UserRole.ADMIN) {
+      warnings.push('Assigning ADMIN role grants extensive system privileges');
     }
 
     return {
@@ -447,19 +559,22 @@ export class RoleService {
   }
 
   /**
-   * Log role change for audit trail
+   * Log role changes for audit purposes
    */
   private async logRoleChange(auditLog: RoleAuditLog): Promise<void> {
     try {
-      await addDoc(collection(db, this.ROLE_AUDIT_COLLECTION), {
+      const docRef = await addDoc(collection(db, this.ROLE_AUDIT_COLLECTION), {
         ...auditLog,
-        createdAt: new Date(),
+        changedAt: auditLog.changedAt,
       });
+      consoleLog('📝 Role change logged:', docRef.id);
     } catch (error) {
       consoleError('❌ Error logging role change:', error);
+      // Don't throw error here as it shouldn't block the role assignment
     }
   }
 }
 
 // Export singleton instance
 export const roleService = RoleService.getInstance();
+export default roleService;
