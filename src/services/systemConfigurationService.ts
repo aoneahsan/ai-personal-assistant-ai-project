@@ -869,7 +869,7 @@ class SystemConfigurationService {
     return true;
   }
 
-  getSettingValue(key: string, category?: string): any {
+  getSettingValue(key: string, category?: string): unknown {
     const setting = this.cache.settings.find(
       (s) => s.key === key && (!category || s.category === category)
     );

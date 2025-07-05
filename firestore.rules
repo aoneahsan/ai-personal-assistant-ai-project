@@ -112,47 +112,47 @@ service cloud.firestore {
       // For now, we'll keep it simple and only allow creation
     }
 
-    // System Configuration Collections - Dynamic system management
-    // System Roles - read access for authenticated users, write access for admin users
+    // System Configuration Collections - Public read access, admin write access
+    // System Roles - public read access for app functionality, admin write access
     match /system_roles/{roleId} {
-      // Allow authenticated users to read system roles (needed for app functionality)
-      allow read: if request.auth != null;
+      // Allow everyone to read system roles (needed for app functionality)
+      allow read: if true;
       
       // Allow admin users to manage roles (check if user has admin role)
       allow write: if request.auth != null && isAdminUser();
     }
     
-    // System Permissions - read access for authenticated users, write access for admin users  
+    // System Permissions - public read access for app functionality, admin write access
     match /system_permissions/{permissionId} {
-      // Allow authenticated users to read system permissions
-      allow read: if request.auth != null;
+      // Allow everyone to read system permissions (needed for app functionality)
+      allow read: if true;
       
       // Allow admin users to manage permissions
       allow write: if request.auth != null && isAdminUser();
     }
     
-    // System Subscription Plans - read access for authenticated users, write access for admin users
+    // System Subscription Plans - public read access for pricing pages, admin write access
     match /system_subscription_plans/{planId} {
-      // Allow authenticated users to read subscription plans (needed for app functionality)
-      allow read: if request.auth != null;
+      // Allow everyone to read subscription plans (needed for public pricing pages)
+      allow read: if true;
       
       // Allow admin users to manage subscription plans
       allow write: if request.auth != null && isAdminUser();
     }
     
-    // System Feature Flags - read access for authenticated users, write access for admin users
+    // System Feature Flags - public read access for app functionality, admin write access
     match /system_feature_flags/{flagId} {
-      // Allow authenticated users to read feature flags (needed for app functionality)
-      allow read: if request.auth != null;
+      // Allow everyone to read feature flags (needed for app functionality)
+      allow read: if true;
       
       // Allow admin users to manage feature flags
       allow write: if request.auth != null && isAdminUser();
     }
     
-    // System Settings - read access for authenticated users, write access for admin users
+    // System Settings - public read access for app functionality, admin write access
     match /system_settings/{settingId} {
-      // Allow authenticated users to read system settings (needed for app functionality)
-      allow read: if request.auth != null;
+      // Allow everyone to read system settings (needed for app functionality)
+      allow read: if true;
       
       // Allow admin users to manage system settings
       allow write: if request.auth != null && isAdminUser();
