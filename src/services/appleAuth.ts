@@ -33,68 +33,64 @@ export const appleAuthService: AppleAuthService = {
 
   // Sign in with Apple
   signIn: async (): Promise<UserCredential> => {
+    const platform = Capacitor.getPlatform();
+    consoleLog(`Attempting Apple Sign In on platform: ${platform}`);
+
+    // Check if Apple Sign In is available
+    if (!appleAuthService.isAvailable()) {
+      consoleError(`Apple Sign In not available on ${platform}`);
+      throw new Error(
+        `Apple Sign In is only available on iOS devices. Current platform: ${platform}`
+      );
+    }
+
+    // Generate nonce for security
+    const rawNonce = generateNonce();
+    const hashedNonce = await hashNonce(rawNonce);
+
+    // The nonce is required for Apple Sign In
+    if (!rawNonce) {
+      throw new Error('Failed to generate nonce for Apple Sign In');
+    }
+
+    consoleLog('Generating secure nonce for Apple Sign In');
+
     try {
-      const platform = Capacitor.getPlatform();
-      consoleLog(`Attempting Apple Sign In on platform: ${platform}`);
+      consoleLog('Initiating Apple Sign In with Capacitor plugin');
 
-      // Check if Apple Sign In is available
-      if (!appleAuthService.isAvailable()) {
-        consoleError(`Apple Sign In not available on ${platform}`);
-        throw new Error(
-          `Apple Sign In is only available on iOS devices. Current platform: ${platform}`
-        );
+      const result = await SignInWithApple.authorize({
+        clientId: import.meta.env.VITE_FIREBASE_PROJECT_ID + '.app',
+        redirectURI: `https://${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com/__/auth/handler`,
+        scopes: 'email name',
+        state: hashedNonce,
+        nonce: rawNonce,
+      });
+
+      consoleLog('Apple Sign In response received');
+
+      if (!result.response.identityToken) {
+        consoleError('No identity token received from Apple');
+        throw new Error('No identity token received from Apple Sign In');
       }
 
-      // Generate nonce for security
-      const rawNonce = generateNonce();
-      const hashedNonce = await hashNonce(rawNonce);
+      consoleLog('Creating Firebase credential with Apple identity token');
 
-      // The nonce is required for Apple Sign In
-      if (!rawNonce) {
-        throw new Error('Failed to generate nonce for Apple Sign In');
-      }
+      // Create the Apple credential
+      const provider = new OAuthProvider('apple.com');
+      const credential = provider.credential({
+        idToken: result.response.identityToken,
+        rawNonce,
+      });
 
-      consoleLog('Generating secure nonce for Apple Sign In');
+      consoleLog('Signing in to Firebase with Apple credential');
 
-      try {
-        consoleLog('Initiating Apple Sign In with Capacitor plugin');
+      // Sign in to Firebase with the Apple credential
+      const userCredential = await signInWithCredential(auth, credential);
+      consoleLog('Apple Sign In completed successfully');
 
-        const result = await SignInWithApple.authorize({
-          clientId: import.meta.env.VITE_FIREBASE_PROJECT_ID + '.app',
-          redirectURI: `https://${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com/__/auth/handler`,
-          scopes: 'email name',
-          state: hashedNonce,
-          nonce: rawNonce,
-        });
-
-        consoleLog('Apple Sign In response received');
-
-        if (!result.response.identityToken) {
-          consoleError('No identity token received from Apple');
-          throw new Error('No identity token received from Apple Sign In');
-        }
-
-        consoleLog('Creating Firebase credential with Apple identity token');
-
-        // Create the Apple credential
-        const provider = new OAuthProvider('apple.com');
-        const credential = provider.credential({
-          idToken: result.response.identityToken,
-          rawNonce,
-        });
-
-        consoleLog('Signing in to Firebase with Apple credential');
-
-        // Sign in to Firebase with the Apple credential
-        const userCredential = await signInWithCredential(auth, credential);
-        consoleLog('Apple Sign In completed successfully');
-
-        return userCredential;
-      } catch (error) {
-        consoleError('Error signing in with Apple:', error);
-        throw error;
-      }
+      return userCredential;
     } catch (error) {
+      consoleError('Error signing in with Apple:', error);
       throw error;
     }
   },

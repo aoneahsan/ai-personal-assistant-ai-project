@@ -25,23 +25,30 @@ export const USER_SETTINGS_KEYS = {
   APP_PREFERENCES: 'app_preferences',
 };
 
-export const setLocalStorageUser = async (data: any) => {
+export const setLocalStorageUser = async (
+  data: string | object | number | boolean
+) => {
   try {
     await STORAGE.SET(USER_LOCALSTORAGE_KEY, aesEncrypt(data));
-  } catch (_) {}
+  } catch {
+    // Silently fail if storage fails
+  }
 };
 
 export const getLocalStorageUser = async () => {
   try {
-    const user = (await STORAGE.GET(USER_LOCALSTORAGE_KEY)) || {};
+    const user = await STORAGE.GET(USER_LOCALSTORAGE_KEY);
+    if (!user) return null;
     return aesDecrypt(user);
-  } catch (_) {
+  } catch {
     return null;
   }
 };
 
 // User Profile Data Storage
-export const saveUserProfileData = async (data: any): Promise<void> => {
+export const saveUserProfileData = async (
+  data: Record<string, unknown>
+): Promise<void> => {
   try {
     await STORAGE.SET(USER_SETTINGS_KEYS.USER_PROFILE, JSON.stringify(data));
   } catch (error) {
@@ -49,7 +56,10 @@ export const saveUserProfileData = async (data: any): Promise<void> => {
   }
 };
 
-export const getUserProfileData = async (): Promise<any | null> => {
+export const getUserProfileData = async (): Promise<Record<
+  string,
+  unknown
+> | null> => {
   try {
     const profileData = await STORAGE.GET(USER_SETTINGS_KEYS.USER_PROFILE);
     return profileData ? JSON.parse(profileData) : null;
@@ -68,7 +78,7 @@ export const saveThemeSettings = async (themeName: string): Promise<void> => {
   }
 };
 
-export const getThemeSettings = async (): Promise<any | null> => {
+export const getThemeSettings = async (): Promise<string | null> => {
   try {
     return await STORAGE.GET(USER_SETTINGS_KEYS.THEME_SETTINGS);
   } catch (error) {
@@ -78,7 +88,9 @@ export const getThemeSettings = async (): Promise<any | null> => {
 };
 
 // App Preferences Storage
-export const saveAppPreferences = async (preferences: any): Promise<void> => {
+export const saveAppPreferences = async (
+  preferences: Record<string, unknown>
+): Promise<void> => {
   try {
     await STORAGE.SET(
       USER_SETTINGS_KEYS.APP_PREFERENCES,
@@ -89,7 +101,10 @@ export const saveAppPreferences = async (preferences: any): Promise<void> => {
   }
 };
 
-export const getAppPreferences = async (): Promise<any | null> => {
+export const getAppPreferences = async (): Promise<Record<
+  string,
+  unknown
+> | null> => {
   try {
     const preferences = await STORAGE.GET(USER_SETTINGS_KEYS.APP_PREFERENCES);
     return preferences ? JSON.parse(preferences) : null;
@@ -177,7 +192,7 @@ export const getLocalStorageSize = (): number => {
   try {
     let total = 0;
     for (const key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
         total += localStorage[key].length + key.length;
       }
     }

@@ -3,6 +3,13 @@ import { useUserDataZState } from '@/zustandStates/userState';
 import { useEffect } from 'react';
 import { isFunction } from 'zaions-tool-kit';
 
+// Type definition for ProductFruits global object
+interface ProductFruitsWindow extends Window {
+  $productFruits?: {
+    push: (data: [string, string, string, { username: string }]) => void;
+  };
+}
+
 const ProductFruitsHOC: React.FC = () => {
   const userData = useUserDataZState((state) => state.data);
   const userId = userData?.id;
@@ -15,14 +22,15 @@ const ProductFruitsHOC: React.FC = () => {
       let productFruitsIsInitialized = false;
 
       intervalRef = setInterval(() => {
+        const productFruitsWindow = window as ProductFruitsWindow;
         if (
           userId &&
           !productFruitsIsInitialized &&
           window &&
-          (window as any)?.$productFruits &&
-          isFunction((window as any)?.$productFruits?.push)
+          productFruitsWindow.$productFruits &&
+          isFunction(productFruitsWindow.$productFruits.push)
         ) {
-          (window as any)?.$productFruits?.push([
+          productFruitsWindow.$productFruits.push([
             'init',
             ENV_KEYS.productFruitsAppId,
             'en',
@@ -34,7 +42,9 @@ const ProductFruitsHOC: React.FC = () => {
           clearInterval(intervalRef);
         }
       }, 2000);
-    } catch (_) {}
+    } catch {
+      // Silently handle initialization errors
+    }
 
     return () => {
       if (intervalRef) {

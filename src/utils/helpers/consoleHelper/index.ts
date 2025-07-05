@@ -8,7 +8,6 @@ export const consoleError = (message: string, ...data: unknown[]): void => {
 };
 
 export const consoleLog = (message: string, ...data: unknown[]): void => {
-  if (isProduction) return;
   console.log(message, ...data);
 };
 
@@ -29,4 +28,9 @@ export const consoleDebug = (message: string, ...data: unknown[]): void => {
 export const consoleDir = (...data: any[]) => {
   if (isProduction) return;
   console.dir(...data);
+};
+
+// Console log with object support
+export const consoleLogObject = (obj: Record<string, unknown>): void => {
+  console.log(JSON.stringify(obj, null, 2));
 };

@@ -87,7 +87,7 @@ export const getCountryInfo = async (): Promise<ILocationInfo | null> => {
   try {
     const data = await getUserCurrentLocationInfo();
     return data ?? null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
