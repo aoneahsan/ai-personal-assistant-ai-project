@@ -114,6 +114,77 @@ service cloud.firestore {
       // Admins or system can read all feedback (you can add admin role check here)
       // For now, we'll keep it simple and only allow creation
     }
+
+    // System Configuration Collections - Dynamic system management
+    // System Roles - read access for authenticated users, write access for admin users
+    match /system_roles/{roleId} {
+      // Allow authenticated users to read system roles (needed for app functionality)
+      allow read: if request.auth != null;
+      
+      // Allow admin users to manage roles (check if user has admin role)
+      allow write: if request.auth != null && isAdminUser();
+    }
+    
+    // System Permissions - read access for authenticated users, write access for admin users  
+    match /system_permissions/{permissionId} {
+      // Allow authenticated users to read system permissions
+      allow read: if request.auth != null;
+      
+      // Allow admin users to manage permissions
+      allow write: if request.auth != null && isAdminUser();
+    }
+    
+    // System Subscription Plans - read access for all, write access for admin users
+    match /system_subscription_plans/{planId} {
+      // Allow everyone to read subscription plans (needed for public pricing pages)
+      allow read: if true;
+      
+      // Allow admin users to manage subscription plans
+      allow write: if request.auth != null && isAdminUser();
+    }
+    
+    // System Feature Flags - read access for authenticated users, write access for admin users
+    match /system_feature_flags/{flagId} {
+      // Allow authenticated users to read feature flags (needed for app functionality)
+      allow read: if request.auth != null;
+      
+      // Allow admin users to manage feature flags
+      allow write: if request.auth != null && isAdminUser();
+    }
+    
+    // System Settings - read access based on publicity, write access for admin users
+    match /system_settings/{settingId} {
+      // Allow reading public settings by anyone, private settings only by authenticated users
+      allow read: if resource.data.isPublic == true || request.auth != null;
+      
+      // Allow admin users to manage system settings
+      allow write: if request.auth != null && isAdminUser();
+    }
+
+    // Subscription Requests - users can manage their own requests, admins can manage all
+    match /pca_subscription_requests/{requestId} {
+      // Allow users to read their own subscription requests
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isAdminUser());
+      
+      // Allow users to create their own subscription requests
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Allow users to update their own requests (cancel), admins can update any
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isAdminUser());
+      
+      // Only admins can delete requests
+      allow delete: if request.auth != null && isAdminUser();
+    }
+
+    // Helper function to check if user is an admin
+    function isAdminUser() {
+      // Check if user has admin role in their user document
+      // This is a simplified check - you might want to make this more robust
+      return get(/databases/$(database)/documents/pca_users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    }
     
     // Deny all other access
     match /{document=**} {
