@@ -627,7 +627,7 @@ export const UserManagement: React.FC = () => {
             <label className='block mb-2'>Ban Until (Optional)</label>
             <Calendar
               value={banUntil}
-              onChange={(e) => setBanUntil(e.value)}
+              onChange={(e) => setBanUntil(e.value || null)}
               showTime
               className='w-full'
             />

@@ -4,11 +4,12 @@ import { Card } from 'primereact/card';
 import { TabPanel, TabView } from 'primereact/tabview';
 import React, { useState } from 'react';
 import { useSystemConfigStore } from '../../../zustandStates/systemConfigState';
-import SystemFeatureFlagManagement from './SystemFeatureFlagManagement';
-import SystemPermissionManagement from './SystemPermissionManagement';
-import SystemRoleManagement from './SystemRoleManagement';
-import SystemSettingsManagement from './SystemSettingsManagement';
-import SystemSubscriptionPlanManagement from './SystemSubscriptionPlanManagement';
+// TODO: Create these components
+// import SystemFeatureFlagManagement from './SystemFeatureFlagManagement';
+// import SystemPermissionManagement from './SystemPermissionManagement';
+// import SystemRoleManagement from './SystemRoleManagement';
+// import SystemSettingsManagement from './SystemSettingsManagement';
+// import SystemSubscriptionPlanManagement from './SystemSubscriptionPlanManagement';
 
 const SystemConfigurationAdmin: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -145,7 +146,12 @@ const SystemConfigurationAdmin: React.FC = () => {
             </div>
           }
         >
-          <SystemRoleManagement />
+          <div className='text-center p-4'>
+            <i className='pi pi-wrench text-4xl text-gray-400 mb-3'></i>
+            <p className='text-gray-600'>
+              Role management component coming soon...
+            </p>
+          </div>
         </TabPanel>
 
         <TabPanel
@@ -160,7 +166,12 @@ const SystemConfigurationAdmin: React.FC = () => {
             </div>
           }
         >
-          <SystemPermissionManagement />
+          <div className='text-center p-4'>
+            <i className='pi pi-wrench text-4xl text-gray-400 mb-3'></i>
+            <p className='text-gray-600'>
+              Permission management component coming soon...
+            </p>
+          </div>
         </TabPanel>
 
         <TabPanel
@@ -175,7 +186,12 @@ const SystemConfigurationAdmin: React.FC = () => {
             </div>
           }
         >
-          <SystemSubscriptionPlanManagement />
+          <div className='text-center p-4'>
+            <i className='pi pi-wrench text-4xl text-gray-400 mb-3'></i>
+            <p className='text-gray-600'>
+              Subscription plan management component coming soon...
+            </p>
+          </div>
         </TabPanel>
 
         <TabPanel
@@ -185,12 +201,17 @@ const SystemConfigurationAdmin: React.FC = () => {
               <span>Feature Flags</span>
               <Badge
                 value={counts.flags}
-                severity='help'
+                severity='secondary'
               />
             </div>
           }
         >
-          <SystemFeatureFlagManagement />
+          <div className='text-center p-4'>
+            <i className='pi pi-wrench text-4xl text-gray-400 mb-3'></i>
+            <p className='text-gray-600'>
+              Feature flag management component coming soon...
+            </p>
+          </div>
         </TabPanel>
 
         <TabPanel
@@ -205,7 +226,12 @@ const SystemConfigurationAdmin: React.FC = () => {
             </div>
           }
         >
-          <SystemSettingsManagement />
+          <div className='text-center p-4'>
+            <i className='pi pi-wrench text-4xl text-gray-400 mb-3'></i>
+            <p className='text-gray-600'>
+              Settings management component coming soon...
+            </p>
+          </div>
         </TabPanel>
       </TabView>
     </div>

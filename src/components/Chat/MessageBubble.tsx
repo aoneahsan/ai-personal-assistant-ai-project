@@ -1,14 +1,16 @@
+import { FirestoreMessage } from '@/services/chatService';
 import { featureFlagService } from '@/services/featureFlagService';
-import { ChatFeatureFlag, FirestoreMessage, Message } from '@/types';
+import { ChatFeatureFlag } from '@/types/user/subscription';
 import { useUserDataZState } from '@/zustandStates/userState';
+import { Button } from 'primereact/button';
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem } from 'primereact/menuitem';
-import React, { useRef } from 'react';
-import AudioPlayer from './AudioPlayer';
-import VideoPlayer from './VideoPlayer';
-import { Button } from 'primereact/button';
 import { Tag } from 'primereact/tag';
-import { FaVideo, FaFile, FaDownload } from 'react-icons/fa';
+import React, { useRef } from 'react';
+import { FaDownload, FaFile, FaVideo } from 'react-icons/fa';
+import AudioPlayer from './AudioPlayer';
+import { Message } from './types';
+import VideoPlayer from './VideoPlayer';
 
 // Extended message interface with additional properties
 interface ExtendedMessage extends Message {
