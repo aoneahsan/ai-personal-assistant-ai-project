@@ -1,13 +1,13 @@
 import {
   adminTableDefaults,
   AdminTableFilters,
-  renderAdminSearchHeader,
+  getAdminSearchHeaderConfig,
 } from '@/utils/helpers/adminDataUtils';
-import { DataTable, DataTableProps } from 'primereact/datatable';
+import { DataTable } from 'primereact/datatable';
 import { Toolbar } from 'primereact/toolbar';
 import React, { useState } from 'react';
 
-export interface AdminDataTableProps extends Omit<DataTableProps, 'header'> {
+export interface AdminDataTableProps {
   title: string;
   searchPlaceholder?: string;
   filters?: AdminTableFilters;
@@ -16,6 +16,8 @@ export interface AdminDataTableProps extends Omit<DataTableProps, 'header'> {
   rightToolbar?: React.ReactNode;
   showToolbar?: boolean;
   showSearch?: boolean;
+  children?: React.ReactNode;
+  [key: string]: any; // Allow other DataTable props
 }
 
 const AdminDataTable: React.FC<AdminDataTableProps> = ({
@@ -44,11 +46,26 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   const renderHeader = () => {
     if (!showSearch) return null;
 
-    return renderAdminSearchHeader(
+    const config = getAdminSearchHeaderConfig(
       title,
       globalFilterValue,
-      handleSearchChange,
       searchPlaceholder
+    );
+
+    return (
+      <div className={config.wrapperClassName}>
+        <h4 className={config.titleClassName}>{config.title}</h4>
+        <span className={config.searchClassName}>
+          <i className={config.iconClassName} />
+          <input
+            type='text'
+            value={config.searchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder={config.placeholder}
+            className={config.inputClassName}
+          />
+        </span>
+      </div>
     );
   };
 
