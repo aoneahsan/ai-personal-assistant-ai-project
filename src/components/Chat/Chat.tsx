@@ -26,7 +26,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
-import './Chat.scss';
+import styles from './Chat.module.scss';
 
 interface ChatUser {
   id: string;
@@ -521,15 +521,15 @@ const Chat: React.FC<ChatProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className='chat-container'>
-        <div className='chat-loading'>
-          <div className='chat-loading-header'>
+      <div className={styles.chatContainer}>
+        <div className={styles.chatLoading}>
+          <div className={styles.chatLoadingHeader}>
             <Skeleton
               width='100%'
               height='60px'
             />
           </div>
-          <div className='chat-loading-messages'>
+          <div className={styles.chatLoadingMessages}>
             <Skeleton
               width='60%'
               height='40px'
@@ -566,78 +566,84 @@ const Chat: React.FC<ChatProps> = ({
         />
       )}
 
-      <div className='chat-container'>
+      <div className={styles.chatContainer}>
         {/* Header */}
-        <div className='chat-header'>
-          <div className='chat-header-left'>
+        <div className={styles.chatHeader}>
+          <div className={styles.chatHeaderLeft}>
             <Button
               icon={<FaArrowLeft />}
-              className='chat-back-btn'
+              className={styles.chatBackBtn}
               onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
             />
 
-            <div className='chat-avatar'>
+            <div className={styles.chatAvatar}>
               {currentChatUser.avatar ? (
                 <img
                   src={currentChatUser.avatar}
                   alt={currentChatUser.name}
                 />
               ) : (
-                <div className='avatar-placeholder'>
+                <div className={styles.avatarPlaceholder}>
                   {currentChatUser.name.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
-            <div className='chat-user-info'>
-              <h3 className='chat-user-name'>{currentChatUser.name}</h3>
-              <span className='chat-user-status'>
+            <div className={styles.chatUserInfo}>
+              <h3 className={styles.chatUserName}>{currentChatUser.name}</h3>
+              <span className={styles.chatUserStatus}>
                 {currentChatUser.isOnline ? 'Online' : 'Last seen recently'}
               </span>
             </div>
           </div>
 
-          <div className='chat-header-right'>
+          <div className={styles.chatHeaderRight}>
             <Button
               icon={<FaVideo />}
-              className='chat-action-btn'
+              className={styles.chatActionBtn}
             />
             <Button
               icon={<FaPhone />}
-              className='chat-action-btn'
+              className={styles.chatActionBtn}
             />
             <Button
               icon={<FaEllipsisV />}
-              className='chat-action-btn'
+              className={styles.chatActionBtn}
             />
           </div>
         </div>
 
         {/* Messages */}
-        <div className='chat-messages'>
+        <div className={styles.chatMessages}>
           {messages.length === 0 ? (
-            <div className='chat-empty'>
-              <div className='empty-icon'>💬</div>
+            <div className={styles.chatEmpty}>
+              <div className={styles.emptyIcon}>💬</div>
               <h3>Start a conversation</h3>
               <p>
                 Send a message to begin chatting with {currentChatUser.name}
               </p>
             </div>
           ) : (
-            <div className='messages-list'>
+            <div className={styles.messagesList}>
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`message ${message.sender === 'me' ? 'message-sent' : 'message-received'}`}
+                  className={`${styles.message} ${
+                    message.sender === 'me'
+                      ? styles.messageSent
+                      : styles.messageReceived
+                  }`}
                 >
-                  <div className='message-bubble'>
-                    <div className='message-text'>{message.text}</div>
-                    <div className='message-meta'>
-                      <span className='message-time'>
+                  <div className={styles.messageBubble}>
+                    <div className={styles.messageText}>{message.text}</div>
+                    <div className={styles.messageMeta}>
+                      <span className={styles.messageTime}>
                         {formatTime(message.timestamp)}
                       </span>
                       {message.sender === 'me' && (
-                        <span className={`message-status ${message.status}`}>
+                        <span
+                          className={`${styles.messageStatus} ${message.status}`}
+                        >
                           {message.status === 'read' ? '✓✓' : '✓'}
                         </span>
                       )}
@@ -651,11 +657,11 @@ const Chat: React.FC<ChatProps> = ({
         </div>
 
         {/* Input */}
-        <div className='chat-input'>
-          <div className='input-wrapper'>
+        <div className={styles.chatInput}>
+          <div className={styles.inputWrapper}>
             <Button
               icon={<FaPaperclip />}
-              className='attach-btn'
+              className={styles.attachBtn}
               onClick={handleFileClick}
               tooltip='Attach file'
             />
@@ -666,22 +672,22 @@ const Chat: React.FC<ChatProps> = ({
               onChange={handleTextareaChange}
               onKeyPress={handleKeyPress}
               placeholder='Type a message...'
-              className='message-textarea'
+              className={styles.messageTextarea}
               autoResize={false}
               rows={1}
             />
 
-            <div className='input-actions'>
+            <div className={styles.inputActions}>
               <Button
                 icon={<FaSmile />}
-                className='emoji-btn'
+                className={styles.emojiBtn}
                 onClick={() => setShowEmojiPicker(true)}
                 tooltip='Add emoji'
               />
 
               <Button
                 icon={<FaMicrophone />}
-                className={`voice-btn ${isRecording ? 'recording' : ''}`}
+                className={`${styles.voiceBtn} ${isRecording ? 'recording' : ''}`}
                 onClick={handleVoiceRecord}
                 tooltip={
                   isRecording ? 'Stop recording' : 'Record voice message'
@@ -690,21 +696,21 @@ const Chat: React.FC<ChatProps> = ({
 
               <Button
                 icon={<FaImage />}
-                className='image-btn'
+                className={styles.imageBtn}
                 onClick={handleImageCapture}
                 tooltip='Take photo'
               />
 
               <Button
                 icon={<FaVideoSlash />}
-                className='video-btn'
+                className={styles.videoBtn}
                 onClick={handleVideoRecord}
                 tooltip='Record video'
               />
 
               <Button
                 icon={<FaPaperPlane />}
-                className='send-btn'
+                className={styles.sendBtn}
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
                 tooltip='Send message'
@@ -730,14 +736,14 @@ const Chat: React.FC<ChatProps> = ({
         onHide={() => setShowEmojiPicker(false)}
         header='Select Emoji'
         modal
-        className='emoji-picker-dialog'
+        className={styles.emojiPickerDialog}
         style={{ width: '400px', maxWidth: '90vw' }}
       >
-        <div className='emoji-grid'>
+        <div className={styles.emojiGrid}>
           {EMOJI_DATA.map((emoji, index) => (
             <button
               key={index}
-              className='emoji-button'
+              className={styles.emojiButton}
               onClick={() => handleEmojiSelect(emoji)}
               type='button'
             >
