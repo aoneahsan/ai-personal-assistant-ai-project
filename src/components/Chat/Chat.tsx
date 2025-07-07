@@ -1,3 +1,4 @@
+import { DashboardPageWrapper } from '@/components/common';
 import { useTheme } from '@/hooks/useTheme';
 import { unifiedAuthService } from '@/services/authService';
 import { chatService, FirestoreMessage } from '@/services/chatService';
@@ -9,8 +10,11 @@ import {
   useUserDataZState,
 } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
 import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
+import { FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
 import './Chat.scss';
@@ -46,6 +50,7 @@ const Chat: React.FC<ChatProps> = ({
   const isAuthSystemReady = useIsAuthSystemReady();
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   // Initialize theme to ensure CSS variables are loaded
   useTheme();
@@ -552,124 +557,147 @@ const Chat: React.FC<ChatProps> = ({
 
   // Enhanced empty state component
   const EmptyState = () => (
-    <div className='empty-chat-state'>
+    <div className='empty-chat-state text-center'>
       <div className='empty-illustration'></div>
-      <h2 className='empty-title'>Start a Conversation</h2>
-      <p className='empty-subtitle'>
+      <h3
+        className='empty-title mb-3'
+        style={{ color: theme.textPrimary }}
+      >
+        Start a Conversation
+      </h3>
+      <p
+        className='empty-subtitle mb-4'
+        style={{ color: theme.textSecondary }}
+      >
         Begin chatting with your AI assistant. Ask questions, share files, or
         just say hello!
       </p>
-      <button
+      <Button
+        label='Get Started'
         className='start-chat-btn'
         onClick={() => {
           setMessages(getDefaultMessages());
         }}
-      >
-        Get Started
-      </button>
+      />
     </div>
   );
 
   // Show initial loading state
   if (isInitialLoading) {
     return (
-      <div className='chat-container'>
-        <div className='chat-loading-state'>
-          <div className='loading-header'>
-            <Skeleton
-              width='100%'
-              height='70px'
-            />
-          </div>
-          <div className='loading-messages'>
-            <div className='loading-message-group'>
-              <Skeleton
-                width='60%'
-                height='60px'
-                className='mb-3'
-              />
-              <Skeleton
-                width='40%'
-                height='60px'
-                className='mb-3 ml-auto'
-              />
-              <Skeleton
-                width='70%'
-                height='60px'
-                className='mb-3'
-              />
-              <Skeleton
-                width='50%'
-                height='60px'
-                className='mb-3 ml-auto'
-              />
-              <Skeleton
-                width='65%'
-                height='60px'
-                className='mb-3'
-              />
+      <DashboardPageWrapper
+        title={`Chat with ${currentChatUser.name}`}
+        actions={
+          <Button
+            icon={<FaArrowLeft />}
+            label='Back'
+            className='p-button-outlined'
+            onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
+          />
+        }
+      >
+        <Card className='shadow-3 border-round-2xl h-full'>
+          <div className='chat-loading-state'>
+            <div className='loading-messages'>
+              <div className='loading-message-group'>
+                <Skeleton
+                  width='60%'
+                  height='60px'
+                  className='mb-3'
+                />
+                <Skeleton
+                  width='40%'
+                  height='60px'
+                  className='mb-3 ml-auto'
+                />
+                <Skeleton
+                  width='70%'
+                  height='60px'
+                  className='mb-3'
+                />
+                <Skeleton
+                  width='50%'
+                  height='60px'
+                  className='mb-3 ml-auto'
+                />
+                <Skeleton
+                  width='65%'
+                  height='60px'
+                  className='mb-3'
+                />
+              </div>
             </div>
           </div>
-          <div className='loading-input'>
-            <Skeleton
-              width='100%'
-              height='70px'
-            />
-          </div>
-        </div>
-      </div>
+        </Card>
+      </DashboardPageWrapper>
     );
   }
 
   return (
-    <div className='chat-container'>
+    <DashboardPageWrapper
+      title={`Chat with ${currentChatUser.name}`}
+      actions={
+        <Button
+          icon={<FaArrowLeft />}
+          label='Back'
+          className='p-button-outlined'
+          onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
+        />
+      }
+    >
       {/* Anonymous User Indicator */}
       {unifiedAuthService.isAnonymousUser() && (
         <AnonymousUserIndicator
           variant='banner'
           showConversion={true}
-          className='mb-0'
+          className='mb-3'
         />
       )}
 
-      <ChatHeader
-        chatUser={currentChatUser}
-        onBack={onBack}
-        onClearChat={handleClearChat}
-        onDeleteChat={handleDeleteChat}
-        onBlockUser={handleBlockUser}
-        onMuteNotifications={handleMuteNotifications}
-      />
+      <Card className='shadow-3 border-round-2xl h-full'>
+        <div className='chat-container'>
+          <ChatHeader
+            chatUser={currentChatUser}
+            onBack={onBack}
+            onClearChat={handleClearChat}
+            onDeleteChat={handleDeleteChat}
+            onBlockUser={handleBlockUser}
+            onMuteNotifications={handleMuteNotifications}
+          />
 
-      {/* Show empty state if no messages, otherwise show messages list */}
-      {messages.length === 0 && !isLoadingMessages ? (
-        <div className='messages-container'>
-          <EmptyState />
+          {/* Show empty state if no messages, otherwise show messages list */}
+          {messages.length === 0 && !isLoadingMessages ? (
+            <div className='messages-container'>
+              <EmptyState />
+            </div>
+          ) : (
+            <MessagesList
+              messages={messages}
+              isTyping={false}
+              playingAudioId={playingAudioId}
+              onAudioToggle={toggleAudioPlayback}
+              onShowTranscript={showTranscript}
+              isLoading={isLoadingMessages}
+              onEditMessage={handleEditMessage}
+              onDeleteMessage={handleDeleteMessage}
+              onViewHistory={handleViewHistory}
+              onUpgrade={handleUpgradeFeature}
+            />
+          )}
+
+          <MessageInput
+            currentMessage={currentMessage}
+            onMessageChange={setCurrentMessage}
+            onSendMessage={handleSendMessage}
+            onSendAudioMessage={handleSendAudioMessage}
+            onSendVideoMessage={handleSendVideoMessage}
+            onFileUpload={handleFileUpload}
+            disabled={
+              isProcessingAudio || isProcessingVideo || isProcessingFile
+            }
+          />
         </div>
-      ) : (
-        <MessagesList
-          messages={messages}
-          isTyping={false}
-          playingAudioId={playingAudioId}
-          onAudioToggle={toggleAudioPlayback}
-          onShowTranscript={showTranscript}
-          isLoading={isLoadingMessages}
-          onEditMessage={handleEditMessage}
-          onDeleteMessage={handleDeleteMessage}
-          onViewHistory={handleViewHistory}
-          onUpgrade={handleUpgradeFeature}
-        />
-      )}
-
-      <MessageInput
-        currentMessage={currentMessage}
-        onMessageChange={setCurrentMessage}
-        onSendMessage={handleSendMessage}
-        onSendAudioMessage={handleSendAudioMessage}
-        onSendVideoMessage={handleSendVideoMessage}
-        onFileUpload={handleFileUpload}
-        disabled={isProcessingAudio || isProcessingVideo || isProcessingFile}
-      />
+      </Card>
 
       <TranscriptDialog
         visible={!!showTranscriptDialog}
@@ -699,7 +727,7 @@ const Chat: React.FC<ChatProps> = ({
         onHide={() => setShowUpgradeModal(false)}
         onUpgrade={handleUpgradePlan}
       />
-    </div>
+    </DashboardPageWrapper>
   );
 };
 
