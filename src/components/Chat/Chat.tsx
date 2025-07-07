@@ -6,6 +6,7 @@ import { ROUTES } from '@/utils/constants/routingConstants';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { useUserDataZState } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
+import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
@@ -30,11 +31,6 @@ interface ChatProps {
     userName?: string;
     userAvatar?: string;
   };
-}
-
-// Define interface for Capacitor file with actualUrl property
-interface CapacitorFile extends File {
-  actualUrl?: string;
 }
 
 const Chat: React.FC<ChatProps> = ({
@@ -80,13 +76,13 @@ const Chat: React.FC<ChatProps> = ({
   // State for messages and chat
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [currentMessage, setCurrentMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showTranscriptDialog, setShowTranscriptDialog] = useState<
     string | null
   >(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // State for message editing features
   const [selectedMessageForEdit, setSelectedMessageForEdit] =
@@ -97,6 +93,11 @@ const Chat: React.FC<ChatProps> = ({
   const [upgradeFeature, setUpgradeFeature] = useState<ChatFeatureFlag | null>(
     null
   );
+
+  // Processing states
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
 
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -115,9 +116,11 @@ const Chat: React.FC<ChatProps> = ({
     const setupChat = async () => {
       if (!currentUser) {
         consoleLog('No current user, skipping chat setup');
+        setIsInitialLoading(false);
         return;
       }
 
+      setIsInitialLoading(true);
       try {
         // If we have a chatId from search params, use it
         if (search?.chatId) {
@@ -137,11 +140,13 @@ const Chat: React.FC<ChatProps> = ({
           // Use default behavior for existing contacts
           consoleLog('Using default chat behavior');
           setMessages(getDefaultMessages());
+          setIsInitialLoading(false);
           return;
         }
       } catch (error) {
         consoleError('Error setting up chat:', error);
         toast.error('Failed to set up chat');
+        setIsInitialLoading(false);
       }
     };
 
@@ -182,6 +187,7 @@ const Chat: React.FC<ChatProps> = ({
 
         setMessages(convertedMessages);
         setIsLoadingMessages(false);
+        setIsInitialLoading(false);
       }
     );
 
@@ -207,54 +213,36 @@ const Chat: React.FC<ChatProps> = ({
   const getDefaultMessages = (): Message[] => [
     {
       id: '1',
-      text: 'Hey! How are you doing?',
+      text: "Hi! I'm your AI assistant. How can I help you today?",
       sender: 'other',
-      timestamp: new Date(Date.now() - 3600000),
+      timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
       status: 'read',
       type: 'text',
     },
     {
       id: '2',
-      text: "I'm doing great! Just working on some exciting projects. What about you?",
-      sender: 'me',
-      timestamp: new Date(Date.now() - 3500000),
-      status: 'read',
-      type: 'text',
-    },
-    {
-      id: '3',
-      text: "That sounds awesome! I'd love to hear more about your projects.",
+      text: 'Feel free to send me text messages, images, videos, or voice recordings. I can help with a wide variety of tasks!',
       sender: 'other',
-      timestamp: new Date(Date.now() - 3400000),
-      status: 'read',
-      type: 'text',
-    },
-    {
-      id: '4',
-      text: "Sure! I'm building an AI personal assistant with React and it's been quite a journey.",
-      sender: 'me',
-      timestamp: new Date(Date.now() - 3300000),
+      timestamp: new Date(Date.now() - 1000 * 60 * 4), // 4 minutes ago
       status: 'read',
       type: 'text',
     },
   ];
 
   const toggleAudioPlayback = (messageId: string) => {
-    // Stop all other audio first
-    Object.keys(audioRefs.current).forEach((id) => {
-      if (id !== messageId && audioRefs.current[id]) {
-        audioRefs.current[id].pause();
-        audioRefs.current[id].currentTime = 0;
+    const audioElement = audioRefs.current[messageId];
+    if (audioElement) {
+      if (playingAudioId === messageId) {
+        audioElement.pause();
+        setPlayingAudioId(null);
+      } else {
+        // Pause any currently playing audio
+        if (playingAudioId) {
+          audioRefs.current[playingAudioId]?.pause();
+        }
+        audioElement.play();
+        setPlayingAudioId(messageId);
       }
-    });
-
-    // Toggle the current audio
-    if (playingAudioId === messageId) {
-      // Pause the current audio
-      setPlayingAudioId(null);
-    } else {
-      // Play the new audio
-      setPlayingAudioId(messageId);
     }
   };
 
@@ -263,185 +251,186 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   const handleSendMessage = async () => {
-    if (!currentMessage.trim() || !currentUser) {
-      return;
-    }
+    if (!currentMessage.trim()) return;
 
-    const messageText = currentMessage.trim();
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      text: currentMessage,
+      sender: 'me',
+      timestamp: new Date(),
+      status: 'sent',
+      type: 'text',
+    };
+
+    // Add message to local state immediately
+    setMessages((prev) => [...prev, newMessage]);
     setCurrentMessage('');
 
-    // If we have a chatId, save to Firestore
-    if (chatId) {
+    // Send to Firebase if chatId exists
+    if (chatId && currentUser) {
       try {
         await chatService.sendTextMessage(
           chatId,
           currentUser.id!,
           currentUser.email!,
-          messageText
+          currentMessage
         );
-
-        consoleLog('✅ Message sent to Firestore');
-        // Message will be added to UI via the subscription
       } catch (error) {
-        consoleError('❌ Error sending message:', error);
+        consoleError('Error sending message:', error);
         toast.error('Failed to send message');
-        // Restore the message text
-        setCurrentMessage(messageText);
+
+        // Remove message from local state on error
+        setMessages((prev) => prev.filter((msg) => msg.id !== newMessage.id));
       }
     } else {
-      // Fallback to local state for backward compatibility
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: messageText,
-        sender: 'me',
-        timestamp: new Date(),
-        status: 'sent',
-        type: 'text',
-      };
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      // Simulate message status updates
+      // Simulate bot response for default behavior
       setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
-          )
-        );
-      }, 1000);
-
-      setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
-          )
-        );
-      }, 2000);
-
-      // Simulate typing indicator and response
-      setTimeout(() => {
-        setIsTyping(true);
-      }, 2500);
-
-      setTimeout(() => {
-        setIsTyping(false);
-        const responseMessage: Message = {
+        const botResponse: Message = {
           id: (Date.now() + 1).toString(),
-          text: 'That sounds really interesting! 😊',
+          text: "I'm here to help! What would you like to know?",
           sender: 'other',
           timestamp: new Date(),
           status: 'read',
           type: 'text',
         };
-        setMessages((prev) => [...prev, responseMessage]);
-      }, 4000);
+        setMessages((prev) => [...prev, botResponse]);
+      }, 1000);
     }
   };
 
   const handleSendAudioMessage = (message: Message) => {
+    setIsProcessingAudio(true);
+
+    // Add message to local state immediately
     setMessages((prev) => [...prev, message]);
 
-    // Simulate message status updates
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === message.id ? { ...msg, status: 'delivered' } : msg
-        )
-      );
-    }, 1000);
+    // Send to Firebase if chatId exists
+    if (chatId && currentUser && message.fileData) {
+      try {
+        const audioFile = new File([new Blob()], message.fileData.name, {
+          type: message.fileData.type,
+        });
 
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === message.id ? { ...msg, status: 'read' } : msg
-        )
-      );
-    }, 2000);
+        chatService.sendAudioMessage({
+          file: audioFile,
+          chatId,
+          senderId: currentUser.id!,
+          senderEmail: currentUser.email!,
+          transcript: message.transcript,
+          quickTranscript: message.quickTranscript,
+          duration: message.audioDuration,
+        });
+      } catch (error) {
+        consoleError('Error sending audio message:', error);
+        toast.error('Failed to send audio message');
+
+        // Remove message from local state on error
+        setMessages((prev) => prev.filter((msg) => msg.id !== message.id));
+      }
+    }
+
+    setIsProcessingAudio(false);
   };
 
   const handleSendVideoMessage = (message: Message) => {
+    setIsProcessingVideo(true);
+
+    // Add message to local state immediately
     setMessages((prev) => [...prev, message]);
 
-    // Simulate message status updates
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === message.id ? { ...msg, status: 'delivered' } : msg
-        )
-      );
-    }, 1000);
+    // Send to Firebase if chatId exists
+    if (chatId && currentUser && message.fileData) {
+      try {
+        const videoFile = new File([new Blob()], message.fileData.name, {
+          type: message.fileData.type,
+        });
 
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === message.id ? { ...msg, status: 'read' } : msg
-        )
-      );
-    }, 2000);
+        chatService.sendVideoMessage({
+          file: videoFile,
+          chatId,
+          senderId: currentUser.id!,
+          senderEmail: currentUser.email!,
+          duration: message.videoDuration,
+          thumbnail: message.videoThumbnail,
+        });
+      } catch (error) {
+        consoleError('Error sending video message:', error);
+        toast.error('Failed to send video message');
+
+        // Remove message from local state on error
+        setMessages((prev) => prev.filter((msg) => msg.id !== message.id));
+      }
+    }
+
+    setIsProcessingVideo(false);
   };
 
   const handleFileUpload = (files: FileList) => {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i] as CapacitorFile;
-      let messageType: Message['type'] = 'file';
+    setIsProcessingFile(true);
 
-      if (file.type.startsWith('image/')) {
-        messageType = 'image';
-      } else if (file.type.startsWith('video/')) {
-        messageType = 'video';
-      }
-
-      // Check if the file has an actualUrl property (from Capacitor file manager)
-      const fileUrl = file.actualUrl || URL.createObjectURL(file);
-
-      const newMessage: Message = {
-        id: Date.now().toString() + Math.random(),
-        sender: 'me',
-        timestamp: new Date(),
-        status: 'sent',
-        type: messageType,
-        fileData: {
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileData = {
           name: file.name,
           size: file.size,
           type: file.type,
-          url: fileUrl,
-        },
+          url: e.target?.result as string,
+        };
+
+        let messageType: Message['type'] = 'file';
+        if (file.type.startsWith('image/')) {
+          messageType = 'image';
+        } else if (file.type.startsWith('video/')) {
+          messageType = 'video';
+        }
+
+        const newMessage: Message = {
+          id: Date.now().toString() + Math.random(),
+          sender: 'me',
+          timestamp: new Date(),
+          status: 'sent',
+          type: messageType,
+          fileData,
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+
+        // Send to Firebase if chatId exists
+        if (chatId && currentUser) {
+          try {
+            if (messageType === 'image') {
+              chatService.sendImageMessage({
+                file: file,
+                chatId,
+                senderId: currentUser.id!,
+                senderEmail: currentUser.email!,
+              });
+            } else if (messageType === 'video') {
+              chatService.sendVideoMessage({
+                file: file,
+                chatId,
+                senderId: currentUser.id!,
+                senderEmail: currentUser.email!,
+              });
+            }
+          } catch (error) {
+            consoleError('Error sending file message:', error);
+            toast.error('Failed to send file');
+
+            // Remove message from local state on error
+            setMessages((prev) =>
+              prev.filter((msg) => msg.id !== newMessage.id)
+            );
+          }
+        }
       };
+      reader.readAsDataURL(file);
+    });
 
-      // Add video duration for video files (placeholder)
-      if (messageType === 'video') {
-        newMessage.videoDuration = 0; // This would be extracted from video metadata
-      }
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      // Simulate message status updates
-      setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
-          )
-        );
-      }, 1000);
-
-      setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
-          )
-        );
-      }, 2000);
-    }
+    setIsProcessingFile(false);
   };
 
-  const selectedMessage = showTranscriptDialog
-    ? messages.find((m) => m.id === showTranscriptDialog) || null
-    : null;
-
-  // Check if any audio is being processed
-  const isProcessingAudio = false;
-
-  // Chat header action handlers
   const handleClearChat = () => {
     setMessages([]);
     consoleLog('Chat cleared');
@@ -508,31 +497,79 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   const handleSaveEdit = async (newText: string, editReason?: string) => {
-    if (!selectedMessageForEdit?.id || !currentUser?.id || !currentUser?.email)
-      return;
+    if (!selectedMessageForEdit || !currentUser?.id) return;
 
     try {
       await chatService.editMessage(
-        selectedMessageForEdit.id,
+        selectedMessageForEdit.id!,
         newText,
         currentUser.id,
-        currentUser.email,
+        currentUser.email!,
         editReason
       );
+      setShowEditDialog(false);
+      setSelectedMessageForEdit(null);
       toast.success('Message updated successfully');
     } catch (error) {
-      consoleError('Error editing message:', error);
+      consoleError('Error updating message:', error);
       toast.error('Failed to update message');
     }
   };
 
   const handleUpgradePlan = (plan: SubscriptionPlan) => {
-    // This would redirect to payment/upgrade page
-    consoleLog('Upgrade to plan:', plan);
-    toast.info(`Redirecting to upgrade to ${plan} plan...`);
-    // TODO: Implement actual upgrade flow
     setShowUpgradeModal(false);
+    // Handle upgrade logic here
+    consoleLog('Upgrading to plan:', plan);
   };
+
+  const selectedMessage =
+    messages.find((msg) => msg.id === showTranscriptDialog) || null;
+
+  // Show initial loading state
+  if (isInitialLoading) {
+    return (
+      <div className='chat-container'>
+        <div className='chat-loading-state'>
+          <div className='loading-header'>
+            <Skeleton
+              width='100%'
+              height='70px'
+            />
+          </div>
+          <div className='loading-messages'>
+            <div className='loading-message-group'>
+              <Skeleton
+                width='60%'
+                height='50px'
+                className='mb-2'
+              />
+              <Skeleton
+                width='40%'
+                height='50px'
+                className='mb-2 ml-auto'
+              />
+              <Skeleton
+                width='70%'
+                height='50px'
+                className='mb-2'
+              />
+              <Skeleton
+                width='50%'
+                height='50px'
+                className='mb-2 ml-auto'
+              />
+            </div>
+          </div>
+          <div className='loading-input'>
+            <Skeleton
+              width='100%'
+              height='60px'
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='chat-container'>
@@ -556,7 +593,7 @@ const Chat: React.FC<ChatProps> = ({
 
       <MessagesList
         messages={messages}
-        isTyping={isTyping}
+        isTyping={false}
         playingAudioId={playingAudioId}
         onAudioToggle={toggleAudioPlayback}
         onShowTranscript={showTranscript}
@@ -574,7 +611,7 @@ const Chat: React.FC<ChatProps> = ({
         onSendAudioMessage={handleSendAudioMessage}
         onSendVideoMessage={handleSendVideoMessage}
         onFileUpload={handleFileUpload}
-        disabled={isProcessingAudio}
+        disabled={isProcessingAudio || isProcessingVideo || isProcessingFile}
       />
 
       <TranscriptDialog

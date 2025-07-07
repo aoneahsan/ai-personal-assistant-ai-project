@@ -2,17 +2,10 @@ import { Capacitor } from '@capacitor/core';
 import EmojiPicker from 'emoji-picker-react';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
 import { OverlayPanel } from 'primereact/overlaypanel';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { useRef, useState } from 'react';
-import {
-  FaCamera,
-  FaFile,
-  FaImage,
-  FaPaperPlane,
-  FaSmile,
-  FaVideo,
-} from 'react-icons/fa';
+import { FaPaperclip, FaPaperPlane, FaSmile } from 'react-icons/fa';
 import {
   FileInfo,
   handleWebFileInput,
@@ -56,9 +49,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [showAttachmentDialog, setShowAttachmentDialog] = useState(false);
   const [showVideoRecorder, setShowVideoRecorder] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const emojiPanelRef = useRef<OverlayPanel>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Check platform
   const isNative = Capacitor.isNativePlatform();
@@ -69,7 +64,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -78,23 +73,35 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   const handleEmojiClick = (emojiObject: EmojiObject) => {
     onMessageChange(currentMessage + emojiObject.emoji);
-    emojiPanelRef.current?.hide();
+    setShowEmojiPicker(false);
+    textareaRef.current?.focus();
+  };
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onMessageChange(e.target.value);
+    adjustTextareaHeight();
   };
 
   // Handle camera capture directly
   const handleCameraCapture = async () => {
     if (isProcessingFile) return;
 
-    // Close the attachment dialog first
     setShowAttachmentDialog(false);
-
     setIsProcessingFile(true);
+
     try {
       const fileInfo = await takePhoto({
         quality: 90,
         allowEditing: false,
       });
-
       await handleFileMessage(fileInfo, 'image');
     } catch (error) {
       console.error('Camera capture failed:', error);
@@ -107,16 +114,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleGallerySelect = async () => {
     if (isProcessingFile) return;
 
-    // Close the attachment dialog first
     setShowAttachmentDialog(false);
-
     setIsProcessingFile(true);
+
     try {
       const fileInfo = await pickImageFromGallery({
         quality: 90,
         allowEditing: false,
       });
-
       await handleFileMessage(fileInfo, 'image');
     } catch (error) {
       console.error('Gallery selection failed:', error);
@@ -130,10 +135,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
     const files = e.target.files;
     if (!files || files.length === 0 || isProcessingFile) return;
 
-    // Close the attachment dialog first
     setShowAttachmentDialog(false);
-
     setIsProcessingFile(true);
+
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -152,7 +156,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
       console.error('File selection failed:', error);
     } finally {
       setIsProcessingFile(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -178,17 +181,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
       },
     };
 
-    // Add video duration if it's a video file
     if (messageType === 'video') {
       newMessage.videoDuration = 0;
     }
 
-    // Send the message directly to the parent component
     if (messageType === 'video' && onSendVideoMessage) {
       onSendVideoMessage(newMessage);
     } else {
-      // For images and other files, create a proper message and send it
-      // We'll bypass the FileList approach and send the message directly
       const mockFile = new File([new Blob()], fileInfo.name, {
         type: fileInfo.type,
       }) as ExtendedFile;
@@ -201,10 +200,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         value: (index: number) => (index === 0 ? mockFile : null),
       });
 
-      // Pass the actual file URL through a custom property
-      mockFile.actualUrl = fileInfo.url;
-
-      onFileUpload(mockFileList);
+      onFileUpload(mockFileList as FileList);
     }
   };
 
@@ -213,216 +209,220 @@ const MessageInput: React.FC<MessageInputProps> = ({
     videoDuration: number,
     thumbnail?: string
   ) => {
-    if (isProcessingFile) return;
-
-    setIsProcessingFile(true);
     try {
-      // Save video to device storage
-      const fileInfo = await saveBlobToDevice(
-        videoBlob,
-        `video-${Date.now()}.mp4`
-      );
+      const videoFile = await saveBlobToDevice(videoBlob, 'recorded_video.mp4');
 
-      const videoMessage: Message = {
-        id: Date.now().toString(),
+      const newMessage: Message = {
+        id: Date.now().toString() + Math.random(),
         sender: 'me',
         timestamp: new Date(),
         status: 'sent',
         type: 'video',
         fileData: {
-          name: fileInfo.name,
-          size: fileInfo.size,
-          type: fileInfo.type,
-          url: fileInfo.url,
+          name: videoFile.name,
+          size: videoFile.size,
+          type: videoFile.type,
+          url: videoFile.url,
         },
         videoDuration,
         videoThumbnail: thumbnail,
       };
 
-      onSendVideoMessage?.(videoMessage);
-      setShowVideoRecorder(false);
+      if (onSendVideoMessage) {
+        onSendVideoMessage(newMessage);
+      }
     } catch (error) {
-      console.error('Video save failed:', error);
-    } finally {
-      setIsProcessingFile(false);
+      console.error('Failed to save video:', error);
     }
+
+    setShowVideoRecorder(false);
   };
 
-  // Get platform-specific attachment options
-  const getAttachmentOptions = () => {
-    const options = [];
-
-    if (isNative) {
-      // Native platform options
-      options.push({
-        icon: <FaCamera />,
-        label: 'Take Photo',
-        action: handleCameraCapture,
-        illustration: '📸',
-        description: 'Capture with camera',
-      });
-
-      options.push({
-        icon: <FaImage />,
-        label: 'Choose from Gallery',
-        action: handleGallerySelect,
-        illustration: '🖼️',
-        description: 'Select from photos',
-      });
-    } else {
-      // Web platform - combine gallery and file selection
-      options.push({
-        icon: <FaCamera />,
-        label: 'Take Photo',
-        action: handleCameraCapture,
-        illustration: '📸',
-        description: 'Capture with camera',
-      });
-
-      options.push({
-        icon: <FaFile />,
-        label: 'Choose File',
-        action: () => fileInputRef.current?.click(),
-        illustration: '📁',
-        description: 'Select files & images',
-      });
-    }
-
-    options.push({
-      icon: <FaVideo />,
+  const getAttachmentOptions = () => [
+    {
+      id: 'camera',
+      label: 'Take Photo',
+      description: 'Capture a photo with your camera',
+      icon: '📸',
+      action: handleCameraCapture,
+      disabled: !isNative,
+    },
+    {
+      id: 'gallery',
+      label: 'Choose from Gallery',
+      description: 'Select photos or videos from your gallery',
+      icon: '🖼️',
+      action: isNative
+        ? handleGallerySelect
+        : () => fileInputRef.current?.click(),
+      disabled: false,
+    },
+    {
+      id: 'file',
+      label: 'Upload File',
+      description: 'Share documents, audio, or other files',
+      icon: '📎',
+      action: () => fileInputRef.current?.click(),
+      disabled: false,
+    },
+    {
+      id: 'video',
       label: 'Record Video',
+      description: 'Record a video message',
+      icon: '🎥',
       action: () => {
-        setShowVideoRecorder(true);
         setShowAttachmentDialog(false);
+        setShowVideoRecorder(true);
       },
-      illustration: '🎥',
-      description: 'Record video message',
-    });
-
-    return options;
-  };
+      disabled: false,
+    },
+  ];
 
   return (
     <>
       <div className='message-input-container'>
         <div className='message-input-wrapper'>
+          {/* Attachment Button */}
           <Button
-            icon={<FaFile />}
+            icon={<FaPaperclip />}
             className='attachment-btn'
             onClick={() => setShowAttachmentDialog(true)}
             disabled={disabled || isProcessingFile}
+            tooltip='Attach files'
+            tooltipOptions={{ position: 'top' }}
           />
 
-          <div className='message-input-field'>
-            <InputText
-              value={currentMessage}
-              onChange={(e) => onMessageChange(e.target.value)}
-              placeholder='Type a message...'
-              className='message-input'
-              onKeyPress={handleKeyPress}
-              disabled={disabled || isProcessingFile}
-            />
+          {/* Message Input */}
+          <textarea
+            ref={textareaRef}
+            className='message-input'
+            placeholder='Type a message...'
+            value={currentMessage}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            disabled={disabled}
+            rows={1}
+            style={{ resize: 'none', overflow: 'hidden' }}
+          />
 
-            <Button
-              icon={<FaCamera />}
-              className='camera-btn'
-              onClick={handleCameraCapture}
-              disabled={disabled || isProcessingFile}
-            />
-
+          {/* Input Actions */}
+          <div className='input-actions'>
+            {/* Emoji Button */}
             <Button
               icon={<FaSmile />}
               className='emoji-btn'
-              onClick={(e) => emojiPanelRef.current?.toggle(e)}
-              disabled={disabled || isProcessingFile}
+              onClick={(e) => {
+                setShowEmojiPicker(!showEmojiPicker);
+                emojiPanelRef.current?.toggle(e);
+              }}
+              disabled={disabled}
+              tooltip='Add emoji'
+              tooltipOptions={{ position: 'top' }}
             />
-          </div>
 
-          {currentMessage.trim() ? (
+            {/* Voice Recording Component */}
+            <VoiceRecording
+              onSendAudioMessage={onSendAudioMessage}
+              disabled={disabled}
+            />
+
+            {/* Send Button */}
             <Button
               icon={<FaPaperPlane />}
               className='send-btn'
               onClick={handleSendMessage}
-              disabled={disabled || isProcessingFile}
+              disabled={disabled || !currentMessage.trim()}
+              tooltip='Send message'
+              tooltipOptions={{ position: 'top' }}
             />
-          ) : (
-            <VoiceRecording
-              onSendAudioMessage={onSendAudioMessage}
-              disabled={disabled || isProcessingFile}
-            />
-          )}
+          </div>
         </div>
+
+        {/* Processing Indicator */}
+        {isProcessingFile && (
+          <div className='processing-indicator'>
+            <ProgressSpinner size='small' />
+            <span>Processing file...</span>
+          </div>
+        )}
       </div>
 
-      {/* Emoji Picker */}
+      {/* Emoji Picker Overlay */}
       <OverlayPanel
         ref={emojiPanelRef}
         className='emoji-panel'
+        showCloseIcon={false}
+        dismissable={true}
       >
-        <EmojiPicker onEmojiClick={handleEmojiClick} />
+        <EmojiPicker
+          onEmojiClick={handleEmojiClick}
+          autoFocusSearch={false}
+          theme='light'
+          height={350}
+          width={300}
+          searchDisabled={false}
+          skinTonesDisabled={false}
+          previewConfig={{
+            showPreview: false,
+          }}
+        />
       </OverlayPanel>
 
-      {/* Enhanced Attachment Dialog */}
+      {/* Attachment Options Dialog */}
       <Dialog
-        header='Send Attachment'
         visible={showAttachmentDialog}
-        style={{ width: '450px' }}
         onHide={() => setShowAttachmentDialog(false)}
-        className='attachment-dialog'
+        header='Share Content'
+        modal
+        style={{ width: '90vw', maxWidth: '500px' }}
+        className='attachment-dialog modern-dialog'
       >
         <div className='attachment-options-grid'>
-          {getAttachmentOptions().map((option, index) => (
+          {getAttachmentOptions().map((option) => (
             <div
-              key={index}
-              className='attachment-option-card'
-              onClick={option.action}
+              key={option.id}
+              className={`attachment-option-card ${option.disabled ? 'disabled' : ''}`}
+              onClick={option.disabled ? undefined : option.action}
             >
               <div className='option-illustration'>
-                <span className='option-emoji'>{option.illustration}</span>
+                <span
+                  className='option-emoji'
+                  role='img'
+                  aria-label={option.label}
+                >
+                  {option.icon}
+                </span>
               </div>
               <div className='option-content'>
-                <div className='option-icon'>{option.icon}</div>
                 <h4 className='option-title'>{option.label}</h4>
                 <p className='option-description'>{option.description}</p>
               </div>
+              {option.disabled && (
+                <div className='option-badge'>
+                  <span>Mobile Only</span>
+                </div>
+              )}
             </div>
           ))}
-
-          <input
-            ref={fileInputRef}
-            type='file'
-            accept='image/*,video/*,.pdf,.doc,.docx,.txt'
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            multiple
-          />
-
-          {isProcessingFile && (
-            <div className='processing-indicator'>
-              <div className='processing-spinner'></div>
-              <p>Processing file...</p>
-            </div>
-          )}
         </div>
       </Dialog>
 
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type='file'
+        multiple
+        accept='image/*,video/*,audio/*,.pdf,.doc,.docx,.txt'
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+
       {/* Video Recorder */}
       {showVideoRecorder && (
-        <Dialog
-          visible={showVideoRecorder}
-          onHide={() => setShowVideoRecorder(false)}
-          className='video-recorder-dialog'
-          header={null}
-          closable={false}
-          style={{ width: '100vw', height: '100vh', margin: 0 }}
-          contentStyle={{ padding: 0, height: '100%' }}
-        >
-          <VideoRecorder
-            onVideoRecorded={handleVideoRecorded}
-            onClose={() => setShowVideoRecorder(false)}
-            maxDuration={60}
-          />
-        </Dialog>
+        <VideoRecorder
+          onVideoRecorded={handleVideoRecorded}
+          onClose={() => setShowVideoRecorder(false)}
+        />
       )}
     </>
   );
