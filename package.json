@@ -92,7 +92,7 @@
     "socket.io-client": "^4.8.1",
     "swiper": "^11.2.10",
     "zaions-tool-kit": "^0.1.5",
-    "zod": "^3.25.74",
+    "zod": "^3.25.75",
     "zustand": "^5.0.6"
   },
   "description": "AI Personal Assistant Project - A comprehensive AI-powered personal assistant application built with React.",
@@ -102,7 +102,7 @@
     "url": "https://aoneahsan.com"
   },
   "displayName": "AI Personal Assistant",
-  "pricing": "Commercial License Required",
+  "pricing": "Trial",
   "keywords": [
     "AI Personal Assistant",
     "ahsan mahmood",
