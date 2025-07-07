@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(flutter create:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(dart pub global activate:*)",
+      "Bash(flutterfire:*)",
+      "Bash($HOME/.pub-cache/bin/flutterfire:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(flutter create:*)",
+      "Bash(mkdir:*)",
+      "Bash(flutter pub:*)",
+      "Bash(npm init:*)",
+      "Bash(flutter:*)",
+      "Bash(rm:*)",
+      "Bash(*:*)"
+    ],
+    "deny": []
+  }
+}
