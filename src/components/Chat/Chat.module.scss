@@ -385,6 +385,74 @@
             background: var(--color-danger-dark, #c82333) !important;
           }
         }
+
+        &.listening {
+          background: var(--color-success, #28a745) !important;
+          color: white !important;
+          animation: pulse 1.5s infinite;
+
+          &:hover {
+            background: var(--color-success-dark, #218838) !important;
+          }
+        }
+      }
+
+      .audioRecorderWrapper {
+        display: flex;
+        align-items: center;
+
+        .audioRecorder {
+          border: none !important;
+          background: transparent !important;
+          width: auto !important;
+          height: auto !important;
+
+          button {
+            background: transparent !important;
+            border: none !important;
+            color: var(--color-text-secondary, #6c757d) !important;
+            padding: 8px !important;
+            border-radius: 50% !important;
+            width: 36px !important;
+            height: 36px !important;
+            transition: all 0.2s ease !important;
+
+            &:hover {
+              background: var(
+                --color-primary-light,
+                rgba(0, 123, 255, 0.1)
+              ) !important;
+              color: var(--color-primary, #007bff) !important;
+            }
+          }
+        }
+
+        .audioRecorderStartSave {
+          background: var(--color-danger, #dc3545) !important;
+          color: white !important;
+
+          &:hover {
+            background: var(--color-danger-dark, #c82333) !important;
+          }
+        }
+
+        .audioRecorderPauseResume {
+          background: var(--color-warning, #ffc107) !important;
+          color: var(--color-text-primary, #212529) !important;
+
+          &:hover {
+            background: var(--color-warning-dark, #e0a800) !important;
+          }
+        }
+
+        .audioRecorderDiscard {
+          background: var(--color-secondary, #6c757d) !important;
+          color: white !important;
+
+          &:hover {
+            background: var(--color-secondary-dark, #5a6268) !important;
+          }
+        }
       }
 
       .sendBtn {
@@ -411,6 +479,13 @@
           font-size: 14px !important;
         }
       }
+    }
+  }
+
+  .messageTextarea {
+    &.listening {
+      border-color: var(--color-success, #28a745) !important;
+      box-shadow: 0 0 0 2px var(--color-success-light, rgba(40, 167, 69, 0.2)) !important;
     }
   }
 }
@@ -729,5 +804,47 @@
     max-height: 300px;
     border-radius: 8px;
     background: #000;
+  }
+}
+
+/* Speech Recognition Status */
+.speechRecognitionStatus {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-success, #28a745);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  z-index: 9999;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: slideInFromTop 0.3s ease-out;
+
+  .listeningIndicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+
+    .listeningDot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
   }
 }

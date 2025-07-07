@@ -8,11 +8,13 @@ import {
   useUserDataZState,
 } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
+import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
 import {
   FaArrowLeft,
   FaEllipsisV,
@@ -25,12 +27,13 @@ import {
   FaVideo,
   FaVideoSlash,
 } from 'react-icons/fa';
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from 'react-speech-recognition';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
 import styles from './Chat.module.scss';
-import { TranscriptSegment } from './types';
 import VideoRecorder from './VideoRecorder';
-import VoiceRecording from './VoiceRecording';
 
 interface ChatUser {
   id: string;
@@ -59,7 +62,7 @@ interface Message {
   videoDuration?: number;
   videoThumbnail?: string;
   quickTranscript?: string;
-  transcript?: TranscriptSegment[];
+  transcript?: string;
 }
 
 interface ChatProps {
@@ -73,170 +76,6 @@ interface ChatProps {
     userAvatar?: string;
   };
 }
-
-// Emoji data - basic emojis for the picker
-const EMOJI_DATA = [
-  '😀',
-  '😃',
-  '😄',
-  '😁',
-  '😆',
-  '😅',
-  '😂',
-  '🤣',
-  '😊',
-  '😇',
-  '🙂',
-  '🙃',
-  '😉',
-  '😌',
-  '😍',
-  '🥰',
-  '😘',
-  '😗',
-  '😙',
-  '😚',
-  '😋',
-  '😛',
-  '😝',
-  '😜',
-  '🤪',
-  '🤨',
-  '🧐',
-  '🤓',
-  '😎',
-  '🤩',
-  '🥳',
-  '😏',
-  '😒',
-  '😞',
-  '😔',
-  '😟',
-  '😕',
-  '🙁',
-  '☹️',
-  '😣',
-  '😖',
-  '😫',
-  '😩',
-  '🥺',
-  '😢',
-  '😭',
-  '😤',
-  '😠',
-  '😡',
-  '🤬',
-  '🤯',
-  '😳',
-  '🥵',
-  '🥶',
-  '😱',
-  '😨',
-  '😰',
-  '😥',
-  '😓',
-  '🤗',
-  '🤔',
-  '🤭',
-  '🤫',
-  '🤥',
-  '😶',
-  '😐',
-  '😑',
-  '😬',
-  '🙄',
-  '😯',
-  '😦',
-  '😧',
-  '😮',
-  '😲',
-  '🥱',
-  '😴',
-  '🤤',
-  '😪',
-  '😵',
-  '🤐',
-  '🥴',
-  '🤢',
-  '🤮',
-  '🤧',
-  '😷',
-  '🤒',
-  '🤕',
-  '🤑',
-  '🤠',
-  '😈',
-  '👿',
-  '👹',
-  '👺',
-  '🤡',
-  '💩',
-  '👻',
-  '💀',
-  '☠️',
-  '👽',
-  '👾',
-  '🤖',
-  '🎃',
-  '😺',
-  '😸',
-  '😹',
-  '😻',
-  '😼',
-  '😽',
-  '🙀',
-  '😿',
-  '😾',
-  '❤️',
-  '🧡',
-  '💛',
-  '💚',
-  '💙',
-  '💜',
-  '🤎',
-  '🖤',
-  '🤍',
-  '💔',
-  '❣️',
-  '💕',
-  '💞',
-  '💓',
-  '💗',
-  '💖',
-  '💘',
-  '💝',
-  '💟',
-  '👍',
-  '👎',
-  '👌',
-  '✌️',
-  '🤞',
-  '🤟',
-  '🤘',
-  '🤙',
-  '👈',
-  '👉',
-  '👆',
-  '🖕',
-  '👇',
-  '☝️',
-  '👋',
-  '🤚',
-  '🖐️',
-  '✋',
-  '🖖',
-  '👏',
-  '🙌',
-  '👐',
-  '🤲',
-  '🤝',
-  '🙏',
-  '✍️',
-  '💅',
-  '🤳',
-  '💪',
-  '🦾',
-];
 
 const Chat: React.FC<ChatProps> = ({
   chatUser,
@@ -284,6 +123,16 @@ const Chat: React.FC<ChatProps> = ({
     isOnline: false,
     lastSeen: new Date(),
   });
+
+  // Voice recording and speech recognition
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  const recorderControls = useAudioRecorder();
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -433,7 +282,10 @@ const Chat: React.FC<ChatProps> = ({
             videoDuration: msg.videoDuration,
             videoThumbnail: msg.videoThumbnail,
             quickTranscript: msg.quickTranscript,
-            transcript: msg.transcript,
+            transcript:
+              typeof msg.transcript === 'string'
+                ? msg.transcript
+                : msg.transcript?.map((seg) => seg.text).join(' ') || '',
           })
         );
 
@@ -450,12 +302,20 @@ const Chat: React.FC<ChatProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Handle speech recognition transcript
+  useEffect(() => {
+    if (transcript && listening) {
+      setNewMessage(transcript);
+    }
+  }, [transcript, listening]);
+
   // Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
     const messageText = newMessage.trim();
     setNewMessage('');
+    resetTranscript();
 
     // Auto-resize textarea
     if (textareaRef.current) {
@@ -503,13 +363,35 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   // Handle audio message
-  const handleSendAudioMessage = async (audioMessage: Message) => {
+  const handleSendAudioMessage = (audioBlob: Blob) => {
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audioDuration = recorderControls.recordingTime || 0;
+
+    const audioMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'me',
+      timestamp: new Date(),
+      status: 'sent',
+      type: 'audio',
+      fileData: {
+        name: 'voice-message.webm',
+        size: audioBlob.size,
+        type: audioBlob.type,
+        url: audioUrl,
+      },
+      audioDuration,
+      quickTranscript: transcript
+        ? transcript.substring(0, 50) + (transcript.length > 50 ? '...' : '')
+        : 'Audio message',
+      transcript: transcript || 'Audio message recorded',
+    };
+
     setMessages((prev) => [...prev, audioMessage]);
+    resetTranscript();
 
     if (chatId && currentUser) {
       try {
         // Here you would upload the audio file and send the message
-        // For now, we'll just show the audio message locally
         console.log('Audio message sent:', audioMessage);
         toast.success('Audio message sent!');
       } catch (error) {
@@ -576,8 +458,8 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   // Handle emoji select
-  const handleEmojiSelect = (emoji: string) => {
-    setNewMessage((prev) => prev + emoji);
+  const handleEmojiSelect = (emojiData: EmojiClickData) => {
+    setNewMessage((prev) => prev + emojiData.emoji);
     setShowEmojiPicker(false);
     if (textareaRef.current) {
       textareaRef.current.focus();
@@ -596,6 +478,21 @@ const Chat: React.FC<ChatProps> = ({
       console.log('Selected files:', files);
       // TODO: Implement file upload logic
       toast.info('File upload functionality coming soon!');
+    }
+  };
+
+  // Handle speech recognition toggle
+  const handleSpeechRecognitionToggle = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+      toast.info('Speech recognition stopped');
+    } else {
+      if (browserSupportsSpeechRecognition) {
+        SpeechRecognition.startListening({ continuous: true });
+        toast.success('Speech recognition started - speak now!');
+      } else {
+        toast.error('Speech recognition not supported in this browser');
+      }
     }
   };
 
@@ -765,7 +662,7 @@ const Chat: React.FC<ChatProps> = ({
                         </div>
                         {message.quickTranscript && (
                           <div className={styles.audioTranscript}>
-                            {message.quickTranscript}
+                            "{message.quickTranscript}"
                           </div>
                         )}
                       </div>
@@ -819,8 +716,10 @@ const Chat: React.FC<ChatProps> = ({
               value={newMessage}
               onChange={handleTextareaChange}
               onKeyPress={handleKeyPress}
-              placeholder='Type a message...'
-              className={styles.messageTextarea}
+              placeholder={
+                listening ? 'Listening... Speak now!' : 'Type a message...'
+              }
+              className={`${styles.messageTextarea} ${listening ? styles.listening : ''}`}
               autoResize={false}
               rows={1}
             />
@@ -833,10 +732,30 @@ const Chat: React.FC<ChatProps> = ({
                 tooltip='Add emoji'
               />
 
-              <VoiceRecording
-                onSendAudioMessage={handleSendAudioMessage}
-                disabled={false}
+              <Button
+                icon={<FaMicrophone />}
+                className={`${styles.voiceBtn} ${listening ? styles.listening : ''}`}
+                onClick={handleSpeechRecognitionToggle}
+                tooltip={listening ? 'Stop listening' : 'Start voice typing'}
               />
+
+              <div className={styles.audioRecorderWrapper}>
+                <AudioRecorder
+                  onRecordingComplete={handleSendAudioMessage}
+                  audioTrackConstraints={{
+                    noiseSuppression: true,
+                    echoCancellation: true,
+                  }}
+                  showVisualizer={true}
+                  classes={{
+                    AudioRecorderClass: styles.audioRecorder,
+                    AudioRecorderStartSaveClass: styles.audioRecorderStartSave,
+                    AudioRecorderPauseResumeClass:
+                      styles.audioRecorderPauseResume,
+                    AudioRecorderDiscardClass: styles.audioRecorderDiscard,
+                  }}
+                />
+              </div>
 
               <Button
                 icon={<FaImage />}
@@ -874,7 +793,7 @@ const Chat: React.FC<ChatProps> = ({
         onChange={handleFileSelect}
       />
 
-      {/* Emoji Picker Dialog */}
+      {/* Professional Emoji Picker Dialog */}
       <Dialog
         visible={showEmojiPicker}
         onHide={() => setShowEmojiPicker(false)}
@@ -883,18 +802,19 @@ const Chat: React.FC<ChatProps> = ({
         className={styles.emojiPickerDialog}
         style={{ width: '400px', maxWidth: '90vw' }}
       >
-        <div className={styles.emojiGrid}>
-          {EMOJI_DATA.map((emoji, index) => (
-            <button
-              key={index}
-              className={styles.emojiButton}
-              onClick={() => handleEmojiSelect(emoji)}
-              type='button'
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
+        <EmojiPicker
+          onEmojiClick={handleEmojiSelect}
+          autoFocusSearch={false}
+          height={350}
+          width='100%'
+          searchDisabled={false}
+          skinTonesDisabled={false}
+          previewConfig={{
+            defaultEmoji: '1f60a',
+            defaultCaption: "What's on your mind?",
+            showPreview: true,
+          }}
+        />
       </Dialog>
 
       {/* Video Recorder Dialog */}
@@ -913,6 +833,16 @@ const Chat: React.FC<ChatProps> = ({
             maxDuration={60}
           />
         </Dialog>
+      )}
+
+      {/* Speech Recognition Status */}
+      {listening && (
+        <div className={styles.speechRecognitionStatus}>
+          <div className={styles.listeningIndicator}>
+            <div className={styles.listeningDot}></div>
+            <span>Listening... Speak now!</span>
+          </div>
+        </div>
       )}
     </>
   );
