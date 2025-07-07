@@ -1,6 +1,8 @@
-import { FeedbackModal } from '@/modules/FeedbackModule/components/FeedbackModal';
-import { FeedbackWidget } from '@/modules/FeedbackModule/components/FeedbackWidget';
-import { useFeedback } from '@/modules/FeedbackModule/hooks/useFeedback';
+import {
+  FeedbackModal,
+  FeedbackWidget,
+  useFeedback,
+} from '@/modules/FeedbackModule';
 import {
   FeedbackConfig,
   FeedbackRating,

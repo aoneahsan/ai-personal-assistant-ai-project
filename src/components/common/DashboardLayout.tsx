@@ -18,6 +18,7 @@ const DashboardLayout: React.FC = () => {
     const path = location.pathname;
     if (path === ROUTES.DASHBOARD_CHATS) return 'chats';
     if (path === ROUTES.DASHBOARD_CHAT_EMBEDS) return 'embeds';
+    if (path === ROUTES.DASHBOARD_FEEDBACK_EMBEDS) return 'feedback-embeds';
     if (path === ROUTES.DASHBOARD_ACCOUNT) return 'account';
     if (path === ROUTES.EDIT_PROFILE) return 'profile';
     if (path.startsWith('/dashboard/chats/view/')) return 'chats';
@@ -44,6 +45,12 @@ const DashboardLayout: React.FC = () => {
       label: 'Chat Embeds',
       icon: 'pi pi-code',
       route: ROUTES.DASHBOARD_CHAT_EMBEDS,
+    },
+    {
+      key: 'feedback-embeds',
+      label: 'Feedback Embeds',
+      icon: 'pi pi-comment',
+      route: ROUTES.DASHBOARD_FEEDBACK_EMBEDS,
     },
     {
       key: 'account',

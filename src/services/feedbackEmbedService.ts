@@ -66,6 +66,8 @@ class FeedbackEmbedService {
       FeedbackEmbedConfig,
       | 'id'
       | 'embedId'
+      | 'userId'
+      | 'userEmail'
       | 'createdAt'
       | 'updatedAt'
       | 'totalViews'

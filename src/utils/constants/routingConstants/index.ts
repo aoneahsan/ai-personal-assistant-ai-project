@@ -28,6 +28,7 @@ export const ROUTES = {
   DASHBOARD_CHATS: '/dashboard/chats',
   DASHBOARD_CHAT_VIEW: '/dashboard/chats/view/$chatId',
   DASHBOARD_CHAT_EMBEDS: '/dashboard/embeds',
+  DASHBOARD_FEEDBACK_EMBEDS: '/dashboard/feedback-embeds',
   DASHBOARD_ACCOUNT: '/dashboard/account',
   EDIT_PROFILE: '/dashboard/profile',
 
@@ -37,6 +38,7 @@ export const ROUTES = {
 
   // Standalone Routes (outside dashboard layout)
   EMBED_DEMO: '/embed-demo',
+  EMBED_FEEDBACK: '/embed/feedback',
   ADMIN: '/admin',
 
   // Policy Routes (public access)
@@ -54,9 +56,11 @@ export const ROUTE_LABELS = {
   [ROUTES.DASHBOARD_CHATS]: 'Chats',
   [ROUTES.DASHBOARD_CHAT_VIEW]: 'Chat View',
   [ROUTES.DASHBOARD_CHAT_EMBEDS]: 'Chat Embeds',
+  [ROUTES.DASHBOARD_FEEDBACK_EMBEDS]: 'Feedback Embeds',
   [ROUTES.DASHBOARD_ACCOUNT]: 'Account',
   [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',
   [ROUTES.EMBED_DEMO]: 'Embed Demo',
+  [ROUTES.EMBED_FEEDBACK]: 'Embed Feedback',
   [ROUTES.ADMIN]: 'Admin Dashboard',
   [ROUTES.AUTH]: 'Authentication',
   [ROUTES.PRIVACY_POLICY]: 'Privacy Policy',
@@ -88,6 +92,12 @@ export const NAVIGATION_ITEMS = [
     label: 'Chat Embeds',
     icon: 'pi pi-code',
     route: ROUTES.DASHBOARD_CHAT_EMBEDS,
+  },
+  {
+    key: 'feedback-embeds',
+    label: 'Feedback Embeds',
+    icon: 'pi pi-comment',
+    route: ROUTES.DASHBOARD_FEEDBACK_EMBEDS,
   },
   {
     key: 'account',

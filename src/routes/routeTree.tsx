@@ -31,6 +31,7 @@ const chatSearchSchema = z
 
 // Lazy load components
 const EmbedDemo = lazy(() => import('@/pages/EmbedDemo'));
+const EmbedFeedback = lazy(() => import('@/pages/EmbedFeedback'));
 const AdminDashboard = lazy(() => import('@/pages/Admin'));
 const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const ChatView = lazy(() => import('@/components/Chat/ChatView'));
@@ -42,6 +43,9 @@ const DashboardOverview = lazy(
 const DashboardChats = lazy(() => import('@/pages/Dashboard/DashboardChats'));
 const DashboardChatEmbeds = lazy(
   () => import('@/pages/Dashboard/DashboardChatEmbeds')
+);
+const DashboardFeedbackEmbeds = lazy(
+  () => import('@/pages/Dashboard/DashboardFeedbackEmbeds')
 );
 const DashboardAccount = lazy(
   () => import('@/pages/Dashboard/DashboardAccount')
@@ -215,6 +219,17 @@ const dashboardChatEmbedsRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+const dashboardFeedbackEmbedsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/feedback-embeds',
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <DashboardFeedbackEmbeds />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 const dashboardAccountRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/account',
@@ -280,6 +295,18 @@ const embedDemoRoute = createRoute({
   component: () => (
     <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
       <EmbedDemo />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+// Embed Feedback route - public route for embedded feedback forms
+const embedFeedbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.EMBED_FEEDBACK,
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <EmbedFeedback />
     </React.Suspense>
   ),
   errorComponent: ErrorFallback,
@@ -399,10 +426,12 @@ export const routeTree = rootRoute.addChildren([
     dashboardChatsRoute,
     dashboardChatViewRoute,
     dashboardChatEmbedsRoute,
+    dashboardFeedbackEmbedsRoute,
     dashboardAccountRoute,
   ]),
   editProfileRoute,
   embedDemoRoute,
+  embedFeedbackRoute,
   adminRoute,
   anonymousRoomRoute,
   anonymousRoomWithIdRoute,
