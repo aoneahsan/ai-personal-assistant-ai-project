@@ -1,5 +1,8 @@
 import { ROUTES } from '@/utils/constants/routingConstants';
-import { useUserDataZState } from '@/zustandStates/userState';
+import {
+  useIsAuthSystemReady,
+  useUserDataZState,
+} from '@/zustandStates/userState';
 import { useNavigate } from '@tanstack/react-router';
 import React, { useEffect } from 'react';
 
@@ -17,18 +20,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
 }) => {
   const user = useUserDataZState((state) => state.data);
+  const isAuthSystemReady = useIsAuthSystemReady();
   const navigate = useNavigate();
 
   // Auto-redirect if authentication is required but user is not authenticated
   useEffect(() => {
-    if (requireAuth && !user) {
+    // Only redirect if auth system is ready and user is definitely not authenticated
+    if (requireAuth && isAuthSystemReady && !user) {
       navigate({ to: redirectTo, replace: true });
     }
-  }, [requireAuth, user, navigate, redirectTo]);
+  }, [requireAuth, user, isAuthSystemReady, navigate, redirectTo]);
 
   // If auth is not required, always render children
   if (!requireAuth) {
     return <>{children}</>;
+  }
+
+  // If auth system is not ready yet, show fallback or loading
+  if (!isAuthSystemReady) {
+    return fallback ? <>{fallback}</> : null;
   }
 
   // If user is not authenticated, show fallback or nothing (redirect is handled by useEffect)

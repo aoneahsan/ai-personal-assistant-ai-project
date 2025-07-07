@@ -4,7 +4,10 @@ import { chatService, FirestoreMessage } from '@/services/chatService';
 import { ChatFeatureFlag, SubscriptionPlan } from '@/types/user/subscription';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
-import { useUserDataZState } from '@/zustandStates/userState';
+import {
+  useIsAuthSystemReady,
+  useUserDataZState,
+} from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
@@ -40,6 +43,7 @@ const Chat: React.FC<ChatProps> = ({
   searchParams,
 }) => {
   const currentUser = useUserDataZState((state) => state.data);
+  const isAuthSystemReady = useIsAuthSystemReady();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -114,8 +118,15 @@ const Chat: React.FC<ChatProps> = ({
   // Set up chat when component mounts or search params change
   useEffect(() => {
     const setupChat = async () => {
+      // Wait for auth system to be ready before proceeding
+      if (!isAuthSystemReady) {
+        consoleLog('Auth system not ready, waiting...');
+        return;
+      }
+
       if (!currentUser) {
-        consoleLog('No current user, skipping chat setup');
+        consoleLog('No current user, using default chat behavior');
+        setMessages(getDefaultMessages());
         setIsInitialLoading(false);
         return;
       }
@@ -151,7 +162,13 @@ const Chat: React.FC<ChatProps> = ({
     };
 
     setupChat();
-  }, [currentUser, search?.chatId, search?.userId, search?.userEmail]);
+  }, [
+    currentUser,
+    isAuthSystemReady,
+    search?.chatId,
+    search?.userId,
+    search?.userEmail,
+  ]);
 
   // Subscribe to messages when chatId is available
   useEffect(() => {
