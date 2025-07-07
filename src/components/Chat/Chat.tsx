@@ -1,4 +1,3 @@
-import { DashboardPageWrapper } from '@/components/common';
 import { unifiedAuthService } from '@/services/authService';
 import { chatService } from '@/services/chatService';
 import { ROUTES } from '@/utils/constants/routingConstants';
@@ -9,18 +8,21 @@ import {
 } from '@/zustandStates/userState';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
+import { Dialog } from 'primereact/dialog';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   FaArrowLeft,
   FaEllipsisV,
+  FaImage,
+  FaMicrophone,
   FaPaperPlane,
   FaPaperclip,
   FaPhone,
   FaSmile,
   FaVideo,
+  FaVideoSlash,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
@@ -63,6 +65,170 @@ interface ChatProps {
   };
 }
 
+// Emoji data - basic emojis for the picker
+const EMOJI_DATA = [
+  '😀',
+  '😃',
+  '😄',
+  '😁',
+  '😆',
+  '😅',
+  '😂',
+  '🤣',
+  '😊',
+  '😇',
+  '🙂',
+  '🙃',
+  '😉',
+  '😌',
+  '😍',
+  '🥰',
+  '😘',
+  '😗',
+  '😙',
+  '😚',
+  '😋',
+  '😛',
+  '😝',
+  '😜',
+  '🤪',
+  '🤨',
+  '🧐',
+  '🤓',
+  '😎',
+  '🤩',
+  '🥳',
+  '😏',
+  '😒',
+  '😞',
+  '😔',
+  '😟',
+  '😕',
+  '🙁',
+  '☹️',
+  '😣',
+  '😖',
+  '😫',
+  '😩',
+  '🥺',
+  '😢',
+  '😭',
+  '😤',
+  '😠',
+  '😡',
+  '🤬',
+  '🤯',
+  '😳',
+  '🥵',
+  '🥶',
+  '😱',
+  '😨',
+  '😰',
+  '😥',
+  '😓',
+  '🤗',
+  '🤔',
+  '🤭',
+  '🤫',
+  '🤥',
+  '😶',
+  '😐',
+  '😑',
+  '😬',
+  '🙄',
+  '😯',
+  '😦',
+  '😧',
+  '😮',
+  '😲',
+  '🥱',
+  '😴',
+  '🤤',
+  '😪',
+  '😵',
+  '🤐',
+  '🥴',
+  '🤢',
+  '🤮',
+  '🤧',
+  '😷',
+  '🤒',
+  '🤕',
+  '🤑',
+  '🤠',
+  '😈',
+  '👿',
+  '👹',
+  '👺',
+  '🤡',
+  '💩',
+  '👻',
+  '💀',
+  '☠️',
+  '👽',
+  '👾',
+  '🤖',
+  '🎃',
+  '😺',
+  '😸',
+  '😹',
+  '😻',
+  '😼',
+  '😽',
+  '🙀',
+  '😿',
+  '😾',
+  '❤️',
+  '🧡',
+  '💛',
+  '💚',
+  '💙',
+  '💜',
+  '🤎',
+  '🖤',
+  '🤍',
+  '💔',
+  '❣️',
+  '💕',
+  '💞',
+  '💓',
+  '💗',
+  '💖',
+  '💘',
+  '💝',
+  '💟',
+  '👍',
+  '👎',
+  '👌',
+  '✌️',
+  '🤞',
+  '🤟',
+  '🤘',
+  '🤙',
+  '👈',
+  '👉',
+  '👆',
+  '🖕',
+  '👇',
+  '☝️',
+  '👋',
+  '🤚',
+  '🖐️',
+  '✋',
+  '🖖',
+  '👏',
+  '🙌',
+  '👐',
+  '🤲',
+  '🤝',
+  '🙏',
+  '✍️',
+  '💅',
+  '🤳',
+  '💪',
+  '🦾',
+];
+
 const Chat: React.FC<ChatProps> = ({
   chatUser,
   initialMessages = [],
@@ -100,10 +266,13 @@ const Chat: React.FC<ChatProps> = ({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [chatId, setChatId] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Current chat user
   const currentChatUser: ChatUser = chatUser || {
@@ -290,6 +459,56 @@ const Chat: React.FC<ChatProps> = ({
     }
   };
 
+  // Handle emoji select
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
+  // Handle file attachment
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      console.log('Selected files:', files);
+      // TODO: Implement file upload logic
+      toast.info('File upload functionality coming soon!');
+    }
+  };
+
+  // Handle voice recording
+  const handleVoiceRecord = () => {
+    setIsRecording(!isRecording);
+    if (!isRecording) {
+      toast.info('Voice recording started!');
+      // TODO: Implement voice recording logic
+    } else {
+      toast.info('Voice recording stopped!');
+      // TODO: Process and send voice message
+    }
+  };
+
+  // Handle image capture
+  const handleImageCapture = () => {
+    console.log('Image capture clicked');
+    toast.info('Image capture functionality coming soon!');
+    // TODO: Implement image capture logic
+  };
+
+  // Handle video recording
+  const handleVideoRecord = () => {
+    console.log('Video recording clicked');
+    toast.info('Video recording functionality coming soon!');
+    // TODO: Implement video recording logic
+  };
+
   // Format time
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -302,65 +521,43 @@ const Chat: React.FC<ChatProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <DashboardPageWrapper
-        title={`Chat with ${currentChatUser.name}`}
-        actions={
-          <Button
-            icon={<FaArrowLeft />}
-            label='Back'
-            className='p-button-outlined'
-            onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
-          />
-        }
-      >
-        <Card className='h-full'>
-          <div className='chat-loading'>
-            <div className='chat-loading-header'>
-              <Skeleton
-                width='100%'
-                height='60px'
-              />
-            </div>
-            <div className='chat-loading-messages'>
-              <Skeleton
-                width='60%'
-                height='40px'
-                className='mb-2'
-              />
-              <Skeleton
-                width='40%'
-                height='40px'
-                className='mb-2 ml-auto'
-              />
-              <Skeleton
-                width='70%'
-                height='40px'
-                className='mb-2'
-              />
-              <Skeleton
-                width='50%'
-                height='40px'
-                className='mb-2 ml-auto'
-              />
-            </div>
+      <div className='chat-container'>
+        <div className='chat-loading'>
+          <div className='chat-loading-header'>
+            <Skeleton
+              width='100%'
+              height='60px'
+            />
           </div>
-        </Card>
-      </DashboardPageWrapper>
+          <div className='chat-loading-messages'>
+            <Skeleton
+              width='60%'
+              height='40px'
+              className='mb-2'
+            />
+            <Skeleton
+              width='40%'
+              height='40px'
+              className='mb-2 ml-auto'
+            />
+            <Skeleton
+              width='70%'
+              height='40px'
+              className='mb-2'
+            />
+            <Skeleton
+              width='50%'
+              height='40px'
+              className='mb-2 ml-auto'
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <DashboardPageWrapper
-      title={`Chat with ${currentChatUser.name}`}
-      actions={
-        <Button
-          icon={<FaArrowLeft />}
-          label='Back'
-          className='p-button-outlined'
-          onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
-        />
-      }
-    >
+    <>
       {unifiedAuthService.isAnonymousUser() && (
         <AnonymousUserIndicator
           variant='banner'
@@ -369,115 +566,140 @@ const Chat: React.FC<ChatProps> = ({
         />
       )}
 
-      <Card className='h-full p-0 overflow-hidden'>
-        <div className='chat-container'>
-          {/* Header */}
-          <div className='chat-header'>
-            <div className='chat-header-left'>
-              <Button
-                icon={<FaArrowLeft />}
-                className='chat-back-btn'
-                onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
-              />
+      <div className='chat-container'>
+        {/* Header */}
+        <div className='chat-header'>
+          <div className='chat-header-left'>
+            <Button
+              icon={<FaArrowLeft />}
+              className='chat-back-btn'
+              onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
+            />
 
-              <div className='chat-avatar'>
-                {currentChatUser.avatar ? (
-                  <img
-                    src={currentChatUser.avatar}
-                    alt={currentChatUser.name}
-                  />
-                ) : (
-                  <div className='avatar-placeholder'>
-                    {currentChatUser.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              <div className='chat-user-info'>
-                <h3 className='chat-user-name'>{currentChatUser.name}</h3>
-                <span className='chat-user-status'>
-                  {currentChatUser.isOnline ? 'Online' : 'Last seen recently'}
-                </span>
-              </div>
+            <div className='chat-avatar'>
+              {currentChatUser.avatar ? (
+                <img
+                  src={currentChatUser.avatar}
+                  alt={currentChatUser.name}
+                />
+              ) : (
+                <div className='avatar-placeholder'>
+                  {currentChatUser.name.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
 
-            <div className='chat-header-right'>
-              <Button
-                icon={<FaVideo />}
-                className='chat-action-btn'
-              />
-              <Button
-                icon={<FaPhone />}
-                className='chat-action-btn'
-              />
-              <Button
-                icon={<FaEllipsisV />}
-                className='chat-action-btn'
-              />
+            <div className='chat-user-info'>
+              <h3 className='chat-user-name'>{currentChatUser.name}</h3>
+              <span className='chat-user-status'>
+                {currentChatUser.isOnline ? 'Online' : 'Last seen recently'}
+              </span>
             </div>
           </div>
 
-          {/* Messages */}
-          <div className='chat-messages'>
-            {messages.length === 0 ? (
-              <div className='chat-empty'>
-                <div className='empty-icon'>💬</div>
-                <h3>Start a conversation</h3>
-                <p>
-                  Send a message to begin chatting with {currentChatUser.name}
-                </p>
-              </div>
-            ) : (
-              <div className='messages-list'>
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`message ${message.sender === 'me' ? 'message-sent' : 'message-received'}`}
-                  >
-                    <div className='message-bubble'>
-                      <div className='message-text'>{message.text}</div>
-                      <div className='message-meta'>
-                        <span className='message-time'>
-                          {formatTime(message.timestamp)}
+          <div className='chat-header-right'>
+            <Button
+              icon={<FaVideo />}
+              className='chat-action-btn'
+            />
+            <Button
+              icon={<FaPhone />}
+              className='chat-action-btn'
+            />
+            <Button
+              icon={<FaEllipsisV />}
+              className='chat-action-btn'
+            />
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className='chat-messages'>
+          {messages.length === 0 ? (
+            <div className='chat-empty'>
+              <div className='empty-icon'>💬</div>
+              <h3>Start a conversation</h3>
+              <p>
+                Send a message to begin chatting with {currentChatUser.name}
+              </p>
+            </div>
+          ) : (
+            <div className='messages-list'>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`message ${message.sender === 'me' ? 'message-sent' : 'message-received'}`}
+                >
+                  <div className='message-bubble'>
+                    <div className='message-text'>{message.text}</div>
+                    <div className='message-meta'>
+                      <span className='message-time'>
+                        {formatTime(message.timestamp)}
+                      </span>
+                      {message.sender === 'me' && (
+                        <span className={`message-status ${message.status}`}>
+                          {message.status === 'read' ? '✓✓' : '✓'}
                         </span>
-                        {message.sender === 'me' && (
-                          <span className={`message-status ${message.status}`}>
-                            {message.status === 'read' ? '✓✓' : '✓'}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
 
-          {/* Input */}
-          <div className='chat-input'>
-            <div className='input-wrapper'>
-              <Button
-                icon={<FaPaperclip />}
-                className='attach-btn'
-                onClick={() => console.log('Attach file')}
-              />
+        {/* Input */}
+        <div className='chat-input'>
+          <div className='input-wrapper'>
+            <Button
+              icon={<FaPaperclip />}
+              className='attach-btn'
+              onClick={handleFileClick}
+              tooltip='Attach file'
+            />
 
-              <InputTextarea
-                ref={textareaRef}
-                value={newMessage}
-                onChange={handleTextareaChange}
-                onKeyPress={handleKeyPress}
-                placeholder='Type a message...'
-                className='message-textarea'
-                autoResize={false}
-                rows={1}
-              />
+            <InputTextarea
+              ref={textareaRef}
+              value={newMessage}
+              onChange={handleTextareaChange}
+              onKeyPress={handleKeyPress}
+              placeholder='Type a message...'
+              className='message-textarea'
+              autoResize={false}
+              rows={1}
+            />
 
+            <div className='input-actions'>
               <Button
                 icon={<FaSmile />}
                 className='emoji-btn'
-                onClick={() => console.log('Open emoji picker')}
+                onClick={() => setShowEmojiPicker(true)}
+                tooltip='Add emoji'
+              />
+
+              <Button
+                icon={<FaMicrophone />}
+                className={`voice-btn ${isRecording ? 'recording' : ''}`}
+                onClick={handleVoiceRecord}
+                tooltip={
+                  isRecording ? 'Stop recording' : 'Record voice message'
+                }
+              />
+
+              <Button
+                icon={<FaImage />}
+                className='image-btn'
+                onClick={handleImageCapture}
+                tooltip='Take photo'
+              />
+
+              <Button
+                icon={<FaVideoSlash />}
+                className='video-btn'
+                onClick={handleVideoRecord}
+                tooltip='Record video'
               />
 
               <Button
@@ -485,12 +707,46 @@ const Chat: React.FC<ChatProps> = ({
                 className='send-btn'
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
+                tooltip='Send message'
               />
             </div>
           </div>
         </div>
-      </Card>
-    </DashboardPageWrapper>
+      </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type='file'
+        multiple
+        accept='image/*,video/*,audio/*,.pdf,.doc,.docx,.txt'
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+
+      {/* Emoji Picker Dialog */}
+      <Dialog
+        visible={showEmojiPicker}
+        onHide={() => setShowEmojiPicker(false)}
+        header='Select Emoji'
+        modal
+        className='emoji-picker-dialog'
+        style={{ width: '400px', maxWidth: '90vw' }}
+      >
+        <div className='emoji-grid'>
+          {EMOJI_DATA.map((emoji, index) => (
+            <button
+              key={index}
+              className='emoji-button'
+              onClick={() => handleEmojiSelect(emoji)}
+              type='button'
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </Dialog>
+    </>
   );
 };
 
