@@ -47,9 +47,24 @@ export const useVoiceCall = (
     voiceCallService.getCallState()
   );
   const [isCallModalVisible, setIsCallModalVisible] = useState(false);
-  const [incomingCall, setIncomingCall] = useState<VoiceCallSession | null>(
-    null
-  );
+
+  // Answer an incoming call - moved before useEffect to fix hoisting
+  const answerCall = useCallback(async () => {
+    if (!callState.callSession?.callId) {
+      toast.error('No active call to answer');
+      return;
+    }
+
+    try {
+      await voiceCallService.answerCall(callState.callSession.callId);
+      toast.success('Call answered');
+    } catch (error) {
+      console.error('Failed to answer call:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to answer call'
+      );
+    }
+  }, [callState.callSession?.callId]);
 
   // Subscribe to voice call service state changes
   useEffect(() => {
@@ -64,7 +79,6 @@ export const useVoiceCall = (
       // Hide modal when call ends
       if (!newState.isInCall && isCallModalVisible) {
         setIsCallModalVisible(false);
-        setIncomingCall(null);
       }
 
       // Call external callback
@@ -141,25 +155,6 @@ export const useVoiceCall = (
     [currentUser]
   );
 
-  // Answer an incoming call
-  const answerCall = useCallback(async () => {
-    if (!callState.callSession?.callId) {
-      toast.error('No active call to answer');
-      return;
-    }
-
-    try {
-      await voiceCallService.answerCall(callState.callSession.callId);
-      setIncomingCall(null);
-      toast.success('Call answered');
-    } catch (error) {
-      console.error('Failed to answer call:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to answer call'
-      );
-    }
-  }, [callState.callSession?.callId]);
-
   // Decline an incoming call
   const declineCall = useCallback(async () => {
     if (!callState.callSession?.callId) {
@@ -169,7 +164,6 @@ export const useVoiceCall = (
     try {
       await voiceCallService.declineCall(callState.callSession.callId);
       setIsCallModalVisible(false);
-      setIncomingCall(null);
       toast.info('Call declined');
     } catch (error) {
       console.error('Failed to decline call:', error);
@@ -182,7 +176,6 @@ export const useVoiceCall = (
     try {
       await voiceCallService.endCall();
       setIsCallModalVisible(false);
-      setIncomingCall(null);
       toast.info('Call ended');
     } catch (error) {
       console.error('Failed to end call:', error);
@@ -199,7 +192,6 @@ export const useVoiceCall = (
   const closeCallModal = useCallback(() => {
     if (!callState.isInCall) {
       setIsCallModalVisible(false);
-      setIncomingCall(null);
     }
   }, [callState.isInCall]);
 

@@ -194,6 +194,15 @@ service cloud.firestore {
       allow write: if request.auth != null && isAdminUser();
     }
 
+    // Admin Settings - allow authenticated users to read admin settings, admin write access
+    match /pca_admin_settings/{settingId} {
+      // Allow authenticated users to read admin settings (needed for app functionality)
+      allow read: if request.auth != null;
+      
+      // Allow admin users to manage admin settings
+      allow write: if request.auth != null && isAdminUser();
+    }
+
     // Subscription Requests - users can manage their own requests, admins can manage all
     match /pca_subscription_requests/{requestId} {
       // Allow users to read their own subscription requests
