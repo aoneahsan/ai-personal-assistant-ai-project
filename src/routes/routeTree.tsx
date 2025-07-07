@@ -241,6 +241,17 @@ const dashboardAccountRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+const dashboardProfileRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/profile',
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <EditProfile />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 // Root index route - redirect to dashboard only if explicitly visiting root
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -273,20 +284,6 @@ const DashboardRedirect = () => {
     </div>
   );
 };
-
-// Edit Profile route - protected route
-const editProfileRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTES.EDIT_PROFILE,
-  component: () => (
-    <ProtectedRoute>
-      <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
-        <EditProfile />
-      </React.Suspense>
-    </ProtectedRoute>
-  ),
-  errorComponent: ErrorFallback,
-});
 
 // Embed Demo route - public route
 const embedDemoRoute = createRoute({
@@ -428,8 +425,8 @@ export const routeTree = rootRoute.addChildren([
     dashboardChatEmbedsRoute,
     dashboardFeedbackEmbedsRoute,
     dashboardAccountRoute,
+    dashboardProfileRoute,
   ]),
-  editProfileRoute,
   embedDemoRoute,
   embedFeedbackRoute,
   adminRoute,

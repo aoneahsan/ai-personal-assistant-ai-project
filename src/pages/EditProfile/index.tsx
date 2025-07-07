@@ -1,4 +1,3 @@
-import { DashboardPageWrapper } from '@/components/common';
 import {
   CustomCheckbox,
   CustomDropdown,
@@ -6,7 +5,6 @@ import {
 } from '@/components/FormComponents';
 import { useToast } from '@/hooks';
 import { useTheme } from '@/hooks/useTheme';
-import { PAGE_TITLES, TOOLTIP_LABELS } from '@/utils/constants/generic/labels';
 import { UI_ICONS } from '@/utils/constants/generic/ui';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import {
@@ -22,7 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-// Simplified validation schema
+// Validation schema
 const profileSchema = z.object({
   name: z
     .string()
@@ -164,56 +162,54 @@ const EditProfile: React.FC = () => {
   // Loading state
   if (!profile) {
     return (
-      <DashboardPageWrapper
-        title={PAGE_TITLES.EDIT_PROFILE}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        refreshTooltip={TOOLTIP_LABELS.REFRESH_DATA}
-      >
-        <Card className='shadow-3 border-round-2xl'>
-          <div className='flex align-items-center justify-content-center p-6'>
-            <div className='text-center'>
-              <i
-                className='pi pi-spin pi-spinner text-4xl mb-3'
-                style={{ color: theme.primary }}
-              ></i>
-              <p style={{ color: theme.textSecondary }}>Loading profile...</p>
-            </div>
-          </div>
-        </Card>
-      </DashboardPageWrapper>
+      <div className='flex align-items-center justify-content-center p-6'>
+        <div className='text-center'>
+          <i
+            className='pi pi-spin pi-spinner text-4xl mb-3'
+            style={{ color: theme.primary }}
+          ></i>
+          <p style={{ color: theme.textSecondary }}>Loading profile...</p>
+        </div>
+      </div>
     );
   }
 
-  // Header actions
-  const headerActions = (
-    <div className='flex gap-2'>
-      <Button
-        label='Cancel'
-        icon={UI_ICONS.CANCEL}
-        className='p-button-outlined'
-        onClick={handleCancel}
-        disabled={isSubmitting}
-      />
-      <Button
-        label='Save Changes'
-        icon={UI_ICONS.SAVE}
-        className='p-button-rounded'
-        onClick={handleSubmit(onSubmit)}
-        loading={isSubmitting}
-        disabled={!isDirty}
-      />
-    </div>
-  );
-
   return (
-    <DashboardPageWrapper
-      title={PAGE_TITLES.EDIT_PROFILE}
-      onRefresh={handleRefresh}
-      refreshing={refreshing}
-      refreshTooltip={TOOLTIP_LABELS.REFRESH_DATA}
-      actions={headerActions}
-    >
+    <div>
+      {/* Page Header */}
+      <div className='flex align-items-center justify-content-between mb-4'>
+        <h2
+          className='text-2xl font-bold m-0'
+          style={{ color: theme.textPrimary }}
+        >
+          Edit Profile
+        </h2>
+        <div className='flex gap-2'>
+          <Button
+            icon='pi pi-refresh'
+            className='p-button-text p-button-rounded'
+            onClick={handleRefresh}
+            loading={refreshing}
+            tooltip='Refresh Profile Data'
+          />
+          <Button
+            label='Cancel'
+            icon={UI_ICONS.CANCEL}
+            className='p-button-outlined'
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          />
+          <Button
+            label='Save Changes'
+            icon={UI_ICONS.SAVE}
+            className='p-button-rounded'
+            onClick={handleSubmit(onSubmit)}
+            loading={isSubmitting}
+            disabled={!isDirty}
+          />
+        </div>
+      </div>
+
       <div className='grid'>
         {/* Profile Avatar Section */}
         <div className='col-12'>
@@ -392,7 +388,7 @@ const EditProfile: React.FC = () => {
           </Card>
         </div>
       </div>
-    </DashboardPageWrapper>
+    </div>
   );
 };
 
