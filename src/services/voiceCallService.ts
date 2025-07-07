@@ -106,7 +106,8 @@ export class VoiceCallService {
   private callListener: (() => void) | null = null;
 
   constructor() {
-    this.setupIncomingCallListener();
+    // Don't call setupIncomingCallListener here as it's empty
+    // It will be set up when user logs in via setupIncomingCallListenerForUser
   }
 
   // Subscribe to state changes
@@ -269,10 +270,12 @@ export class VoiceCallService {
       this.setupPeerEventHandlers(peer, callId);
 
       // Update call status
-      await this.updateCallStatus(
-        this.currentCallState.callSession.id!,
-        'answered'
-      );
+      if (this.currentCallState.callSession?.id) {
+        await this.updateCallStatus(
+          this.currentCallState.callSession.id,
+          'answered'
+        );
+      }
 
       // Start call timer
       this.startCallTimer();
@@ -292,9 +295,9 @@ export class VoiceCallService {
     try {
       consoleLog('📞 Declining call:', callId);
 
-      if (this.currentCallState.callSession) {
+      if (this.currentCallState.callSession?.id) {
         await this.updateCallStatus(
-          this.currentCallState.callSession.id!,
+          this.currentCallState.callSession.id,
           'declined'
         );
 
@@ -323,10 +326,12 @@ export class VoiceCallService {
         await this.sendSignal(callId, 'end-call');
 
         // Update call status
-        await this.updateCallStatus(
-          this.currentCallState.callSession.id!,
-          'ended'
-        );
+        if (this.currentCallState.callSession.id) {
+          await this.updateCallStatus(
+            this.currentCallState.callSession.id,
+            'ended'
+          );
+        }
 
         // Update call duration
         if (this.currentCallState.callSession.id) {
@@ -572,10 +577,15 @@ export class VoiceCallService {
   private startRingTimer(): void {
     this.ringTimer = setTimeout(async () => {
       consoleLog('⏰ Call ring timeout');
-      await this.updateCallStatus(
-        this.currentCallState.callSession!.id!,
-        'missed'
-      );
+
+      // Check if we have a valid call session with an id
+      if (this.currentCallState.callSession?.id) {
+        await this.updateCallStatus(
+          this.currentCallState.callSession.id,
+          'missed'
+        );
+      }
+
       await this.cleanupCall();
     }, 30000); // 30 seconds
   }
