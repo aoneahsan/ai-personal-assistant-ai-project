@@ -15,16 +15,12 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  FaArrowLeft,
-  FaEllipsisV,
   FaImage,
   FaMicrophone,
   FaPaperPlane,
   FaPaperclip,
-  FaPhone,
   FaSmile,
   FaStop,
-  FaVideo,
   FaVideoSlash,
 } from 'react-icons/fa';
 import { useReactMediaRecorder } from 'react-media-recorder';
@@ -34,15 +30,9 @@ import SpeechRecognition, {
 import { toast } from 'react-toastify';
 import AnonymousUserIndicator from '../Auth/AnonymousUserIndicator';
 import styles from './Chat.module.scss';
+import ChatHeader from './ChatHeader';
 import VideoRecorder from './VideoRecorder';
-
-interface ChatUser {
-  id: string;
-  name: string;
-  avatar?: string;
-  isOnline: boolean;
-  lastSeen: Date;
-}
+import { ChatUser } from './types';
 
 interface FileData {
   name: string;
@@ -553,21 +543,6 @@ const Chat: React.FC<ChatProps> = ({
     });
   };
 
-  // Format last seen
-  const formatLastSeen = (date: Date) => {
-    const now = new Date();
-    const timeDiff = now.getTime() - date.getTime();
-    const minutes = Math.floor(timeDiff / (1000 * 60));
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minutes ago`;
-    if (hours < 24) return `${hours} hours ago`;
-    if (days < 7) return `${days} days ago`;
-    return date.toLocaleDateString();
-  };
-
   // Loading state
   if (isLoading) {
     return (
@@ -618,52 +593,11 @@ const Chat: React.FC<ChatProps> = ({
 
       <div className={styles.chatContainer}>
         {/* Header */}
-        <div className={styles.chatHeader}>
-          <div className={styles.chatHeaderLeft}>
-            <Button
-              icon={<FaArrowLeft />}
-              className={styles.chatBackBtn}
-              onClick={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
-            />
-
-            <div className={styles.chatAvatar}>
-              {currentChatUser.avatar ? (
-                <img
-                  src={currentChatUser.avatar}
-                  alt={currentChatUser.name}
-                />
-              ) : (
-                <div className={styles.avatarPlaceholder}>
-                  {currentChatUser.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.chatUserInfo}>
-              <h3 className={styles.chatUserName}>{currentChatUser.name}</h3>
-              <span className={styles.chatUserStatus}>
-                {currentChatUser.isOnline
-                  ? 'Online'
-                  : `Last seen ${formatLastSeen(currentChatUser.lastSeen)}`}
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.chatHeaderRight}>
-            <Button
-              icon={<FaVideo />}
-              className={styles.chatActionBtn}
-            />
-            <Button
-              icon={<FaPhone />}
-              className={styles.chatActionBtn}
-            />
-            <Button
-              icon={<FaEllipsisV />}
-              className={styles.chatActionBtn}
-            />
-          </div>
-        </div>
+        <ChatHeader
+          chatUser={currentChatUser}
+          chatId={chatId || undefined}
+          onBack={() => navigate({ to: ROUTES.DASHBOARD_CHATS })}
+        />
 
         {/* Messages */}
         <div className={styles.chatMessages}>

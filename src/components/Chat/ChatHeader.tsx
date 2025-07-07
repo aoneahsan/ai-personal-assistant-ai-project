@@ -119,10 +119,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     );
   };
 
-  const handleFeedbackClick = () => {
-    setShowFeedbackModal(true);
-  };
-
   // Handle voice call initiation
   const handleVoiceCall = async () => {
     if (isInCall) {
