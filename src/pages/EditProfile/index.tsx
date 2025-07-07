@@ -5,7 +5,6 @@ import {
 } from '@/components/FormComponents';
 import { useToast } from '@/hooks';
 import { useTheme } from '@/hooks/useTheme';
-import { UI_ICONS } from '@/utils/constants/generic/ui';
 import { ROUTES } from '@/utils/constants/routingConstants';
 import {
   UserProfileData,
@@ -162,10 +161,13 @@ const EditProfile: React.FC = () => {
   // Loading state
   if (!profile) {
     return (
-      <div className='flex align-items-center justify-content-center p-4'>
+      <div
+        className='flex align-items-center justify-content-center'
+        style={{ minHeight: '400px' }}
+      >
         <div className='text-center'>
           <i
-            className='pi pi-spin pi-spinner text-3xl mb-2'
+            className='pi pi-spin pi-spinner text-4xl mb-3'
             style={{ color: theme.primary }}
           ></i>
           <p style={{ color: theme.textSecondary }}>Loading profile...</p>
@@ -176,33 +178,40 @@ const EditProfile: React.FC = () => {
 
   return (
     <div>
-      {/* Compact Page Header */}
-      <div className='flex align-items-center justify-content-between mb-3'>
-        <h2
-          className='text-xl font-bold m-0'
-          style={{ color: theme.textPrimary }}
-        >
-          Edit Profile
-        </h2>
+      {/* Clean Header */}
+      <div className='flex align-items-center justify-content-between mb-4'>
+        <div>
+          <h1
+            className='text-2xl font-bold m-0'
+            style={{ color: theme.textPrimary }}
+          >
+            Profile Settings
+          </h1>
+          <p
+            className='text-sm mt-1 mb-0'
+            style={{ color: theme.textSecondary }}
+          >
+            Manage your personal information and preferences
+          </p>
+        </div>
         <div className='flex gap-2'>
           <Button
             icon='pi pi-refresh'
-            className='p-button-text p-button-rounded p-button-sm'
+            className='p-button-text p-button-rounded'
             onClick={handleRefresh}
             loading={refreshing}
-            tooltip='Refresh'
+            tooltip='Refresh Profile'
           />
           <Button
             label='Cancel'
-            icon={UI_ICONS.CANCEL}
-            className='p-button-outlined p-button-sm'
+            icon='pi pi-times'
+            className='p-button-outlined'
             onClick={handleCancel}
             disabled={isSubmitting}
           />
           <Button
-            label='Save'
-            icon={UI_ICONS.SAVE}
-            className='p-button-rounded p-button-sm'
+            label='Save Changes'
+            icon='pi pi-check'
             onClick={handleSubmit(onSubmit)}
             loading={isSubmitting}
             disabled={!isDirty}
@@ -210,14 +219,11 @@ const EditProfile: React.FC = () => {
         </div>
       </div>
 
-      <div
-        className='grid'
-        style={{ gap: '0.75rem' }}
-      >
-        {/* Compact Profile Avatar Section */}
+      <div className='grid'>
+        {/* Profile Header Card */}
         <div className='col-12'>
-          <Card className='shadow-2 border-round-lg p-3 mb-3'>
-            <div className='flex align-items-center gap-3'>
+          <Card className='shadow-3 border-round-xl mb-4'>
+            <div className='flex align-items-center gap-4 p-2'>
               <Avatar
                 image={profile.avatar || undefined}
                 label={
@@ -225,25 +231,28 @@ const EditProfile: React.FC = () => {
                   profile.email?.charAt(0) ||
                   '?'
                 }
-                size='large'
+                size='xlarge'
                 shape='circle'
                 style={{
-                  width: '60px',
-                  height: '60px',
-                  fontSize: '1.5rem',
+                  width: '80px',
+                  height: '80px',
+                  fontSize: '2rem',
                   backgroundColor: theme.primary,
                   color: 'white',
                 }}
               />
-              <div>
-                <p
-                  className='text-lg font-medium m-0'
+              <div className='flex-1'>
+                <h3
+                  className='text-xl font-semibold m-0'
                   style={{ color: theme.textPrimary }}
                 >
-                  {profile.generalInfo?.firstName || profile.name || 'User'}
-                </p>
+                  {profile.generalInfo?.firstName &&
+                  profile.generalInfo?.lastName
+                    ? `${profile.generalInfo.firstName} ${profile.generalInfo.lastName}`
+                    : profile.name || 'User'}
+                </h3>
                 <p
-                  className='text-sm m-0'
+                  className='text-base mt-1 mb-0'
                   style={{ color: theme.textSecondary }}
                 >
                   {profile.email}
@@ -253,138 +262,169 @@ const EditProfile: React.FC = () => {
           </Card>
         </div>
 
-        {/* Compact Basic Information */}
-        <div className='col-12 lg:col-6'>
-          <Card className='shadow-2 border-round-lg p-3 h-full'>
-            <h4
-              className='font-bold mb-3 mt-0'
-              style={{ color: theme.textPrimary }}
-            >
-              Basic Information
-            </h4>
-            <div className='grid gap-2'>
-              <div className='col-12'>
+        {/* Basic Information */}
+        <div className='col-12 md:col-6'>
+          <Card className='shadow-3 border-round-xl h-full'>
+            <div className='p-4'>
+              <h3
+                className='text-lg font-semibold mb-4'
+                style={{ color: theme.textPrimary }}
+              >
+                <i className='pi pi-user mr-2'></i>
+                Basic Information
+              </h3>
+
+              <div className='field mb-4'>
                 <CustomInputText
                   name='name'
                   label='Display Name'
                   control={control}
-                  placeholder='Enter display name'
+                  placeholder='Enter your display name'
                 />
               </div>
-              <div className='col-12'>
+
+              <div className='field mb-4'>
                 <CustomInputText
                   name='email'
-                  label='Email'
+                  label='Email Address'
                   control={control}
-                  placeholder='Enter email'
+                  placeholder='Enter your email address'
                   type='email'
                 />
               </div>
-              <div className='col-12 sm:col-6'>
-                <CustomInputText
-                  name='generalInfo.firstName'
-                  label='First Name'
-                  control={control}
-                  placeholder='First name'
-                />
-              </div>
-              <div className='col-12 sm:col-6'>
-                <CustomInputText
-                  name='generalInfo.lastName'
-                  label='Last Name'
-                  control={control}
-                  placeholder='Last name'
-                />
+
+              <div className='grid'>
+                <div className='col-12 sm:col-6'>
+                  <div className='field'>
+                    <CustomInputText
+                      name='generalInfo.firstName'
+                      label='First Name'
+                      control={control}
+                      placeholder='Enter first name'
+                    />
+                  </div>
+                </div>
+                <div className='col-12 sm:col-6'>
+                  <div className='field'>
+                    <CustomInputText
+                      name='generalInfo.lastName'
+                      label='Last Name'
+                      control={control}
+                      placeholder='Enter last name'
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Compact Contact Information */}
-        <div className='col-12 lg:col-6'>
-          <Card className='shadow-2 border-round-lg p-3 h-full'>
-            <h4
-              className='font-bold mb-3 mt-0'
-              style={{ color: theme.textPrimary }}
-            >
-              Contact
-            </h4>
-            <div className='grid gap-2'>
-              <div className='col-12'>
+        {/* Contact Information */}
+        <div className='col-12 md:col-6'>
+          <Card className='shadow-3 border-round-xl h-full'>
+            <div className='p-4'>
+              <h3
+                className='text-lg font-semibold mb-4'
+                style={{ color: theme.textPrimary }}
+              >
+                <i className='pi pi-phone mr-2'></i>
+                Contact Information
+              </h3>
+
+              <div className='field mb-4'>
                 <CustomInputText
                   name='generalInfo.phone'
-                  label='Phone'
+                  label='Phone Number'
                   control={control}
-                  placeholder='Phone number'
+                  placeholder='Enter your phone number'
                   required={false}
                 />
               </div>
-              <div className='col-12'>
+
+              <div className='field mb-4'>
                 <CustomInputText
                   name='generalInfo.address'
                   label='Address'
                   control={control}
-                  placeholder='Address'
+                  placeholder='Enter your address'
                   required={false}
                 />
               </div>
-              <div className='col-12 sm:col-6'>
-                <CustomInputText
-                  name='generalInfo.dateOfBirth'
-                  label='Birth Date'
-                  control={control}
-                  placeholder='YYYY-MM-DD'
-                  required={false}
-                />
-              </div>
-              <div className='col-12 sm:col-6'>
-                <CustomDropdown
-                  name='generalInfo.gender'
-                  label='Gender'
-                  control={control}
-                  options={genderOptions}
-                  required={false}
-                />
+
+              <div className='grid'>
+                <div className='col-12 sm:col-6'>
+                  <div className='field'>
+                    <CustomInputText
+                      name='generalInfo.dateOfBirth'
+                      label='Date of Birth'
+                      control={control}
+                      placeholder='YYYY-MM-DD'
+                      required={false}
+                    />
+                  </div>
+                </div>
+                <div className='col-12 sm:col-6'>
+                  <div className='field'>
+                    <CustomDropdown
+                      name='generalInfo.gender'
+                      label='Gender'
+                      control={control}
+                      options={genderOptions}
+                      required={false}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Compact Preferences */}
+        {/* Preferences */}
         <div className='col-12'>
-          <Card className='shadow-2 border-round-lg p-3'>
-            <h4
-              className='font-bold mb-3 mt-0'
-              style={{ color: theme.textPrimary }}
-            >
-              Preferences
-            </h4>
-            <div className='grid gap-2'>
-              <div className='col-12 md:col-4'>
-                <CustomDropdown
-                  name='preferences.theme'
-                  label='Theme'
-                  control={control}
-                  options={themeOptions}
-                  required={false}
-                />
-              </div>
-              <div className='col-12 md:col-4'>
-                <CustomDropdown
-                  name='preferences.language'
-                  label='Language'
-                  control={control}
-                  options={languageOptions}
-                  required={false}
-                />
-              </div>
-              <div className='col-12 md:col-4'>
-                <div className='field pt-2'>
-                  <CustomCheckbox
-                    name='preferences.notifications'
-                    label='Enable Notifications'
-                    control={control}
-                  />
+          <Card className='shadow-3 border-round-xl'>
+            <div className='p-4'>
+              <h3
+                className='text-lg font-semibold mb-4'
+                style={{ color: theme.textPrimary }}
+              >
+                <i className='pi pi-cog mr-2'></i>
+                Preferences
+              </h3>
+
+              <div className='grid'>
+                <div className='col-12 md:col-4'>
+                  <div className='field'>
+                    <CustomDropdown
+                      name='preferences.theme'
+                      label='Theme Preference'
+                      control={control}
+                      options={themeOptions}
+                      required={false}
+                    />
+                  </div>
+                </div>
+                <div className='col-12 md:col-4'>
+                  <div className='field'>
+                    <CustomDropdown
+                      name='preferences.language'
+                      label='Language'
+                      control={control}
+                      options={languageOptions}
+                      required={false}
+                    />
+                  </div>
+                </div>
+                <div className='col-12 md:col-4'>
+                  <div
+                    className='field flex align-items-center'
+                    style={{ marginTop: '1.5rem' }}
+                  >
+                    <CustomCheckbox
+                      name='preferences.notifications'
+                      label='Enable email notifications'
+                      control={control}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
