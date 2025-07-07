@@ -21,6 +21,7 @@ const DashboardLayout: React.FC = () => {
     if (path === ROUTES.DASHBOARD_FEEDBACK_EMBEDS) return 'feedback-embeds';
     if (path === ROUTES.DASHBOARD_ACCOUNT) return 'account';
     if (path === ROUTES.EDIT_PROFILE) return 'profile';
+    if (path.startsWith('/dashboard/product-adoption')) return 'product-adoption';
     if (path.startsWith('/dashboard/chats/view/')) return 'chats';
     return 'overview';
   };
@@ -63,6 +64,12 @@ const DashboardLayout: React.FC = () => {
       label: 'Profile',
       icon: 'pi pi-user-edit',
       route: ROUTES.EDIT_PROFILE,
+    },
+    {
+      key: 'product-adoption',
+      label: 'Product Adoption',
+      icon: 'pi pi-directions',
+      route: ROUTES.DASHBOARD_PRODUCT_ADOPTION,
     },
     ...(hasPermission(Permission.ACCESS_ADMIN_PANEL)
       ? [

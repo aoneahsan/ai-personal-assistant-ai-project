@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProductAdoption Extension Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <img src="../../public/icons/icon-48.png" alt="ProductAdoption" class="logo">
+      <h1>ProductAdoption Extension Settings</h1>
+    </header>
+
+    <div class="settings-content">
+      <!-- Account Section -->
+      <section class="settings-section">
+        <h2>Account</h2>
+        <div class="setting-group">
+          <div class="setting-row">
+            <label>Status</label>
+            <div class="setting-value">
+              <span class="status-indicator" id="authStatus"></span>
+              <span id="userEmail">Not connected</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <button class="btn btn-primary" id="connectBtn">Connect Account</button>
+            <button class="btn btn-secondary" id="disconnectBtn" style="display: none;">Disconnect</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- General Settings -->
+      <section class="settings-section">
+        <h2>General Settings</h2>
+        <div class="setting-group">
+          <div class="setting-row">
+            <label for="apiUrl">API URL</label>
+            <input type="text" id="apiUrl" class="input-field" placeholder="https://api.productadoption.com/v1">
+          </div>
+          <div class="setting-row">
+            <label for="autoSave">
+              <input type="checkbox" id="autoSave">
+              Auto-save tours while editing
+            </label>
+          </div>
+          <div class="setting-row">
+            <label for="theme">Theme</label>
+            <select id="theme" class="select-field">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">Auto (System)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Keyboard Shortcuts -->
+      <section class="settings-section">
+        <h2>Keyboard Shortcuts</h2>
+        <div class="setting-group">
+          <div class="setting-row">
+            <label>Toggle Tour Creator</label>
+            <input type="text" id="shortcutToggle" class="input-field shortcut" placeholder="Ctrl+Shift+T" readonly>
+          </div>
+          <div class="setting-row">
+            <label>Save Step</label>
+            <input type="text" id="shortcutSave" class="input-field shortcut" placeholder="Ctrl+S" readonly>
+          </div>
+          <div class="setting-row">
+            <label>Preview Tour</label>
+            <input type="text" id="shortcutPreview" class="input-field shortcut" placeholder="Ctrl+P" readonly>
+          </div>
+          <p class="help-text">Click on a shortcut field and press your desired key combination</p>
+        </div>
+      </section>
+
+      <!-- Data Management -->
+      <section class="settings-section">
+        <h2>Data Management</h2>
+        <div class="setting-group">
+          <div class="setting-row">
+            <label>Local Tours</label>
+            <div class="setting-value">
+              <span id="tourCount">0</span> tours stored locally
+            </div>
+          </div>
+          <div class="setting-row">
+            <button class="btn btn-secondary" id="exportBtn">Export Tours</button>
+            <button class="btn btn-secondary" id="importBtn">Import Tours</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+          </div>
+          <div class="setting-row">
+            <button class="btn btn-danger" id="clearDataBtn">Clear All Local Data</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section class="settings-section">
+        <h2>About</h2>
+        <div class="setting-group">
+          <div class="setting-row">
+            <label>Version</label>
+            <div class="setting-value" id="version">1.0.0</div>
+          </div>
+          <div class="setting-row">
+            <label>Resources</label>
+            <div class="setting-value">
+              <a href="https://docs.productadoption.com/extension" target="_blank">Documentation</a> •
+              <a href="https://productadoption.com/support" target="_blank">Support</a> •
+              <a href="https://github.com/productadoption/extension" target="_blank">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+      <button class="btn btn-secondary" id="resetBtn">Reset to Defaults</button>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

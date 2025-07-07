@@ -1,0 +1,49 @@
+/* Content script styles for ProductAdoption Tour Creator Extension */
+
+/* These styles are injected via JavaScript in content.js */
+/* This file is kept for reference and development purposes */
+
+.pa-tour-creator-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999998;
+  pointer-events: none;
+}
+
+.pa-element-highlight {
+  position: absolute;
+  border: 2px solid #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 999999;
+}
+
+.pa-element-highlight.selected {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.pa-tour-toolbar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 16px;
+  z-index: 1000000;
+  min-width: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pa-element-picker-mode {
+  cursor: crosshair !important;
+}
+
+.pa-element-picker-mode * {
+  cursor: crosshair !important;
+}

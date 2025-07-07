@@ -36,6 +36,11 @@ const AdminDashboard = lazy(() => import('@/pages/Admin'));
 const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const ChatView = lazy(() => import('@/components/Chat/ChatView'));
 
+// Product Adoption components
+const ProductAdoption = lazy(() => import('@/modules/ProductAdoption/components/ProductAdoption'));
+const TourManagement = lazy(() => import('@/modules/ProductAdoption/components/Management'));
+const AnalyticsDashboard = lazy(() => import('@/modules/ProductAdoption/components/Analytics'));
+
 // Dashboard page components
 const DashboardOverview = lazy(
   () => import('@/pages/Dashboard/DashboardOverview')
@@ -252,6 +257,51 @@ const dashboardProfileRoute = createRoute({
   errorComponent: ErrorFallback,
 });
 
+// Product Adoption Routes
+const dashboardProductAdoptionRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/product-adoption',
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <ProductAdoption />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const dashboardProductAdoptionToursRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/product-adoption/tours',
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <TourManagement />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const dashboardProductAdoptionAnalyticsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/product-adoption/analytics',
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <AnalyticsDashboard />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
+const dashboardProductAdoptionWidgetsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/product-adoption/widgets',
+  component: () => (
+    <React.Suspense fallback={<div>{LOADING_MESSAGES.LOADING}</div>}>
+      <ProductAdoption />
+    </React.Suspense>
+  ),
+  errorComponent: ErrorFallback,
+});
+
 // Root index route - redirect to dashboard only if explicitly visiting root
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -426,6 +476,10 @@ export const routeTree = rootRoute.addChildren([
     dashboardFeedbackEmbedsRoute,
     dashboardAccountRoute,
     dashboardProfileRoute,
+    dashboardProductAdoptionRoute,
+    dashboardProductAdoptionToursRoute,
+    dashboardProductAdoptionAnalyticsRoute,
+    dashboardProductAdoptionWidgetsRoute,
   ]),
   embedDemoRoute,
   embedFeedbackRoute,

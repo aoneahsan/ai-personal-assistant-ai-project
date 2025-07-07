@@ -14,78 +14,16 @@ import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import React, { useEffect, useRef, useState } from 'react';
+import { 
+  integrationManagementService, 
+  Integration, 
+  IntegrationTemplate, 
+  IntegrationTestResults 
+} from '@/services/integrationManagementService';
+import { useUserDataZState } from '@/zustandStates/userState';
+import { logError } from '@/sentryErrorLogging';
 
-interface IntegrationTestResults {
-  success: boolean;
-  message: string;
-  responseTime?: number;
-  statusCode?: number;
-  data?: Record<string, unknown>;
-  error?: string;
-  timestamp: Date;
-  details?: {
-    timestamp: string;
-    endpoint: string;
-    method: string;
-  };
-}
-
-interface Integration {
-  id: string;
-  name: string;
-  type:
-    | 'oauth'
-    | 'api_key'
-    | 'webhook'
-    | 'database'
-    | 'storage'
-    | 'notification';
-  status: 'active' | 'inactive' | 'error' | 'pending';
-  description: string;
-  provider: string;
-  version: string;
-  lastSync: Date;
-  lastError?: string;
-  config: Record<string, unknown>;
-  webhookUrl?: string;
-  apiKey?: string;
-  credentials?: {
-    clientId?: string;
-    clientSecret?: string;
-    accessToken?: string;
-    refreshToken?: string;
-  };
-  metrics: {
-    requestsToday: number;
-    requestsTotal: number;
-    errorRate: number;
-    avgResponseTime: number;
-  };
-  limits: {
-    dailyRequests: number;
-    rateLimit: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface IntegrationTemplate {
-  id: string;
-  name: string;
-  provider: string;
-  type: Integration['type'];
-  description: string;
-  icon: string;
-  category: string;
-  configFields: Array<{
-    key: string;
-    label: string;
-    type: 'text' | 'password' | 'url' | 'number' | 'boolean' | 'select';
-    required: boolean;
-    placeholder?: string;
-    options?: Array<{ label: string; value: string }>;
-  }>;
-}
+// Use interfaces from the service
 
 export const IntegrationManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -105,6 +43,9 @@ export const IntegrationManagement: React.FC = () => {
   const [testResults, setTestResults] = useState<IntegrationTestResults | null>(
     null
   );
+  
+  // Get current user for creating integrations
+  const userData = useUserDataZState((state) => state.data);
 
   useEffect(() => {
     loadIntegrations();
@@ -114,171 +55,11 @@ export const IntegrationManagement: React.FC = () => {
   const loadIntegrations = async () => {
     setLoading(true);
     try {
-      const mockIntegrations: Integration[] = [
-        {
-          id: '1',
-          name: 'Google Analytics',
-          type: 'api_key' as const,
-          status: 'active' as const,
-          description: 'Website analytics and tracking',
-          provider: 'Google',
-          version: '4.0',
-          lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          config: {
-            trackingId: 'UA-123456789-1',
-            apiKey: 'AIzaSyA...',
-          },
-          metrics: {
-            requestsToday: 45,
-            requestsTotal: 1420,
-            errorRate: 0.02,
-            avgResponseTime: 150,
-          },
-          limits: {
-            dailyRequests: 1000,
-            rateLimit: 10,
-          },
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        },
-        {
-          id: '2',
-          name: 'Slack Webhook',
-          type: 'webhook' as const,
-          status: 'active' as const,
-          description: 'Send notifications to Slack channels',
-          provider: 'Slack',
-          version: '1.0',
-          lastSync: new Date(Date.now() - 30 * 60 * 1000),
-          config: {
-            webhookUrl: 'https://hooks.slack.com/services/...',
-            channel: '#notifications',
-          },
-          metrics: {
-            requestsToday: 12,
-            requestsTotal: 567,
-            errorRate: 0.05,
-            avgResponseTime: 200,
-          },
-          limits: {
-            dailyRequests: 500,
-            rateLimit: 5,
-          },
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 30 * 60 * 1000),
-        },
-        {
-          id: '3',
-          name: 'Stripe Payment',
-          type: 'api_key' as const,
-          status: 'inactive' as const,
-          description: 'Payment processing and subscriptions',
-          provider: 'Stripe',
-          version: '2022-11-15',
-          lastSync: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          lastError: 'API key validation failed',
-          config: {
-            apiKey: 'sk_test_...',
-            publishableKey: 'pk_test_...',
-          },
-          metrics: {
-            requestsToday: 0,
-            requestsTotal: 234,
-            errorRate: 0.15,
-            avgResponseTime: 300,
-          },
-          limits: {
-            dailyRequests: 2000,
-            rateLimit: 20,
-          },
-          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        },
-        {
-          id: '4',
-          name: 'SendGrid Email',
-          type: 'api_key' as const,
-          status: 'error' as const,
-          description: 'Email delivery and marketing campaigns',
-          provider: 'SendGrid',
-          version: '3.0',
-          lastSync: new Date(Date.now() - 12 * 60 * 60 * 1000),
-          lastError: 'Authentication failed - invalid API key',
-          config: {
-            apiKey: 'SG.xxx...',
-            fromEmail: 'noreply@example.com',
-          },
-          metrics: {
-            requestsToday: 0,
-            requestsTotal: 89,
-            errorRate: 0.25,
-            avgResponseTime: 400,
-          },
-          limits: {
-            dailyRequests: 1500,
-            rateLimit: 15,
-          },
-          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        },
-        {
-          id: '5',
-          name: 'AWS S3 Storage',
-          type: 'storage' as const,
-          status: 'active' as const,
-          description: 'Cloud storage for files and backups',
-          provider: 'Amazon',
-          version: '2006-03-01',
-          lastSync: new Date(Date.now() - 5 * 60 * 1000),
-          config: {
-            bucket: 'my-app-storage',
-            region: 'us-east-1',
-            accessKeyId: 'AKIA...',
-          },
-          metrics: {
-            requestsToday: 234,
-            requestsTotal: 5670,
-            errorRate: 0.01,
-            avgResponseTime: 120,
-          },
-          limits: {
-            dailyRequests: 5000,
-            rateLimit: 50,
-          },
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 5 * 60 * 1000),
-        },
-        {
-          id: '6',
-          name: 'Discord Bot',
-          type: 'webhook' as const,
-          status: 'pending' as const,
-          description: 'Discord bot for community notifications',
-          provider: 'Discord',
-          version: '1.0',
-          lastSync: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          config: {
-            botToken: 'MTAx...',
-            guildId: '123456789',
-          },
-          metrics: {
-            requestsToday: 0,
-            requestsTotal: 12,
-            errorRate: 0.0,
-            avgResponseTime: 180,
-          },
-          limits: {
-            dailyRequests: 300,
-            rateLimit: 3,
-          },
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        },
-      ];
-
-      setIntegrations(mockIntegrations);
+      const integrations = await integrationManagementService.getIntegrations();
+      setIntegrations(integrations);
     } catch (error) {
       console.error('Error loading integrations:', error);
+      logError(error instanceof Error ? error : new Error('Failed to load integrations'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -291,105 +72,11 @@ export const IntegrationManagement: React.FC = () => {
 
   const loadTemplates = async () => {
     try {
-      const mockTemplates: IntegrationTemplate[] = [
-        {
-          id: 'google-analytics',
-          name: 'Google Analytics',
-          provider: 'Google',
-          type: 'oauth',
-          description: 'Track website analytics and user behavior',
-          icon: 'pi pi-chart-line',
-          category: 'Analytics',
-          configFields: [
-            {
-              key: 'propertyId',
-              label: 'Property ID',
-              type: 'text',
-              required: true,
-            },
-            {
-              key: 'trackingId',
-              label: 'Tracking ID',
-              type: 'text',
-              required: true,
-            },
-            {
-              key: 'enableEcommerce',
-              label: 'Enable E-commerce',
-              type: 'boolean',
-              required: false,
-            },
-          ],
-        },
-        {
-          id: 'stripe',
-          name: 'Stripe',
-          provider: 'Stripe',
-          type: 'api_key',
-          description: 'Process payments and manage subscriptions',
-          icon: 'pi pi-credit-card',
-          category: 'Payment',
-          configFields: [
-            {
-              key: 'publishableKey',
-              label: 'Publishable Key',
-              type: 'text',
-              required: true,
-            },
-            {
-              key: 'secretKey',
-              label: 'Secret Key',
-              type: 'password',
-              required: true,
-            },
-            {
-              key: 'webhookEndpoint',
-              label: 'Webhook Endpoint',
-              type: 'url',
-              required: false,
-            },
-            {
-              key: 'currency',
-              label: 'Currency',
-              type: 'select',
-              required: true,
-              options: [
-                { label: 'USD', value: 'USD' },
-                { label: 'EUR', value: 'EUR' },
-                { label: 'GBP', value: 'GBP' },
-              ],
-            },
-          ],
-        },
-        {
-          id: 'onesignal',
-          name: 'OneSignal',
-          provider: 'OneSignal',
-          type: 'api_key',
-          description: 'Send push notifications to users',
-          icon: 'pi pi-bell',
-          category: 'Notifications',
-          configFields: [
-            { key: 'appId', label: 'App ID', type: 'text', required: true },
-            {
-              key: 'apiKey',
-              label: 'API Key',
-              type: 'password',
-              required: true,
-            },
-            {
-              key: 'safariWebId',
-              label: 'Safari Web ID',
-              type: 'text',
-              required: false,
-            },
-          ],
-        },
-      ];
-
-      setTemplates(mockTemplates);
+      const templates = await integrationManagementService.getIntegrationTemplates();
+      setTemplates(templates);
     } catch (error) {
       console.error('Error loading templates:', error);
+      logError(error instanceof Error ? error : new Error('Failed to load integration templates'));
     }
   };
 
@@ -518,14 +205,20 @@ export const IntegrationManagement: React.FC = () => {
   };
 
   const toggleIntegration = async (integration: Integration) => {
+    if (!integration.id) return;
+    
     try {
       const newStatus: Integration['status'] =
         integration.status === 'active' ? 'inactive' : 'active';
-      const updatedIntegration = { ...integration, status: newStatus };
+      
+      await integrationManagementService.updateIntegration(integration.id, {
+        status: newStatus,
+      });
 
+      // Update local state
       setIntegrations(
         integrations.map((i) =>
-          i.id === integration.id ? updatedIntegration : i
+          i.id === integration.id ? { ...i, status: newStatus } : i
         )
       );
 
@@ -536,6 +229,7 @@ export const IntegrationManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error toggling integration:', error);
+      logError(error instanceof Error ? error : new Error('Failed to toggle integration'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -546,49 +240,55 @@ export const IntegrationManagement: React.FC = () => {
 
   const testIntegration = async (integration: Integration) => {
     try {
-      // Simulate API test call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const mockResults: IntegrationTestResults = {
-        success: integration.status !== 'error',
-        responseTime: Math.floor(Math.random() * 500) + 100,
-        statusCode: integration.status === 'error' ? 401 : 200,
-        message:
-          integration.status === 'error'
-            ? 'Authentication failed'
-            : 'Connection successful',
-        timestamp: new Date(),
-        details: {
-          timestamp: new Date().toISOString(),
-          endpoint: `https://api.${integration.provider.toLowerCase()}.com/test`,
-          method: 'GET',
-        },
-      };
-
-      setTestResults(mockResults);
+      const results = await integrationManagementService.testIntegration(integration);
+      setTestResults(results);
+      
+      // Update integration status based on test results
+      if (integration.id) {
+        const newStatus = results.success ? 'active' : 'error';
+        if (newStatus !== integration.status) {
+          await integrationManagementService.updateIntegration(integration.id, {
+            status: newStatus,
+            ...(results.error && { lastError: results.error }),
+          });
+          
+          // Update local state
+          setIntegrations(
+            integrations.map((i) =>
+              i.id === integration.id 
+                ? { ...i, status: newStatus, lastError: results.error }
+                : i
+            )
+          );
+        }
+      }
     } catch (error: unknown) {
-      setTestResults({
+      const errorResult: IntegrationTestResults = {
         success: false,
         message: 'Test failed',
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date(),
-      });
+      };
+      setTestResults(errorResult);
+      logError(error instanceof Error ? error : new Error('Failed to test integration'));
     }
   };
 
   const saveIntegration = async () => {
-    if (!selectedIntegration || !editingIntegration) return;
+    if (!selectedIntegration?.id || !editingIntegration) return;
 
     try {
-      const updatedIntegration = {
-        ...selectedIntegration,
-        ...editingIntegration,
-        updatedAt: new Date(),
-      };
+      await integrationManagementService.updateIntegration(
+        selectedIntegration.id,
+        editingIntegration
+      );
 
+      // Update local state
       setIntegrations(
         integrations.map((i) =>
-          i.id === selectedIntegration.id ? updatedIntegration : i
+          i.id === selectedIntegration.id 
+            ? { ...i, ...editingIntegration, updatedAt: new Date() }
+            : i
         )
       );
 
@@ -603,6 +303,7 @@ export const IntegrationManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error saving integration:', error);
+      logError(error instanceof Error ? error : new Error('Failed to save integration'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -615,15 +316,13 @@ export const IntegrationManagement: React.FC = () => {
     if (!selectedTemplate) return;
 
     try {
-      const newIntegration: Integration = {
-        id: `integration_${Date.now()}`,
+      const integrationData = {
         name: selectedTemplate.name,
         type: selectedTemplate.type,
         status: 'pending' as const,
         description: selectedTemplate.description,
         provider: selectedTemplate.provider,
         version: '1.0',
-        lastSync: new Date(),
         config: {},
         metrics: {
           requestsToday: 0,
@@ -635,11 +334,14 @@ export const IntegrationManagement: React.FC = () => {
           dailyRequests: 1000,
           rateLimit: 10,
         },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdBy: userData?.email || 'admin@example.com',
       };
 
-      setIntegrations([...integrations, newIntegration]);
+      const integrationId = await integrationManagementService.createIntegration(integrationData);
+      
+      // Reload integrations to get the updated list
+      await loadIntegrations();
+
       setShowTemplateDialog(false);
       setSelectedTemplate(null);
 
@@ -650,6 +352,7 @@ export const IntegrationManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error adding integration:', error);
+      logError(error instanceof Error ? error : new Error('Failed to add integration'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',

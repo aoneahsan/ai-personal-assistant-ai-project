@@ -1,0 +1,92 @@
+.tour-management {
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+
+    .table-header-left {
+      display: flex;
+      gap: 0.75rem;
+      flex: 1;
+
+      .p-input-icon-left {
+        flex: 1;
+        max-width: 400px;
+      }
+    }
+  }
+
+  .tour-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .metric {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+
+      .metric-label {
+        color: var(--text-color-secondary);
+      }
+
+      .metric-value {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+    }
+  }
+
+  .tour-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .p-datatable {
+    .p-datatable-header {
+      background-color: var(--surface-card);
+      border: none;
+      padding: 1rem;
+    }
+
+    .p-datatable-thead > tr > th {
+      background-color: var(--surface-card);
+      border-color: var(--surface-border);
+      font-weight: 600;
+      color: var(--text-color-secondary);
+    }
+
+    .p-datatable-tbody > tr {
+      &:hover {
+        background-color: var(--surface-hover);
+      }
+
+      > td {
+        border-color: var(--surface-border);
+      }
+    }
+  }
+
+  .p-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 600;
+  }
+
+  .p-menuitem-danger {
+    .p-menuitem-link {
+      &:hover {
+        background-color: var(--red-50);
+      }
+
+      .p-menuitem-text {
+        color: var(--red-500);
+      }
+
+      .p-menuitem-icon {
+        color: var(--red-500);
+      }
+    }
+  }
+}

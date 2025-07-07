@@ -31,6 +31,12 @@ export const ROUTES = {
   DASHBOARD_FEEDBACK_EMBEDS: '/dashboard/feedback-embeds',
   DASHBOARD_ACCOUNT: '/dashboard/account',
   EDIT_PROFILE: '/dashboard/profile',
+  
+  // Product Adoption Routes
+  DASHBOARD_PRODUCT_ADOPTION: '/dashboard/product-adoption',
+  DASHBOARD_PRODUCT_ADOPTION_TOURS: '/dashboard/product-adoption/tours',
+  DASHBOARD_PRODUCT_ADOPTION_ANALYTICS: '/dashboard/product-adoption/analytics',
+  DASHBOARD_PRODUCT_ADOPTION_WIDGETS: '/dashboard/product-adoption/widgets',
 
   // Anonymous Room Routes (no authentication required)
   ANONYMOUS_ROOM: '/room',
@@ -58,6 +64,10 @@ export const ROUTE_LABELS = {
   [ROUTES.DASHBOARD_CHAT_EMBEDS]: 'Chat Embeds',
   [ROUTES.DASHBOARD_FEEDBACK_EMBEDS]: 'Feedback Embeds',
   [ROUTES.DASHBOARD_ACCOUNT]: 'Account',
+  [ROUTES.DASHBOARD_PRODUCT_ADOPTION]: 'Product Adoption',
+  [ROUTES.DASHBOARD_PRODUCT_ADOPTION_TOURS]: 'Product Tours',
+  [ROUTES.DASHBOARD_PRODUCT_ADOPTION_ANALYTICS]: 'Adoption Analytics',
+  [ROUTES.DASHBOARD_PRODUCT_ADOPTION_WIDGETS]: 'Adoption Widgets',
   [ROUTES.ANONYMOUS_ROOM]: 'Anonymous Room',
   [ROUTES.EMBED_DEMO]: 'Embed Demo',
   [ROUTES.EMBED_FEEDBACK]: 'Embed Feedback',

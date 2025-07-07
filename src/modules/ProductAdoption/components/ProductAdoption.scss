@@ -1,0 +1,81 @@
+.product-adoption {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &-header {
+    padding: 2rem;
+    background-color: var(--surface-card);
+    border-bottom: 1px solid var(--surface-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    > div {
+      h1 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-color);
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-color-secondary);
+        font-size: 1.125rem;
+      }
+    }
+  }
+
+  &-tabs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .p-tabview-nav {
+      background-color: var(--surface-card);
+      border-bottom: 2px solid var(--surface-border);
+
+      .p-tabview-nav-link {
+        &:focus {
+          box-shadow: none;
+        }
+      }
+    }
+
+    .p-tabview-panels {
+      flex: 1;
+      background-color: var(--surface-ground);
+      padding: 0;
+    }
+
+    .p-tabview-panel {
+      height: 100%;
+      padding: 1.5rem;
+    }
+  }
+
+  .coming-soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    text-align: center;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+    }
+
+    h3 {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color);
+    }
+
+    p {
+      margin: 0;
+      font-size: 1.125rem;
+    }
+  }
+}

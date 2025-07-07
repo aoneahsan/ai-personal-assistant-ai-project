@@ -19,56 +19,15 @@ import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { 
+  advancedFeatureFlagService, 
+  AdvancedFeatureFlag 
+} from '@/services/advancedFeatureFlagService';
+import { useUserDataZState } from '@/zustandStates/userState';
+import { logError } from '@/sentryErrorLogging';
 
-interface FeatureFlag {
-  id: string;
-  name: string;
-  key: string;
-  description: string;
-  type: 'boolean' | 'string' | 'number' | 'json' | 'percentage';
-  status: 'active' | 'inactive' | 'scheduled' | 'expired';
-  defaultValue: string | number | boolean | object | null;
-  variations: Array<{
-    name: string;
-    value: string | number | boolean | object | null;
-    description: string;
-    weight: number;
-  }>;
-  targeting: {
-    enabled: boolean;
-    rules: Array<{
-      id: string;
-      name: string;
-      conditions: Array<{
-        attribute: string;
-        operator:
-          | 'equals'
-          | 'not_equals'
-          | 'contains'
-          | 'greater_than'
-          | 'less_than';
-        value: string | number | boolean;
-      }>;
-      variation: string;
-      weight: number;
-    }>;
-    fallback: string;
-  };
-  rolloutPercentage: number;
-  environment: 'development' | 'staging' | 'production';
-  tags: string[];
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  scheduledStart?: Date;
-  scheduledEnd?: Date;
-  metrics: {
-    totalEvaluations: number;
-    uniqueUsers: number;
-    conversionRate: number;
-    performanceImpact: number;
-  };
-}
+// Use the AdvancedFeatureFlag interface from the service
+type FeatureFlag = AdvancedFeatureFlag;
 
 export const FeatureFlagManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -80,9 +39,13 @@ export const FeatureFlagManagement: React.FC = () => {
   const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
   const [editingFlag, setEditingFlag] = useState<Partial<FeatureFlag>>({});
   const [selectedEnvironment, setSelectedEnvironment] =
-    useState<string>('production');
+    useState<string>('all');
+  
+  // Get current user for creating flags
+  const userData = useUserDataZState((state) => state.data);
 
   const environments = [
+    { label: 'All Environments', value: 'all' },
     { label: 'Development', value: 'development' },
     { label: 'Staging', value: 'staging' },
     { label: 'Production', value: 'production' },
@@ -99,167 +62,13 @@ export const FeatureFlagManagement: React.FC = () => {
   const loadFeatureFlags = useCallback(async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      const mockFlags: FeatureFlag[] = [
-        {
-          id: '1',
-          name: 'New Chat Interface',
-          key: 'new_chat_interface',
-          description: 'Enable the new chat interface with improved UX',
-          type: 'boolean' as const,
-          status: 'active' as const,
-          defaultValue: false,
-          variations: [
-            {
-              name: 'Enabled',
-              value: true,
-              description: 'Show new interface',
-              weight: 50,
-            },
-            {
-              name: 'Disabled',
-              value: false,
-              description: 'Show old interface',
-              weight: 50,
-            },
-          ],
-          targeting: {
-            enabled: true,
-            rules: [
-              {
-                id: 'premium_users',
-                name: 'Premium Users',
-                conditions: [
-                  {
-                    attribute: 'subscriptionPlan',
-                    operator: 'equals' as const,
-                    value: 'PREMIUM',
-                  },
-                ],
-                variation: 'Enabled',
-                weight: 100,
-              },
-            ],
-            fallback: 'Disabled',
-          },
-          rolloutPercentage: 25,
-          environment: 'production' as const,
-          tags: ['ui', 'chat', 'experimental'],
-          createdBy: 'admin@example.com',
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          metrics: {
-            totalEvaluations: 15420,
-            uniqueUsers: 1247,
-            conversionRate: 0.12,
-            performanceImpact: 0.05,
-          },
-        },
-        {
-          id: '2',
-          name: 'AI Response Limit',
-          key: 'ai_response_limit',
-          description: 'Set maximum number of AI responses per user per day',
-          type: 'number' as const,
-          status: 'active' as const,
-          defaultValue: 10,
-          variations: [
-            {
-              name: 'Free Tier',
-              value: 5,
-              description: 'Limited responses',
-              weight: 60,
-            },
-            {
-              name: 'Pro Tier',
-              value: 50,
-              description: 'Increased limit',
-              weight: 30,
-            },
-            {
-              name: 'Unlimited',
-              value: -1,
-              description: 'No limit',
-              weight: 10,
-            },
-          ],
-          targeting: {
-            enabled: true,
-            rules: [
-              {
-                id: 'subscription_based',
-                name: 'Subscription Based',
-                conditions: [
-                  {
-                    attribute: 'subscriptionPlan',
-                    operator: 'equals' as const,
-                    value: 'FREE',
-                  },
-                ],
-                variation: 'Free Tier',
-                weight: 100,
-              },
-            ],
-            fallback: 'Pro Tier',
-          },
-          rolloutPercentage: 100,
-          environment: 'production' as const,
-          tags: ['ai', 'limits', 'subscription'],
-          createdBy: 'admin@example.com',
-          createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-          metrics: {
-            totalEvaluations: 45670,
-            uniqueUsers: 2134,
-            conversionRate: 0.08,
-            performanceImpact: 0.02,
-          },
-        },
-        {
-          id: '3',
-          name: 'Dark Mode Default',
-          key: 'dark_mode_default',
-          description: 'Set dark mode as default theme for new users',
-          type: 'boolean' as const,
-          status: 'scheduled' as const,
-          defaultValue: false,
-          variations: [
-            {
-              name: 'Dark',
-              value: true,
-              description: 'Dark mode default',
-              weight: 100,
-            },
-            {
-              name: 'Light',
-              value: false,
-              description: 'Light mode default',
-              weight: 0,
-            },
-          ],
-          targeting: {
-            enabled: false,
-            rules: [],
-            fallback: 'Light',
-          },
-          rolloutPercentage: 0,
-          environment: 'production' as const,
-          tags: ['ui', 'theme', 'ux'],
-          createdBy: 'designer@example.com',
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          scheduledStart: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          scheduledEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          metrics: {
-            totalEvaluations: 0,
-            uniqueUsers: 0,
-            conversionRate: 0,
-            performanceImpact: 0,
-          },
-        },
-      ];
-      setFeatureFlags(mockFlags);
-    } catch {
+      const flags = await advancedFeatureFlagService.getFeatureFlags(
+        selectedEnvironment === 'all' ? undefined : selectedEnvironment
+      );
+      setFeatureFlags(flags);
+    } catch (error) {
+      console.error('Error loading feature flags:', error);
+      logError(error instanceof Error ? error : new Error('Failed to load feature flags'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -269,7 +78,7 @@ export const FeatureFlagManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedEnvironment]);
 
   useEffect(() => {
     loadFeatureFlags();
@@ -391,9 +200,17 @@ export const FeatureFlagManagement: React.FC = () => {
   };
 
   const toggleFlag = async (flag: FeatureFlag) => {
+    if (!flag.id) return;
+    
     try {
       const newStatus: FeatureFlag['status'] =
         flag.status === 'active' ? 'inactive' : 'active';
+      
+      await advancedFeatureFlagService.updateFeatureFlag(flag.id, {
+        status: newStatus,
+      });
+
+      // Update local state
       const updatedFlags = featureFlags.map((f) =>
         f.id === flag.id
           ? { ...f, status: newStatus, updatedAt: new Date() }
@@ -406,7 +223,9 @@ export const FeatureFlagManagement: React.FC = () => {
         summary: 'Flag Updated',
         detail: `Flag ${flag.name} ${newStatus === 'active' ? 'enabled' : 'disabled'}`,
       });
-    } catch {
+    } catch (error) {
+      console.error('Error toggling feature flag:', error);
+      logError(error instanceof Error ? error : new Error('Failed to toggle feature flag'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -416,9 +235,14 @@ export const FeatureFlagManagement: React.FC = () => {
   };
 
   const saveFlag = async () => {
+    if (!selectedFlag?.id) return;
+    
     try {
+      await advancedFeatureFlagService.updateFeatureFlag(selectedFlag.id, editingFlag);
+
+      // Update local state
       const updatedFlags = featureFlags.map((f) =>
-        f.id === selectedFlag?.id
+        f.id === selectedFlag.id
           ? { ...f, ...editingFlag, updatedAt: new Date() }
           : f
       );
@@ -431,7 +255,9 @@ export const FeatureFlagManagement: React.FC = () => {
         summary: 'Flag Updated',
         detail: 'Feature flag updated successfully',
       });
-    } catch {
+    } catch (error) {
+      console.error('Error saving feature flag:', error);
+      logError(error instanceof Error ? error : new Error('Failed to save feature flag'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -441,39 +267,53 @@ export const FeatureFlagManagement: React.FC = () => {
   };
 
   const createFlag = async () => {
+    if (!editingFlag.name || !editingFlag.key) {
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: 'Name and key are required',
+      });
+      return;
+    }
+
     try {
-      const newFlag = {
-        id: Date.now().toString(),
-        name: editingFlag.name || 'New Flag',
-        key: editingFlag.key || 'new_flag',
+      const flagData = {
+        name: editingFlag.name,
+        key: editingFlag.key,
         description: editingFlag.description || '',
-        type: editingFlag.type || 'boolean',
+        type: (editingFlag.type || 'boolean') as AdvancedFeatureFlag['type'],
         status: 'inactive' as const,
         defaultValue: editingFlag.defaultValue || false,
-        variations: editingFlag.variations || [],
+        variations: editingFlag.variations || [
+          {
+            name: 'Enabled',
+            value: true,
+            description: 'Feature enabled',
+            weight: 50,
+          },
+          {
+            name: 'Disabled',
+            value: false,
+            description: 'Feature disabled',
+            weight: 50,
+          },
+        ],
         targeting: {
           enabled: false,
           rules: [],
           fallback: 'Disabled',
         },
         rolloutPercentage: 0,
-        environment: selectedEnvironment as
-          | 'development'
-          | 'staging'
-          | 'production',
+        environment: selectedEnvironment as AdvancedFeatureFlag['environment'],
         tags: editingFlag.tags || [],
-        createdBy: 'admin@example.com',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        metrics: {
-          totalEvaluations: 0,
-          uniqueUsers: 0,
-          conversionRate: 0,
-          performanceImpact: 0,
-        },
+        createdBy: userData?.email || 'admin@example.com',
       };
 
-      setFeatureFlags([...featureFlags, newFlag]);
+      const flagId = await advancedFeatureFlagService.createFeatureFlag(flagData);
+      
+      // Reload flags to get the updated list
+      await loadFeatureFlags();
+
       setShowCreateDialog(false);
       setEditingFlag({});
 
@@ -482,7 +322,9 @@ export const FeatureFlagManagement: React.FC = () => {
         summary: 'Flag Created',
         detail: 'Feature flag created successfully',
       });
-    } catch {
+    } catch (error) {
+      console.error('Error creating feature flag:', error);
+      logError(error instanceof Error ? error : new Error('Failed to create feature flag'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',

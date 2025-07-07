@@ -252,6 +252,63 @@ service cloud.firestore {
       allow delete: if request.auth != null && isAdminUser();
     }
 
+    // Product Adoption Tours - allow authenticated users to read, admins to write
+    match /pca_product_tours/{tourId} {
+      // Allow all authenticated users to read tours
+      allow read: if request.auth != null;
+      
+      // Only admins can create, update, or delete tours
+      allow create, update, delete: if request.auth != null && isAdminUser();
+    }
+
+    // Product Adoption Tour Progress - users can track their own progress
+    match /pca_tour_progress/{progressId} {
+      // Allow users to read their own progress
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow users to create their own progress records
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Allow users to update their own progress
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Don't allow deleting progress records
+      allow delete: if false;
+    }
+
+    // Product Adoption Analytics - admins only
+    match /pca_adoption_analytics/{analyticsId} {
+      // Only admins can read analytics data
+      allow read: if request.auth != null && isAdminUser();
+      
+      // System-generated data, no manual writes allowed
+      allow create, update, delete: if false;
+    }
+
+    // Product Adoption Widgets - admins can manage
+    match /pca_product_widgets/{widgetId} {
+      // Allow all authenticated users to read widgets
+      allow read: if request.auth != null;
+      
+      // Only admins can create, update, or delete widgets
+      allow create, update, delete: if request.auth != null && isAdminUser();
+    }
+
+    // Product Adoption Widget Events - track user interactions
+    match /pca_widget_events/{eventId} {
+      // Allow authenticated users to create events (for tracking)
+      allow create: if request.auth != null;
+      
+      // Only admins can read event data
+      allow read: if request.auth != null && isAdminUser();
+      
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+
     // Helper function to check if user is an admin
     function isAdminUser() {
       // Check if user has admin role in their user document

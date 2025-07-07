@@ -7,6 +7,7 @@ import { AdminSubscriptionManagement } from '@/components/Admin/SubscriptionMana
 import { SystemAnalytics } from '@/components/Admin/SystemAnalytics';
 import { UserManagement } from '@/components/Admin/UserManagement';
 import { AdminPanelGuard } from '@/components/common/RoleGuard';
+import { ProductAdoption } from '@/modules/ProductAdoption/components/ProductAdoption';
 import { useTheme } from '@/hooks/useTheme';
 import {
   BUTTON_LABELS,
@@ -381,6 +382,12 @@ const AdminDashboard: React.FC = () => {
                 leftIcon='pi pi-link'
               >
                 <IntegrationManagement />
+              </TabPanel>
+              <TabPanel
+                header='Product Adoption'
+                leftIcon='pi pi-directions'
+              >
+                <ProductAdoption />
               </TabPanel>
               <TabPanel
                 header='Audit Logs'

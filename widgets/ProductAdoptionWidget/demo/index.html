@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Adoption Widget Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .demo-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .demo-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #0066ff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #0052cc;
+        }
+        button.secondary {
+            background: #e5e5e5;
+            color: #333;
+        }
+        button.secondary:hover {
+            background: #d5d5d5;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e5e5e5;
+        }
+        .feature-card h3 {
+            margin-top: 0;
+        }
+        #signup-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .code-block {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Product Adoption Widget Demo</h1>
+            <p>Interactive demo of the embeddable product tour widget</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>Quick Start</h2>
+            <p>Click the buttons below to see different tour examples:</p>
+            
+            <div class="demo-controls">
+                <button onclick="startWelcomeTour()">Start Welcome Tour</button>
+                <button onclick="startFeatureTour()">Feature Highlights Tour</button>
+                <button onclick="startFormTour()">Form Tutorial</button>
+                <button onclick="resetWidget()" class="secondary">Reset Widget</button>
+                <button onclick="showProgress()" class="secondary">Show Progress</button>
+            </div>
+
+            <div class="code-block">
+                // Initialize widget
+                const widget = ProductAdoptionWidget.init({
+                    theme: 'light',
+                    animation: true,
+                    showProgressBar: true
+                });
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Feature Showcase</h2>
+            <div class="feature-grid">
+                <div class="feature-card" id="feature-1">
+                    <h3>Smart Targeting</h3>
+                    <p>Target any element on your page with CSS selectors. The widget automatically positions itself for optimal visibility.</p>
+                </div>
+                <div class="feature-card" id="feature-2">
+                    <h3>Progress Tracking</h3>
+                    <p>Built-in progress tracking shows users how far they've come and what's left to explore.</p>
+                </div>
+                <div class="feature-card" id="feature-3">
+                    <h3>Analytics Ready</h3>
+                    <p>Comprehensive event tracking integrates with your existing analytics tools.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Interactive Form Example</h2>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+                <button type="submit" id="submit-btn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include the widget -->
+    <script src="../dist/product-adoption-widget.js"></script>
+    
+    <!-- Demo scripts -->
+    <script>
+        // Initialize widget
+        const widget = ProductAdoptionWidget.init({
+            theme: 'light',
+            animation: true,
+            showProgressBar: true,
+            showStepNumbers: true,
+            debug: true,
+            tours: [
+                {
+                    id: 'welcome',
+                    name: 'Welcome Tour',
+                    steps: [
+                        {
+                            title: 'Welcome to Product Adoption Widget!',
+                            content: 'This powerful widget helps you create engaging product tours for your users. Let\'s explore the key features.',
+                            placement: 'center'
+                        },
+                        {
+                            target: '.demo-controls',
+                            title: 'Tour Controls',
+                            content: 'Use these buttons to start different tour examples. Each tour demonstrates different capabilities of the widget.',
+                            placement: 'bottom'
+                        },
+                        {
+                            target: '.code-block',
+                            title: 'Easy Integration',
+                            content: 'Integration is as simple as including the script and initializing the widget with your configuration.',
+                            placement: 'top'
+                        },
+                        {
+                            title: 'Ready to Explore?',
+                            content: 'That\'s the basics! Try out the other tours to see more advanced features.',
+                            placement: 'center'
+                        }
+                    ]
+                },
+                {
+                    id: 'features',
+                    name: 'Feature Tour',
+                    steps: [
+                        {
+                            target: '#feature-1',
+                            title: 'Smart Targeting',
+                            content: 'The widget can highlight any element on your page. It automatically adjusts positioning to ensure the best visibility.',
+                            placement: 'right'
+                        },
+                        {
+                            target: '#feature-2',
+                            title: 'Progress Tracking',
+                            content: 'Users always know where they are in the tour with the built-in progress bar and step counter.',
+                            placement: 'left'
+                        },
+                        {
+                            target: '#feature-3',
+                            title: 'Analytics Integration',
+                            content: 'Track user engagement with comprehensive analytics. The widget integrates with Google Analytics, Mixpanel, and more.',
+                            placement: 'right'
+                        }
+                    ]
+                },
+                {
+                    id: 'form-tutorial',
+                    name: 'Form Tutorial',
+                    steps: [
+                        {
+                            target: '#signup-form',
+                            title: 'Interactive Forms',
+                            content: 'The widget works great with forms too! Let\'s walk through this signup form.',
+                            placement: 'top'
+                        },
+                        {
+                            target: '#name',
+                            title: 'Name Field',
+                            content: 'Start by entering your name here. The widget can guide users through complex forms step by step.',
+                            placement: 'right',
+                            allowInteraction: true
+                        },
+                        {
+                            target: '#email',
+                            title: 'Email Field',
+                            content: 'Next, enter your email address. Notice how the widget allows interaction with the highlighted element.',
+                            placement: 'right',
+                            allowInteraction: true
+                        },
+                        {
+                            target: '#submit-btn',
+                            title: 'Submit Button',
+                            content: 'Finally, click the submit button to complete the form. The widget can trigger actions at any step.',
+                            placement: 'top'
+                        }
+                    ]
+                }
+            ],
+            callbacks: {
+                onInit: (widget) => {
+                    console.log('Widget initialized:', widget);
+                },
+                onStart: (data) => {
+                    console.log('Tour started:', data);
+                },
+                onStep: (data) => {
+                    console.log('Step changed:', data);
+                },
+                onComplete: (data) => {
+                    console.log('Tour completed:', data);
+                    alert('Tour completed! Check the console for analytics data.');
+                },
+                onSkip: (data) => {
+                    console.log('Tour skipped:', data);
+                }
+            }
+        });
+
+        // Demo functions
+        function startWelcomeTour() {
+            widget.startTour('welcome');
+        }
+
+        function startFeatureTour() {
+            widget.startTour('features');
+        }
+
+        function startFormTour() {
+            widget.startTour('form-tutorial');
+        }
+
+        function resetWidget() {
+            widget.reset();
+            alert('Widget state has been reset!');
+        }
+
+        function showProgress() {
+            const progress = widget.getProgress();
+            if (progress.active) {
+                alert(`Current Tour: ${progress.tourId}\nStep: ${progress.currentStep + 1} of ${progress.totalSteps}\nProgress: ${progress.progress.toFixed(0)}%`);
+            } else {
+                alert('No tour is currently active');
+            }
+        }
+
+        // Prevent form submission for demo
+        document.getElementById('signup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Form submitted! (This is just a demo)');
+        });
+    </script>
+</body>
+</html>

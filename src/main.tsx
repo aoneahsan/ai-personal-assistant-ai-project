@@ -4,6 +4,10 @@ import AppHocWrapper from './AppHocWrapper';
 
 import { consoleLog } from '@/utils/helpers/consoleHelper';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
+import sentryInit from '@/sentryErrorLogging';
+
+// Initialize Sentry error tracking first
+sentryInit();
 
 // required for capacitor pwa elements, like toast, camera, etc.
 defineCustomElements(window);

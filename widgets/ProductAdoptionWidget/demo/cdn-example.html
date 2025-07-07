@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Adoption Widget - CDN Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .cta-button {
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background: #218838;
+        }
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product Adoption Widget - CDN Example</h1>
+    
+    <p>This example shows how to use the Product Adoption Widget via CDN. Simply include the script tag and initialize the widget.</p>
+    
+    <div class="feature" id="installation">
+        <h2>Installation</h2>
+        <p>Add this script tag to your HTML:</p>
+        <code>&lt;script src="../dist/product-adoption-widget.min.js"&gt;&lt;/script&gt;</code>
+    </div>
+    
+    <div class="feature" id="features">
+        <h2>Key Features</h2>
+        <ul>
+            <li>Zero dependencies</li>
+            <li>Lightweight (~50KB minified)</li>
+            <li>Works on any website</li>
+            <li>Mobile responsive</li>
+        </ul>
+    </div>
+    
+    <button class="cta-button" id="start-tour">Start Product Tour</button>
+    
+    <div class="feature" id="analytics">
+        <h2>Analytics Integration</h2>
+        <p>The widget automatically tracks user engagement and integrates with your existing analytics tools.</p>
+    </div>
+
+    <!-- Include the widget from CDN (in production, use your CDN URL) -->
+    <script src="../dist/product-adoption-widget.js"></script>
+    
+    <script>
+        // Simple initialization with inline tour configuration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the widget
+            const widget = ProductAdoptionWidget.init({
+                theme: 'light',
+                tours: [
+                    {
+                        id: 'main-tour',
+                        name: 'Product Tour',
+                        steps: [
+                            {
+                                title: 'Welcome!',
+                                content: 'This is a simple example of the Product Adoption Widget loaded via CDN.',
+                                placement: 'center'
+                            },
+                            {
+                                target: '#installation',
+                                title: 'Easy Installation',
+                                content: 'Just include one script tag and you\'re ready to go!',
+                                placement: 'bottom'
+                            },
+                            {
+                                target: '#features',
+                                title: 'Powerful Features',
+                                content: 'The widget is lightweight but packed with features.',
+                                placement: 'top'
+                            },
+                            {
+                                target: '#analytics',
+                                title: 'Built-in Analytics',
+                                content: 'Track user engagement automatically with built-in analytics support.',
+                                placement: 'top'
+                            },
+                            {
+                                title: 'That\'s It!',
+                                content: 'You\'ve seen how easy it is to add product tours to your website. Ready to get started?',
+                                placement: 'center'
+                            }
+                        ]
+                    }
+                ]
+            });
+            
+            // Start tour when button is clicked
+            document.getElementById('start-tour').addEventListener('click', function() {
+                widget.startTour('main-tour');
+            });
+            
+            // Auto-start tour for first-time visitors
+            if (!localStorage.getItem('tour-completed')) {
+                setTimeout(() => {
+                    widget.startTour('main-tour');
+                }, 1000);
+            }
+            
+            // Mark tour as completed
+            widget.on('tour:complete', () => {
+                localStorage.setItem('tour-completed', 'true');
+            });
+        });
+    </script>
+</body>
+</html>

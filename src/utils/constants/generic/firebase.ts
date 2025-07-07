@@ -1,12 +1,14 @@
+import ENV_KEYS from '@/utils/envKeys';
+
 export const FIREBASE_CONFIG = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  apiKey: ENV_KEYS.firebaseApiKey,
+  authDomain: ENV_KEYS.firebaseAuthDomain,
+  projectId: ENV_KEYS.firebaseProjectId,
+  storageBucket: ENV_KEYS.firebaseStorageBucket,
+  messagingSenderId: ENV_KEYS.firebaseMessagingSenderId,
+  appId: ENV_KEYS.firebaseAppId,
+  measurementId: ENV_KEYS.firebaseMeasurementId,
+  databaseURL: ENV_KEYS.firebaseDatabaseUrl,
 };
 
 export const PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS = 'pca'; // Personal Chat Assistant
@@ -23,7 +25,7 @@ export const isFirebaseConfigured = (): boolean => {
 };
 
 export const isGoogleAuthConfigured = (): boolean => {
-  return !!import.meta.env.VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID;
+  return !!ENV_KEYS.googleMobileAuthClientId;
 };
 
 export const getFirebaseConfigStatus = () => {
@@ -38,7 +40,7 @@ export const getFirebaseConfigStatus = () => {
     missing.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
   if (!FIREBASE_CONFIG.appId) missing.push('VITE_FIREBASE_APP_ID');
 
-  if (!import.meta.env.VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID) {
+  if (!ENV_KEYS.googleMobileAuthClientId) {
     missing.push('VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID');
   }
 

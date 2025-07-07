@@ -1,0 +1,227 @@
+.tour-builder {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--surface-ground);
+
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background-color: var(--surface-card);
+    border-bottom: 1px solid var(--surface-border);
+
+    h2 {
+      margin: 0;
+      color: var(--text-color);
+    }
+  }
+
+  &-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  .tour-info-card {
+    margin-bottom: 1.5rem;
+
+    .p-field {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+
+  .tour-steps-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.5rem;
+    height: 600px;
+  }
+
+  .steps-list {
+    background-color: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--surface-border);
+
+      h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--text-color);
+      }
+    }
+
+    &-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--surface-ground);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &.selected {
+      background-color: var(--primary-color);
+      color: var(--primary-color-text);
+      border-color: var(--primary-color);
+
+      .step-number {
+        background-color: var(--primary-color-text);
+        color: var(--primary-color);
+      }
+    }
+
+    &.dragging {
+      opacity: 0.5;
+    }
+  }
+
+  .step-drag-handle {
+    display: flex;
+    align-items: center;
+    margin-right: 0.75rem;
+    color: var(--text-color-secondary);
+    cursor: move;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  .step-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    overflow: hidden;
+
+    .step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary-color);
+      color: var(--primary-color-text);
+      border-radius: 50%;
+      font-size: 0.875rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .step-target {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+      background: var(--surface-100);
+      padding: 0.125rem 0.5rem;
+      border-radius: 12px;
+      font-family: 'Courier New', monospace;
+      flex-shrink: 0;
+
+      i {
+        font-size: 0.625rem;
+      }
+    }
+  }
+
+  .step-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .step-item:hover .step-actions {
+    opacity: 1;
+  }
+
+  .step-editor-container {
+    background-color: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius);
+    overflow-y: auto;
+  }
+
+  .no-step-selected {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1.125rem;
+    }
+  }
+
+  .p-tabview {
+    .p-tabview-panels {
+      background-color: transparent;
+      padding: 0;
+    }
+  }
+}
+
+// Tour preview dialog
+.tour-preview-dialog {
+  .p-dialog-content {
+    padding: 0 !important;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .p-dialog-header {
+    display: none;
+  }
+}

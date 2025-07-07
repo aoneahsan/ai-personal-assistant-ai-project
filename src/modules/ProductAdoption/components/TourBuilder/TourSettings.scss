@@ -1,0 +1,80 @@
+.tour-settings {
+  .settings-card {
+    margin-bottom: 1.5rem;
+
+    .p-card-content {
+      padding-top: 1rem;
+    }
+  }
+
+  .p-field {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      font-size: 0.875rem;
+    }
+  }
+
+  .color-picker-field {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    .p-colorpicker {
+      .p-colorpicker-preview {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--border-radius);
+        border: 2px solid var(--surface-border);
+      }
+    }
+
+    .p-inputtext {
+      flex: 1;
+    }
+  }
+
+  .settings-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .p-field-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      label {
+        margin-bottom: 0;
+        font-weight: normal;
+        color: var(--text-color);
+      }
+    }
+  }
+
+  .p-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1rem;
+
+    .p-col-6 {
+      grid-column: span 6;
+    }
+
+    .p-col-12 {
+      grid-column: span 12;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .p-grid {
+      .p-col-6 {
+        grid-column: span 12;
+      }
+    }
+  }
+}

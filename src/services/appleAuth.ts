@@ -11,6 +11,7 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import { auth } from './firebase';
+import { logError, logInfo } from '@/sentryErrorLogging';
 
 // Apple Auth Service Interface
 export interface AppleAuthService {
@@ -38,10 +39,16 @@ export const appleAuthService: AppleAuthService = {
 
     // Check if Apple Sign In is available
     if (!appleAuthService.isAvailable()) {
+      const errorMessage = `Apple Sign In is only available on iOS devices. Current platform: ${platform}`;
       consoleError(`Apple Sign In not available on ${platform}`);
-      throw new Error(
-        `Apple Sign In is only available on iOS devices. Current platform: ${platform}`
-      );
+      
+      logError(new Error('Apple Sign In attempted on unsupported platform'), {
+        platform: platform,
+        errorType: 'platform_not_supported',
+        feature: 'apple_signin',
+      });
+      
+      throw new Error(errorMessage);
     }
 
     // Generate nonce for security
@@ -91,6 +98,24 @@ export const appleAuthService: AppleAuthService = {
       return userCredential;
     } catch (error) {
       consoleError('Error signing in with Apple:', error);
+      
+      logError(error instanceof Error ? error : new Error('Apple Sign In failed'), {
+        platform: platform,
+        errorType: 'apple_signin_error',
+        step: 'firebase_credential_signin',
+      });
+      
+      // Enhance error message for better user experience
+      if (error instanceof Error) {
+        if (error.message.includes('user_cancelled')) {
+          throw new Error('Apple Sign In was cancelled by the user.');
+        } else if (error.message.includes('invalid_client')) {
+          throw new Error('Apple Sign In configuration error. Please contact support.');
+        } else if (error.message.includes('network')) {
+          throw new Error('Network error during Apple Sign In. Please check your connection and try again.');
+        }
+      }
+      
       throw error;
     }
   },

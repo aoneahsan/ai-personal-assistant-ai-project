@@ -12,39 +12,13 @@ import { Knob } from 'primereact/knob';
 import { ProgressBar } from 'primereact/progressbar';
 import { Toast } from 'primereact/toast';
 import React, { useEffect, useRef, useState } from 'react';
+import { 
+  systemAnalyticsService, 
+  AnalyticsData 
+} from '@/services/systemAnalyticsService';
+import { logError } from '@/sentryErrorLogging';
 
-interface AnalyticsData {
-  userGrowth: {
-    labels: string[];
-    data: number[];
-  };
-  messageVolume: {
-    labels: string[];
-    data: number[];
-  };
-  userEngagement: {
-    dailyActiveUsers: number;
-    weeklyActiveUsers: number;
-    monthlyActiveUsers: number;
-    averageSessionDuration: number;
-  };
-  systemMetrics: {
-    responseTime: number;
-    uptime: number;
-    errorRate: number;
-    throughput: number;
-  };
-  topFeatures: Array<{
-    name: string;
-    usage: number;
-    growth: number;
-  }>;
-  geograficalData: Array<{
-    country: string;
-    users: number;
-    percentage: number;
-  }>;
-}
+// Use AnalyticsData interface from the service
 
 export const SystemAnalytics: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -101,48 +75,14 @@ export const SystemAnalytics: React.FC = () => {
   const loadAnalyticsData = async () => {
     setLoading(true);
     try {
-      // Simulate API call to get analytics data
-      const mockData: AnalyticsData = {
-        userGrowth: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-          data: [120, 190, 300, 500, 720, 1247],
-        },
-        messageVolume: {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          data: [2500, 3200, 2800, 4100],
-        },
-        userEngagement: {
-          dailyActiveUsers: 892,
-          weeklyActiveUsers: 1156,
-          monthlyActiveUsers: 1247,
-          averageSessionDuration: 24.5,
-        },
-        systemMetrics: {
-          responseTime: 150,
-          uptime: 99.9,
-          errorRate: 0.02,
-          throughput: 1250,
-        },
-        topFeatures: [
-          { name: 'Chat System', usage: 95, growth: 12 },
-          { name: 'Anonymous Rooms', usage: 78, growth: 25 },
-          { name: 'File Sharing', usage: 65, growth: 8 },
-          { name: 'Voice Messages', usage: 45, growth: 35 },
-          { name: 'Embed Widget', usage: 32, growth: 18 },
-        ],
-        geograficalData: [
-          { country: 'United States', users: 456, percentage: 36.6 },
-          { country: 'United Kingdom', users: 234, percentage: 18.8 },
-          { country: 'Canada', users: 178, percentage: 14.3 },
-          { country: 'Germany', users: 145, percentage: 11.6 },
-          { country: 'Australia', users: 98, percentage: 7.9 },
-          { country: 'Others', users: 136, percentage: 10.9 },
-        ],
-      };
-
-      setAnalyticsData(mockData);
+      const startDate = dateRange[0] || undefined;
+      const endDate = dateRange[1] || undefined;
+      
+      const data = await systemAnalyticsService.getAnalyticsData(startDate, endDate);
+      setAnalyticsData(data);
     } catch (error) {
       console.error('Error loading analytics data:', error);
+      logError(error instanceof Error ? error : new Error('Failed to load analytics data'));
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -242,6 +182,42 @@ export const SystemAnalytics: React.FC = () => {
     }
   };
 
+  const exportAnalyticsReport = async () => {
+    try {
+      setLoading(true);
+      const startDate = dateRange[0] || undefined;
+      const endDate = dateRange[1] || undefined;
+      const data = await systemAnalyticsService.exportAnalyticsData('csv', startDate, endDate);
+      
+      // Create download link
+      const blob = new Blob([data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Export Complete',
+        detail: 'Analytics report downloaded successfully',
+      });
+    } catch (error) {
+      console.error('Error exporting analytics:', error);
+      logError(error instanceof Error ? error : new Error('Failed to export analytics'));
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Export Failed',
+        detail: 'Failed to export analytics report',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className='system-analytics'>
       <Toast ref={toast} />
@@ -284,13 +260,8 @@ export const SystemAnalytics: React.FC = () => {
               label='Export Report'
               icon='pi pi-download'
               className='p-button-outlined'
-              onClick={() => {
-                toast.current?.show({
-                  severity: 'info',
-                  summary: 'Export',
-                  detail: 'Analytics export would be implemented here',
-                });
-              }}
+              onClick={exportAnalyticsReport}
+              loading={loading}
             />
           </div>
         </PermissionGuard>

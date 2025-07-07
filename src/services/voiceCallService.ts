@@ -14,6 +14,7 @@ import {
   where,
 } from 'firebase/firestore';
 import SimplePeer from 'simple-peer';
+import { logError, logInfo } from '@/sentryErrorLogging';
 
 // Firebase configuration validation
 const validateFirebaseConfig = (): boolean => {
@@ -251,7 +252,30 @@ export class VoiceCallService {
       return callId;
     } catch (error) {
       consoleError('❌ Error initiating voice call:', error);
+      
+      logError(error instanceof Error ? error : new Error('Voice call initiation failed'), {
+        initiatorId,
+        receiverId,
+        chatId,
+        errorType: 'voice_call_initiation_error',
+        step: 'initiate_call',
+      });
+      
       await this.cleanupCall();
+      
+      // Enhance error message for better user experience
+      if (error instanceof Error) {
+        if (error.message.includes('Permission denied')) {
+          throw new Error('Microphone access is required for voice calls. Please allow microphone access and try again.');
+        } else if (error.message.includes('NotFoundError')) {
+          throw new Error('No microphone found. Please connect a microphone and try again.');
+        } else if (error.message.includes('NotAllowedError')) {
+          throw new Error('Microphone access was denied. Please allow microphone access in your browser settings.');
+        } else if (error.message.includes('Firebase')) {
+          throw new Error('Unable to connect to call service. Please check your internet connection and try again.');
+        }
+      }
+      
       throw error;
     }
   }
@@ -309,7 +333,24 @@ export class VoiceCallService {
       consoleLog('✅ Call answered successfully');
     } catch (error) {
       consoleError('❌ Error answering call:', error);
+      
+      logError(error instanceof Error ? error : new Error('Voice call answer failed'), {
+        callId,
+        errorType: 'voice_call_answer_error',
+        step: 'answer_call',
+      });
+      
       await this.endCall();
+      
+      // Enhance error message for better user experience
+      if (error instanceof Error) {
+        if (error.message.includes('Permission denied') || error.message.includes('NotAllowedError')) {
+          throw new Error('Microphone access is required to answer calls. Please allow microphone access and try again.');
+        } else if (error.message.includes('NotFoundError')) {
+          throw new Error('No microphone found. Please connect a microphone and try again.');
+        }
+      }
+      
       throw error;
     }
   }
@@ -334,6 +375,13 @@ export class VoiceCallService {
       consoleLog('✅ Call declined successfully');
     } catch (error) {
       consoleError('❌ Error declining call:', error);
+      
+      logError(error instanceof Error ? error : new Error('Voice call decline failed'), {
+        callId,
+        errorType: 'voice_call_decline_error',
+        step: 'decline_call',
+      });
+      
       await this.cleanupCall();
     }
   }

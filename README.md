@@ -9,6 +9,7 @@ A comprehensive AI-powered personal assistant application built with React, offe
 - **Embeddable Widgets** - Customizable chat widgets for integration into external websites
 - **User Management** - Complete authentication and user profile management
 - **Dashboard** - Comprehensive dashboard with analytics and management tools
+- **Product Adoption** - Interactive product tours and user onboarding system
 - **Multi-Platform Support** - Web application with mobile app capabilities via Capacitor
 - **Real-time Notifications** - Push notifications via OneSignal integration
 - **Feedback System** - Built-in user feedback and rating system
@@ -75,6 +76,7 @@ Comprehensive documentation is available in the `/docs` directory:
 - **[Authentication Guide](./docs/authentication/)** - User authentication and security
 - **[Chat System](./docs/chat-system/)** - Chat functionality and implementation
 - **[Feedback Module](./docs/feedback-module/)** - User feedback system
+- **[Product Adoption Guide](./docs/product-adoption/)** - Product tours and onboarding system
 - **[Testing Guide](./docs/testing/)** - Testing procedures and guidelines
 - **[Deployment Guide](./docs/deployment/)** - Deployment and configuration
 - **[Implementation Status](./docs/implementation-status/)** - Project completion status
@@ -106,6 +108,16 @@ The application follows a modular architecture with:
 - **State Management** - Zustand for global state
 - **HOCs** - Higher-order components for cross-cutting concerns
 - **Modular Features** - Self-contained feature modules
+
+### Key Modules
+
+- **Chat Module** - Real-time messaging with AI integration
+- **Feedback Module** - User feedback collection and management
+- **Product Adoption Module** - Interactive tours and onboarding
+  - Visual tour builder with drag-and-drop interface
+  - Engagement widgets (NPS, feedback, announcements)
+  - Advanced targeting and analytics
+  - Demo data initialization for testing
 
 ## 🔐 Security
 

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProductAdoption Tour Creator</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="header">
+      <img src="../../public/icons/icon-32.png" alt="ProductAdoption" class="logo">
+      <h1>Tour Creator</h1>
+    </header>
+
+    <div class="auth-section" id="authSection">
+      <div class="auth-status" id="authStatus">
+        <span class="status-indicator" id="statusIndicator"></span>
+        <span class="status-text" id="statusText">Not connected</span>
+      </div>
+      <button class="btn btn-primary" id="connectBtn">Connect to Platform</button>
+    </div>
+
+    <div class="main-content" id="mainContent" style="display: none;">
+      <div class="tour-controls">
+        <button class="btn btn-success btn-block" id="createTourBtn">
+          <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Create New Tour
+        </button>
+
+        <button class="btn btn-secondary btn-block" id="editTourBtn">
+          <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          Edit Existing Tour
+        </button>
+      </div>
+
+      <div class="active-tour" id="activeTour" style="display: none;">
+        <h3>Active Tour</h3>
+        <div class="tour-info">
+          <p class="tour-name" id="tourName"></p>
+          <p class="tour-steps" id="tourSteps"></p>
+        </div>
+        <div class="tour-actions">
+          <button class="btn btn-sm" id="previewBtn">Preview</button>
+          <button class="btn btn-sm" id="saveBtn">Save</button>
+          <button class="btn btn-sm btn-danger" id="cancelBtn">Cancel</button>
+        </div>
+      </div>
+
+      <div class="recent-tours" id="recentTours">
+        <h3>Recent Tours</h3>
+        <ul class="tour-list" id="tourList">
+          <!-- Tours will be populated here -->
+        </ul>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <button class="link-btn" id="settingsBtn">Settings</button>
+      <button class="link-btn" id="helpBtn">Help</button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

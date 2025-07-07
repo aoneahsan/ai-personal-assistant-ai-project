@@ -1,0 +1,79 @@
+.rich-text-editor {
+  .p-editor-container {
+    .p-editor-toolbar {
+      background: var(--surface-50);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 0.75rem;
+    }
+
+    .p-editor-content {
+      background: var(--surface-0);
+      
+      .ql-editor {
+        font-size: 14px;
+        line-height: 1.6;
+        
+        &.ql-blank::before {
+          color: var(--text-color-secondary);
+          font-style: normal;
+        }
+      }
+    }
+  }
+
+  .rich-text-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+
+    .ql-formats {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 0.5rem;
+
+      &:last-child {
+        margin-right: 0;
+      }
+
+      &.custom-toolbar {
+        margin-left: auto;
+      }
+    }
+
+    .variable-dropdown {
+      .p-dropdown {
+        min-width: 150px;
+        height: 28px;
+        
+        .p-dropdown-label {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.875rem;
+        }
+      }
+    }
+  }
+
+  .editor-footer {
+    padding: 0.5rem;
+    background: var(--surface-50);
+    border-top: 1px solid var(--surface-border);
+    
+    small {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  // Custom styles for variable placeholders
+  .ql-editor {
+    .variable-placeholder {
+      background: var(--primary-100);
+      color: var(--primary-700);
+      padding: 0 4px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+  }
+}

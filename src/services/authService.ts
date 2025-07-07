@@ -21,6 +21,7 @@ import {
   saveUserToFirestore,
 } from './firebase';
 import { googleAuthService } from './googleAuth';
+import { logError, logInfo, setUserContext } from '@/sentryErrorLogging';
 
 // Authentication Types
 export enum AuthProvider {
@@ -124,6 +125,10 @@ export class UnifiedAuthService {
       this.updateAuthInitialization.setInitializing(false);
       this.updateAuthInitialization.setAuthServicesReady(false);
       consoleError('❌ Error initializing auth services:', error);
+      logError(error instanceof Error ? error : new Error('Auth service initialization failed'), {
+        step: 'auth_initialization',
+        isConfigured: configStatus?.isConfigured || false,
+      });
       throw error;
     }
   }
@@ -162,11 +167,22 @@ export class UnifiedAuthService {
         if (userData) {
           // Update Zustand state
           this.updateUserData(userData);
+          // Set user context for Sentry
+          setUserContext({
+            id: userData.uid,
+            email: userData.email,
+            displayName: userData.displayName,
+          });
           consoleLog('✅ User data updated in Zustand state:', userData.email);
         } else {
           consoleError(
             '❌ Failed to get user data from Firestore after saving'
           );
+          logError(new Error('Failed to get user data from Firestore after saving'), {
+            userId: user.uid,
+            userEmail: user.email,
+            step: 'firestore_user_retrieval',
+          });
           // Clear user data since we can't access Firestore properly
           this.updateUserData(null);
         }
