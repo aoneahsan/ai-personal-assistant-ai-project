@@ -162,10 +162,10 @@ const EditProfile: React.FC = () => {
   // Loading state
   if (!profile) {
     return (
-      <div className='flex align-items-center justify-content-center p-6'>
+      <div className='flex align-items-center justify-content-center p-4'>
         <div className='text-center'>
           <i
-            className='pi pi-spin pi-spinner text-4xl mb-3'
+            className='pi pi-spin pi-spinner text-3xl mb-2'
             style={{ color: theme.primary }}
           ></i>
           <p style={{ color: theme.textSecondary }}>Loading profile...</p>
@@ -176,10 +176,10 @@ const EditProfile: React.FC = () => {
 
   return (
     <div>
-      {/* Page Header */}
-      <div className='flex align-items-center justify-content-between mb-4'>
+      {/* Compact Page Header */}
+      <div className='flex align-items-center justify-content-between mb-3'>
         <h2
-          className='text-2xl font-bold m-0'
+          className='text-xl font-bold m-0'
           style={{ color: theme.textPrimary }}
         >
           Edit Profile
@@ -187,22 +187,22 @@ const EditProfile: React.FC = () => {
         <div className='flex gap-2'>
           <Button
             icon='pi pi-refresh'
-            className='p-button-text p-button-rounded'
+            className='p-button-text p-button-rounded p-button-sm'
             onClick={handleRefresh}
             loading={refreshing}
-            tooltip='Refresh Profile Data'
+            tooltip='Refresh'
           />
           <Button
             label='Cancel'
             icon={UI_ICONS.CANCEL}
-            className='p-button-outlined'
+            className='p-button-outlined p-button-sm'
             onClick={handleCancel}
             disabled={isSubmitting}
           />
           <Button
-            label='Save Changes'
+            label='Save'
             icon={UI_ICONS.SAVE}
-            className='p-button-rounded'
+            className='p-button-rounded p-button-sm'
             onClick={handleSubmit(onSubmit)}
             loading={isSubmitting}
             disabled={!isDirty}
@@ -210,37 +210,40 @@ const EditProfile: React.FC = () => {
         </div>
       </div>
 
-      <div className='grid'>
-        {/* Profile Avatar Section */}
+      <div
+        className='grid'
+        style={{ gap: '0.75rem' }}
+      >
+        {/* Compact Profile Avatar Section */}
         <div className='col-12'>
-          <Card className='shadow-3 border-round-2xl mb-4'>
-            <div className='flex align-items-center justify-content-center p-6'>
-              <div className='text-center'>
-                <Avatar
-                  image={profile.avatar || undefined}
-                  label={
-                    profile.generalInfo?.firstName?.charAt(0) ||
-                    profile.email?.charAt(0) ||
-                    '?'
-                  }
-                  size='xlarge'
-                  shape='circle'
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    fontSize: '2rem',
-                    backgroundColor: theme.primary,
-                    color: 'white',
-                  }}
-                />
+          <Card className='shadow-2 border-round-lg p-3 mb-3'>
+            <div className='flex align-items-center gap-3'>
+              <Avatar
+                image={profile.avatar || undefined}
+                label={
+                  profile.generalInfo?.firstName?.charAt(0) ||
+                  profile.email?.charAt(0) ||
+                  '?'
+                }
+                size='large'
+                shape='circle'
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  fontSize: '1.5rem',
+                  backgroundColor: theme.primary,
+                  color: 'white',
+                }}
+              />
+              <div>
                 <p
-                  className='mt-3 text-lg font-medium'
+                  className='text-lg font-medium m-0'
                   style={{ color: theme.textPrimary }}
                 >
                   {profile.generalInfo?.firstName || profile.name || 'User'}
                 </p>
                 <p
-                  className='text-sm'
+                  className='text-sm m-0'
                   style={{ color: theme.textSecondary }}
                 >
                   {profile.email}
@@ -250,69 +253,69 @@ const EditProfile: React.FC = () => {
           </Card>
         </div>
 
-        {/* Basic Information */}
-        <div className='col-12 md:col-6'>
-          <Card className='shadow-3 border-round-2xl h-full'>
-            <h3
-              className='text-xl font-bold mb-4'
+        {/* Compact Basic Information */}
+        <div className='col-12 lg:col-6'>
+          <Card className='shadow-2 border-round-lg p-3 h-full'>
+            <h4
+              className='font-bold mb-3 mt-0'
               style={{ color: theme.textPrimary }}
             >
               Basic Information
-            </h3>
-            <div className='grid'>
+            </h4>
+            <div className='grid gap-2'>
               <div className='col-12'>
                 <CustomInputText
                   name='name'
                   label='Display Name'
                   control={control}
-                  placeholder='Enter your display name'
+                  placeholder='Enter display name'
                 />
               </div>
               <div className='col-12'>
                 <CustomInputText
                   name='email'
-                  label='Email Address'
+                  label='Email'
                   control={control}
-                  placeholder='Enter your email'
+                  placeholder='Enter email'
                   type='email'
                 />
               </div>
-              <div className='col-12 md:col-6'>
+              <div className='col-12 sm:col-6'>
                 <CustomInputText
                   name='generalInfo.firstName'
                   label='First Name'
                   control={control}
-                  placeholder='Enter first name'
+                  placeholder='First name'
                 />
               </div>
-              <div className='col-12 md:col-6'>
+              <div className='col-12 sm:col-6'>
                 <CustomInputText
                   name='generalInfo.lastName'
                   label='Last Name'
                   control={control}
-                  placeholder='Enter last name'
+                  placeholder='Last name'
                 />
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Contact Information */}
-        <div className='col-12 md:col-6'>
-          <Card className='shadow-3 border-round-2xl h-full'>
-            <h3
-              className='text-xl font-bold mb-4'
+        {/* Compact Contact Information */}
+        <div className='col-12 lg:col-6'>
+          <Card className='shadow-2 border-round-lg p-3 h-full'>
+            <h4
+              className='font-bold mb-3 mt-0'
               style={{ color: theme.textPrimary }}
             >
-              Contact Information
-            </h3>
-            <div className='grid'>
+              Contact
+            </h4>
+            <div className='grid gap-2'>
               <div className='col-12'>
                 <CustomInputText
                   name='generalInfo.phone'
-                  label='Phone Number'
+                  label='Phone'
                   control={control}
-                  placeholder='Enter phone number'
+                  placeholder='Phone number'
                   required={false}
                 />
               </div>
@@ -321,20 +324,20 @@ const EditProfile: React.FC = () => {
                   name='generalInfo.address'
                   label='Address'
                   control={control}
-                  placeholder='Enter your address'
+                  placeholder='Address'
                   required={false}
                 />
               </div>
-              <div className='col-12 md:col-6'>
+              <div className='col-12 sm:col-6'>
                 <CustomInputText
                   name='generalInfo.dateOfBirth'
-                  label='Date of Birth'
+                  label='Birth Date'
                   control={control}
                   placeholder='YYYY-MM-DD'
                   required={false}
                 />
               </div>
-              <div className='col-12 md:col-6'>
+              <div className='col-12 sm:col-6'>
                 <CustomDropdown
                   name='generalInfo.gender'
                   label='Gender'
@@ -347,16 +350,16 @@ const EditProfile: React.FC = () => {
           </Card>
         </div>
 
-        {/* Preferences */}
+        {/* Compact Preferences */}
         <div className='col-12'>
-          <Card className='shadow-3 border-round-2xl'>
-            <h3
-              className='text-xl font-bold mb-4'
+          <Card className='shadow-2 border-round-lg p-3'>
+            <h4
+              className='font-bold mb-3 mt-0'
               style={{ color: theme.textPrimary }}
             >
               Preferences
-            </h3>
-            <div className='grid'>
+            </h4>
+            <div className='grid gap-2'>
               <div className='col-12 md:col-4'>
                 <CustomDropdown
                   name='preferences.theme'
@@ -376,7 +379,7 @@ const EditProfile: React.FC = () => {
                 />
               </div>
               <div className='col-12 md:col-4'>
-                <div className='field pt-4'>
+                <div className='field pt-2'>
                   <CustomCheckbox
                     name='preferences.notifications'
                     label='Enable Notifications'
