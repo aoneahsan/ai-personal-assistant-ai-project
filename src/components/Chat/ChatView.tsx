@@ -1,14 +1,7 @@
 import { useParams, useSearch } from '@tanstack/react-router';
 import React from 'react';
 import Chat from './Chat';
-
-interface ChatUser {
-  id: string;
-  name: string;
-  avatar?: string;
-  isOnline: boolean;
-  lastSeen: Date;
-}
+import { ChatUser } from './types';
 
 const ChatView: React.FC = () => {
   const { chatId } = useParams({ from: '/dashboard/chats/view/$chatId' });
@@ -19,7 +12,7 @@ const ChatView: React.FC = () => {
     ? {
         id: search.userId || chatId,
         name: search.userName || 'Unknown User',
-        avatar: search.userAvatar || '',
+        avatar: search.userAvatar || 'https://via.placeholder.com/40',
         isOnline: true,
         lastSeen: new Date(),
       }

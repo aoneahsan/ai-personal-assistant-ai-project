@@ -75,11 +75,11 @@ const TranscriptDialog: React.FC<TranscriptDialogProps> = ({
               >
                 <div className='segment-timing'>
                   <span className='start-time'>
-                    {formatTimestamp(segment.startTime)}
+                    {formatTimestamp(segment.startTime || 0)}
                   </span>
                   <span className='separator'>→</span>
                   <span className='end-time'>
-                    {formatTimestamp(segment.endTime)}
+                    {formatTimestamp(segment.endTime || 0)}
                   </span>
                   {segment.confidence && (
                     <span className='confidence'>

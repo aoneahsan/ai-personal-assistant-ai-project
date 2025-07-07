@@ -341,7 +341,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         {/* Processing Indicator */}
         {isProcessingFile && (
           <div className='processing-indicator'>
-            <ProgressSpinner size='small' />
+            <ProgressSpinner />
             <span>Processing file...</span>
           </div>
         )}
@@ -357,7 +357,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <EmojiPicker
           onEmojiClick={handleEmojiClick}
           autoFocusSearch={false}
-          theme='light'
           height={350}
           width={300}
           searchDisabled={false}

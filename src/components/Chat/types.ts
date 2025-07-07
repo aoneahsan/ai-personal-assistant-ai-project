@@ -22,7 +22,7 @@ export interface Message {
   videoDuration?: number;
   videoThumbnail?: string;
   quickTranscript?: string;
-  transcript?: string;
+  transcript?: TranscriptSegment[];
 }
 
 export interface ChatUser {
