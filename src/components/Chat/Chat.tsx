@@ -230,7 +230,7 @@ const Chat: React.FC<ChatProps> = ({
   const getDefaultMessages = (): Message[] => [
     {
       id: '1',
-      text: "Hi! I'm your AI assistant. How can I help you today?",
+      text: "✨ Hi there! I'm your AI personal assistant. I'm here to help you with anything you need!",
       sender: 'other',
       timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
       status: 'read',
@@ -238,9 +238,17 @@ const Chat: React.FC<ChatProps> = ({
     },
     {
       id: '2',
-      text: 'Feel free to send me text messages, images, videos, or voice recordings. I can help with a wide variety of tasks!',
+      text: '🚀 I can help you with questions, tasks, creative projects, and so much more. Feel free to send me text messages, images, videos, or voice recordings!',
       sender: 'other',
       timestamp: new Date(Date.now() - 1000 * 60 * 4), // 4 minutes ago
+      status: 'read',
+      type: 'text',
+    },
+    {
+      id: '3',
+      text: "💡 Try asking me about anything - I'm ready to assist you!",
+      sender: 'other',
+      timestamp: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
       status: 'read',
       type: 'text',
     },
@@ -542,6 +550,26 @@ const Chat: React.FC<ChatProps> = ({
   const selectedMessage =
     messages.find((msg) => msg.id === showTranscriptDialog) || null;
 
+  // Enhanced empty state component
+  const EmptyState = () => (
+    <div className='empty-chat-state'>
+      <div className='empty-illustration'></div>
+      <h2 className='empty-title'>Start a Conversation</h2>
+      <p className='empty-subtitle'>
+        Begin chatting with your AI assistant. Ask questions, share files, or
+        just say hello!
+      </p>
+      <button
+        className='start-chat-btn'
+        onClick={() => {
+          setMessages(getDefaultMessages());
+        }}
+      >
+        Get Started
+      </button>
+    </div>
+  );
+
   // Show initial loading state
   if (isInitialLoading) {
     return (
@@ -557,30 +585,35 @@ const Chat: React.FC<ChatProps> = ({
             <div className='loading-message-group'>
               <Skeleton
                 width='60%'
-                height='50px'
-                className='mb-2'
+                height='60px'
+                className='mb-3'
               />
               <Skeleton
                 width='40%'
-                height='50px'
-                className='mb-2 ml-auto'
+                height='60px'
+                className='mb-3 ml-auto'
               />
               <Skeleton
                 width='70%'
-                height='50px'
-                className='mb-2'
+                height='60px'
+                className='mb-3'
               />
               <Skeleton
                 width='50%'
-                height='50px'
-                className='mb-2 ml-auto'
+                height='60px'
+                className='mb-3 ml-auto'
+              />
+              <Skeleton
+                width='65%'
+                height='60px'
+                className='mb-3'
               />
             </div>
           </div>
           <div className='loading-input'>
             <Skeleton
               width='100%'
-              height='60px'
+              height='70px'
             />
           </div>
         </div>
@@ -608,18 +641,25 @@ const Chat: React.FC<ChatProps> = ({
         onMuteNotifications={handleMuteNotifications}
       />
 
-      <MessagesList
-        messages={messages}
-        isTyping={false}
-        playingAudioId={playingAudioId}
-        onAudioToggle={toggleAudioPlayback}
-        onShowTranscript={showTranscript}
-        isLoading={isLoadingMessages}
-        onEditMessage={handleEditMessage}
-        onDeleteMessage={handleDeleteMessage}
-        onViewHistory={handleViewHistory}
-        onUpgrade={handleUpgradeFeature}
-      />
+      {/* Show empty state if no messages, otherwise show messages list */}
+      {messages.length === 0 && !isLoadingMessages ? (
+        <div className='messages-container'>
+          <EmptyState />
+        </div>
+      ) : (
+        <MessagesList
+          messages={messages}
+          isTyping={false}
+          playingAudioId={playingAudioId}
+          onAudioToggle={toggleAudioPlayback}
+          onShowTranscript={showTranscript}
+          isLoading={isLoadingMessages}
+          onEditMessage={handleEditMessage}
+          onDeleteMessage={handleDeleteMessage}
+          onViewHistory={handleViewHistory}
+          onUpgrade={handleUpgradeFeature}
+        />
+      )}
 
       <MessageInput
         currentMessage={currentMessage}
