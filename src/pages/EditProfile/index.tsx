@@ -1,20 +1,14 @@
 import { DashboardPageWrapper } from '@/components/common';
 import {
-  CustomCalendar,
   CustomCheckbox,
   CustomDropdown,
   CustomInputText,
 } from '@/components/FormComponents';
-import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useToast } from '@/hooks';
 import { useTheme } from '@/hooks/useTheme';
-import { PAGE_TITLES } from '@/utils/constants/generic/labels';
-import {
-  COMPONENT_STYLES,
-  CSS_CLASSES,
-} from '@/utils/constants/generic/styles';
+import { PAGE_TITLES, TOOLTIP_LABELS } from '@/utils/constants/generic/labels';
+import { UI_ICONS } from '@/utils/constants/generic/ui';
 import { ROUTES } from '@/utils/constants/routingConstants';
-import { copyToClipboardWithToast } from '@/utils/helpers/capacitorApis';
 import {
   UserProfileData,
   useUserProfileZState,
@@ -22,15 +16,13 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
-import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
-import { Divider } from 'primereact/divider';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-// Zod validation schema
+// Simplified validation schema
 const profileSchema = z.object({
   name: z
     .string()
@@ -38,32 +30,17 @@ const profileSchema = z.object({
     .max(50, 'Name must be less than 50 characters'),
   email: z.string().email('Please enter a valid email address'),
   generalInfo: z.object({
-    firstName: z.string().min(2, 'First name must be at least 2 characters'),
-    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-    dateOfBirth: z.string().min(1, 'Date of birth is required'),
-    gender: z.string().min(1, 'Gender is required'),
-    phone: z.string().min(10, 'Phone number must be at least 10 characters'),
-    address: z.string().min(5, 'Address must be at least 5 characters'),
-  }),
-  workInfo: z.object({
-    position: z.string().min(2, 'Position must be at least 2 characters'),
-    department: z.string().min(2, 'Department must be at least 2 characters'),
-    employeeId: z.string().min(3, 'Employee ID must be at least 3 characters'),
-    startDate: z.string().min(1, 'Start date is required'),
-    salary: z.string().min(1, 'Salary is required'),
-    manager: z.string().min(2, 'Manager name must be at least 2 characters'),
-  }),
-  birthInfo: z.object({
-    placeOfBirth: z
-      .string()
-      .min(2, 'Place of birth must be at least 2 characters'),
-    nationality: z.string().min(2, 'Nationality must be at least 2 characters'),
-    timezone: z.string().min(1, 'Timezone is required'),
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    dateOfBirth: z.string().optional(),
+    gender: z.string().optional(),
   }),
   preferences: z.object({
-    theme: z.string().min(1, 'Theme is required'),
-    language: z.string().min(1, 'Language is required'),
-    notifications: z.boolean(),
+    theme: z.string().optional(),
+    language: z.string().optional(),
+    notifications: z.boolean().optional(),
   }),
 });
 
@@ -72,28 +49,15 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { showRefreshSuccess, showLoadError, showInfo } = useToast();
   const { profile, updateProfile, loadProfileFromStorage } =
     useUserProfileZState();
-  const [showHelpModal, setShowHelpModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Load profile from storage on component mount
   useEffect(() => {
     loadProfileFromStorage();
   }, [loadProfileFromStorage]);
-
-  // Define sections for keyboard shortcuts
-  const sections = [
-    { name: 'Basic Information', icon: 'pi pi-user', color: 'primary' },
-    { name: 'General Information', icon: 'pi pi-info-circle', color: 'blue' },
-    { name: 'Work Information', icon: 'pi pi-briefcase', color: 'green' },
-    {
-      name: 'Birth & Location Information',
-      icon: 'pi pi-map-marker',
-      color: 'orange',
-    },
-    { name: 'Preferences', icon: 'pi pi-cog', color: 'purple' },
-  ];
 
   // Form setup with react-hook-form and zod
   const {
@@ -103,34 +67,21 @@ const EditProfile: React.FC = () => {
     reset,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: profile || {
+    defaultValues: {
       name: '',
       email: '',
       generalInfo: {
-        address: '',
-        phone: '',
         firstName: '',
         lastName: '',
+        phone: '',
+        address: '',
         dateOfBirth: '',
         gender: '',
       },
-      workInfo: {
-        position: '',
-        department: '',
-        employeeId: '',
-        startDate: '',
-        salary: '',
-        manager: '',
-      },
-      birthInfo: {
-        placeOfBirth: '',
-        nationality: '',
-        timezone: '',
-      },
       preferences: {
-        theme: '',
-        language: '',
-        notifications: false,
+        theme: 'auto',
+        language: 'English',
+        notifications: true,
       },
     },
   });
@@ -138,13 +89,29 @@ const EditProfile: React.FC = () => {
   // Update form when profile state changes
   useEffect(() => {
     if (profile) {
-      reset(profile);
+      reset({
+        name: profile.name || '',
+        email: profile.email || '',
+        generalInfo: {
+          firstName: profile.generalInfo?.firstName || '',
+          lastName: profile.generalInfo?.lastName || '',
+          phone: profile.generalInfo?.phone || '',
+          address: profile.generalInfo?.address || '',
+          dateOfBirth: profile.generalInfo?.dateOfBirth || '',
+          gender: profile.generalInfo?.gender || '',
+        },
+        preferences: {
+          theme: profile.preferences?.theme || 'auto',
+          language: profile.preferences?.language || 'English',
+          notifications: profile.preferences?.notifications ?? true,
+        },
+      });
     }
   }, [profile, reset]);
 
   const handleCancel = () => {
     if (profile) {
-      reset(profile);
+      reset();
     }
     navigate({ to: ROUTES.DASHBOARD });
   };
@@ -154,84 +121,37 @@ const EditProfile: React.FC = () => {
     setRefreshing(true);
     try {
       await loadProfileFromStorage();
-      await copyToClipboardWithToast({
-        value: 'Profile data refreshed!',
-        successMessage: 'Profile data refreshed successfully!',
-        errorMessage: 'Profile refreshed but failed to copy message',
-      });
+      showRefreshSuccess('Profile');
     } catch {
-      await copyToClipboardWithToast({
-        value: 'Error refreshing profile',
-        successMessage: 'Error refreshing profile',
-        errorMessage: 'Error refreshing profile',
-      });
+      showLoadError('profile data');
     } finally {
       setRefreshing(false);
-    }
-  };
-
-  // Handle section navigation
-  const handleSectionChange = (sectionIndex: number) => {
-    if (sectionIndex < sections.length) {
-      const sectionIds = [
-        'basic-info',
-        'general-info',
-        'work-info',
-        'birth-info',
-        'preferences',
-      ];
-      const targetSection = document.getElementById(sectionIds[sectionIndex]);
-      if (targetSection) {
-        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
     }
   };
 
   // Form submission handler
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      // Update the zustand state (this will also persist to storage)
       await updateProfile(data as UserProfileData);
-
-      // Show success message
-      await copyToClipboardWithToast({
-        value: 'Profile updated successfully!',
-        successMessage: 'Profile updated successfully!',
-        errorMessage: 'Profile updated but failed to copy message',
-      });
-
-      // Navigate back to dashboard
+      showInfo('Success', 'Profile updated successfully!');
       navigate({ to: ROUTES.DASHBOARD });
     } catch {
-      await copyToClipboardWithToast({
-        value: 'Error updating profile',
-        successMessage: 'Error updating profile',
-        errorMessage: 'Error updating profile',
-      });
+      showLoadError('profile update');
     }
   };
 
-  // Keyboard shortcuts setup
-  useKeyboardShortcuts({
-    onSubmit: handleSubmit(onSubmit),
-    onReset: () => reset(),
-    onCancel: handleCancel,
-    onShowHelp: () => setShowHelpModal(true),
-    onSectionChange: handleSectionChange,
-    sections: sections.map((s) => s.name),
-  });
-
   // Dropdown options
   const genderOptions = [
+    { label: 'Select Gender', value: '' },
     { label: 'Male', value: 'Male' },
     { label: 'Female', value: 'Female' },
     { label: 'Other', value: 'Other' },
   ];
 
   const themeOptions = [
-    { label: 'Light', value: 'Light' },
-    { label: 'Dark', value: 'Dark' },
-    { label: 'Auto', value: 'Auto' },
+    { label: 'Auto', value: 'auto' },
+    { label: 'Light', value: 'light' },
+    { label: 'Dark', value: 'dark' },
   ];
 
   const languageOptions = [
@@ -241,13 +161,6 @@ const EditProfile: React.FC = () => {
     { label: 'German', value: 'German' },
   ];
 
-  const timezoneOptions = [
-    { label: 'EST (UTC-5)', value: 'EST (UTC-5)' },
-    { label: 'PST (UTC-8)', value: 'PST (UTC-8)' },
-    { label: 'GMT (UTC+0)', value: 'GMT (UTC+0)' },
-    { label: 'CET (UTC+1)', value: 'CET (UTC+1)' },
-  ];
-
   // Loading state
   if (!profile) {
     return (
@@ -255,17 +168,19 @@ const EditProfile: React.FC = () => {
         title={PAGE_TITLES.EDIT_PROFILE}
         onRefresh={handleRefresh}
         refreshing={refreshing}
-        refreshTooltip='Refresh Profile Data'
+        refreshTooltip={TOOLTIP_LABELS.REFRESH_DATA}
       >
-        <div className='flex align-items-center justify-content-center min-h-screen'>
-          <div className='text-center'>
-            <i
-              className='pi pi-spin pi-spinner text-4xl mb-3'
-              style={{ color: theme.primary }}
-            ></i>
-            <p style={{ color: theme.textSecondary }}>Loading profile...</p>
+        <Card className='shadow-3 border-round-2xl'>
+          <div className='flex align-items-center justify-content-center p-6'>
+            <div className='text-center'>
+              <i
+                className='pi pi-spin pi-spinner text-4xl mb-3'
+                style={{ color: theme.primary }}
+              ></i>
+              <p style={{ color: theme.textSecondary }}>Loading profile...</p>
+            </div>
           </div>
-        </div>
+        </Card>
       </DashboardPageWrapper>
     );
   }
@@ -274,17 +189,19 @@ const EditProfile: React.FC = () => {
   const headerActions = (
     <div className='flex gap-2'>
       <Button
-        icon='pi pi-keyboard'
-        className='p-button-text p-button-rounded p-button-sm'
-        onClick={() => setShowHelpModal(true)}
-        tooltip='Keyboard Shortcuts (F1)'
-        tooltipOptions={{ position: 'bottom' }}
+        label='Cancel'
+        icon={UI_ICONS.CANCEL}
+        className='p-button-outlined'
+        onClick={handleCancel}
+        disabled={isSubmitting}
       />
       <Button
-        icon='pi pi-arrow-left'
-        label='Back'
-        className='p-button-outlined p-button-sm'
-        onClick={handleCancel}
+        label='Save Changes'
+        icon={UI_ICONS.SAVE}
+        className='p-button-rounded'
+        onClick={handleSubmit(onSubmit)}
+        loading={isSubmitting}
+        disabled={!isDirty}
       />
     </div>
   );
@@ -294,464 +211,187 @@ const EditProfile: React.FC = () => {
       title={PAGE_TITLES.EDIT_PROFILE}
       onRefresh={handleRefresh}
       refreshing={refreshing}
-      refreshTooltip='Refresh Profile Data'
+      refreshTooltip={TOOLTIP_LABELS.REFRESH_DATA}
       actions={headerActions}
     >
-      {/* Profile Avatar Section */}
-      <div className='flex justify-content-center mb-4'>
-        <div className='text-center'>
-          <Avatar
-            image={profile.avatar || undefined}
-            label={
-              profile.generalInfo.firstName?.charAt(0) ||
-              profile.email?.charAt(0) ||
-              '?'
-            }
-            size='xlarge'
-            shape='circle'
-            style={{
-              width: '120px',
-              height: '120px',
-              fontSize: '2rem',
-              backgroundColor: theme.primary,
-              color: 'white',
-            }}
-          />
-          <p
-            className='mt-2'
-            style={{ color: theme.textSecondary }}
-          >
-            Update your profile information
-          </p>
-        </div>
-      </div>
-
-      {/* Keyboard Shortcuts Promotion Banner */}
-      <Card className='mb-4 shadow-2 border-round-2xl'>
-        <div
-          className='p-3 border-round'
-          style={{ background: theme.primaryLight, borderColor: theme.primary }}
-        >
-          <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between gap-3'>
-            <div className='flex align-items-center gap-2 sm:gap-3'>
-              <div
-                className='p-2 border-round'
-                style={{ background: theme.surface }}
-              >
-                <i
-                  className='pi pi-keyboard text-lg sm:text-xl'
-                  style={{ color: theme.primary }}
-                ></i>
-              </div>
-              <div>
-                <h3
-                  className='text-base sm:text-lg font-bold m-0'
+      <div className='grid'>
+        {/* Profile Avatar Section */}
+        <div className='col-12'>
+          <Card className='shadow-3 border-round-2xl mb-4'>
+            <div className='flex align-items-center justify-content-center p-6'>
+              <div className='text-center'>
+                <Avatar
+                  image={profile.avatar || undefined}
+                  label={
+                    profile.generalInfo?.firstName?.charAt(0) ||
+                    profile.email?.charAt(0) ||
+                    '?'
+                  }
+                  size='xlarge'
+                  shape='circle'
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    fontSize: '2rem',
+                    backgroundColor: theme.primary,
+                    color: 'white',
+                  }}
+                />
+                <p
+                  className='mt-3 text-lg font-medium'
                   style={{ color: theme.textPrimary }}
                 >
-                  ⚡ Supercharge Your Editing!
-                </h3>
+                  {profile.generalInfo?.firstName || profile.name || 'User'}
+                </p>
                 <p
-                  className='text-xs sm:text-sm m-0 mt-1'
+                  className='text-sm'
                   style={{ color: theme.textSecondary }}
                 >
-                  Use powerful keyboard shortcuts to edit faster than ever
+                  {profile.email}
                 </p>
               </div>
             </div>
-            <div className='flex flex-column sm:flex-row align-items-start sm:align-items-center gap-2 sm:gap-3'>
-              <div className='flex flex-column sm:text-right gap-1'>
-                <div className='flex align-items-center gap-1 sm:gap-2'>
-                  <kbd
-                    className='px-1 sm:px-2 py-1 border-round text-xs font-mono'
-                    style={{
-                      background: theme.success + '20',
-                      color: theme.success,
-                    }}
-                  >
-                    F2
-                  </kbd>
-                  <span className={CSS_CLASSES.COLORS.TEXT_SECONDARY}>
-                    Save
-                  </span>
-                </div>
-                <div className='flex align-items-center gap-1 sm:gap-2'>
-                  <kbd
-                    className='px-1 sm:px-2 py-1 border-round text-xs font-mono'
-                    style={{ background: theme.info + '20', color: theme.info }}
-                  >
-                    Ctrl+1-5
-                  </kbd>
-                  <span className={CSS_CLASSES.COLORS.TEXT_SECONDARY}>
-                    Jump to sections
-                  </span>
-                </div>
-              </div>
-              <Button
-                label='View All'
-                icon='pi pi-external-link'
-                className='p-button-sm p-button-outlined p-button-info'
-                onClick={() => setShowHelpModal(true)}
-              />
-            </div>
-          </div>
+          </Card>
         </div>
-      </Card>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
         {/* Basic Information */}
-        <Card
-          id='basic-info'
-          title={
-            <div className='flex align-items-center justify-content-between'>
-              <span>Basic Information</span>
-              <div className='flex gap-2'>
-                <Badge
-                  value='Ctrl+1'
-                  severity='secondary'
-                  className='p-badge-sm'
+        <div className='col-12 md:col-6'>
+          <Card className='shadow-3 border-round-2xl h-full'>
+            <h3
+              className='text-xl font-bold mb-4'
+              style={{ color: theme.textPrimary }}
+            >
+              Basic Information
+            </h3>
+            <div className='grid'>
+              <div className='col-12'>
+                <CustomInputText
+                  name='name'
+                  label='Display Name'
+                  control={control}
+                  placeholder='Enter your display name'
+                />
+              </div>
+              <div className='col-12'>
+                <CustomInputText
+                  name='email'
+                  label='Email Address'
+                  control={control}
+                  placeholder='Enter your email'
+                  type='email'
+                />
+              </div>
+              <div className='col-12 md:col-6'>
+                <CustomInputText
+                  name='generalInfo.firstName'
+                  label='First Name'
+                  control={control}
+                  placeholder='Enter first name'
+                />
+              </div>
+              <div className='col-12 md:col-6'>
+                <CustomInputText
+                  name='generalInfo.lastName'
+                  label='Last Name'
+                  control={control}
+                  placeholder='Enter last name'
                 />
               </div>
             </div>
-          }
-          className='mb-4 shadow-2 border-round-2xl'
-        >
-          <div className='grid'>
-            <CustomInputText
-              name='name'
-              control={control}
-              label='Full Name'
-              placeholder='Enter your full name'
-              className='col-12 md:col-6'
-            />
+          </Card>
+        </div>
 
-            <CustomInputText
-              name='email'
-              control={control}
-              label='Email Address'
-              placeholder='Enter your email'
-              type='email'
-              className='col-12 md:col-6'
-            />
-          </div>
-        </Card>
-
-        {/* General Information */}
-        <Card
-          id='general-info'
-          title={
-            <div className='flex align-items-center justify-content-between'>
-              <span>General Information</span>
-              <div className='flex gap-2'>
-                <Badge
-                  value='Ctrl+2'
-                  severity='secondary'
-                  className='p-badge-sm'
+        {/* Contact Information */}
+        <div className='col-12 md:col-6'>
+          <Card className='shadow-3 border-round-2xl h-full'>
+            <h3
+              className='text-xl font-bold mb-4'
+              style={{ color: theme.textPrimary }}
+            >
+              Contact Information
+            </h3>
+            <div className='grid'>
+              <div className='col-12'>
+                <CustomInputText
+                  name='generalInfo.phone'
+                  label='Phone Number'
+                  control={control}
+                  placeholder='Enter phone number'
+                  required={false}
+                />
+              </div>
+              <div className='col-12'>
+                <CustomInputText
+                  name='generalInfo.address'
+                  label='Address'
+                  control={control}
+                  placeholder='Enter your address'
+                  required={false}
+                />
+              </div>
+              <div className='col-12 md:col-6'>
+                <CustomInputText
+                  name='generalInfo.dateOfBirth'
+                  label='Date of Birth'
+                  control={control}
+                  placeholder='YYYY-MM-DD'
+                  required={false}
+                />
+              </div>
+              <div className='col-12 md:col-6'>
+                <CustomDropdown
+                  name='generalInfo.gender'
+                  label='Gender'
+                  control={control}
+                  options={genderOptions}
+                  required={false}
                 />
               </div>
             </div>
-          }
-          className='mb-4 shadow-2 border-round-2xl'
-        >
-          <div className='grid'>
-            <CustomInputText
-              name='generalInfo.firstName'
-              control={control}
-              label='First Name'
-              placeholder='Enter your first name'
-            />
-
-            <CustomInputText
-              name='generalInfo.lastName'
-              control={control}
-              label='Last Name'
-              placeholder='Enter your last name'
-            />
-
-            <CustomCalendar
-              name='generalInfo.dateOfBirth'
-              control={control}
-              label='Date of Birth'
-              placeholder='Select your birth date'
-            />
-
-            <CustomDropdown
-              name='generalInfo.gender'
-              control={control}
-              label='Gender'
-              options={genderOptions}
-              placeholder='Select your gender'
-            />
-
-            <CustomInputText
-              name='generalInfo.phone'
-              control={control}
-              label='Phone Number'
-              placeholder='Enter your phone number'
-              type='tel'
-            />
-
-            <CustomInputText
-              name='generalInfo.address'
-              control={control}
-              label='Address'
-              placeholder='Enter your address'
-              className='col-12'
-            />
-          </div>
-        </Card>
-
-        {/* Work Information */}
-        <Card
-          id='work-info'
-          title={
-            <div className='flex align-items-center justify-content-between'>
-              <span>Work Information</span>
-              <div className='flex gap-2'>
-                <Badge
-                  value='Ctrl+3'
-                  severity='secondary'
-                  className='p-badge-sm'
-                />
-              </div>
-            </div>
-          }
-          className='mb-4 shadow-2 border-round-2xl'
-        >
-          <div className='grid'>
-            <CustomInputText
-              name='workInfo.position'
-              control={control}
-              label='Position'
-              placeholder='Enter your position'
-            />
-
-            <CustomInputText
-              name='workInfo.department'
-              control={control}
-              label='Department'
-              placeholder='Enter your department'
-            />
-
-            <CustomInputText
-              name='workInfo.employeeId'
-              control={control}
-              label='Employee ID'
-              placeholder='Enter your employee ID'
-            />
-
-            <CustomCalendar
-              name='workInfo.startDate'
-              control={control}
-              label='Start Date'
-              placeholder='Select your start date'
-            />
-
-            <CustomInputText
-              name='workInfo.salary'
-              control={control}
-              label='Salary'
-              placeholder='Enter your salary'
-            />
-
-            <CustomInputText
-              name='workInfo.manager'
-              control={control}
-              label='Manager'
-              placeholder="Enter your manager's name"
-            />
-          </div>
-        </Card>
-
-        {/* Birth & Location Information */}
-        <Card
-          id='birth-info'
-          title={
-            <div className='flex align-items-center justify-content-between'>
-              <span>Birth & Location Information</span>
-              <div className='flex gap-2'>
-                <Badge
-                  value='Ctrl+4'
-                  severity='secondary'
-                  className='p-badge-sm'
-                />
-              </div>
-            </div>
-          }
-          className='mb-4 shadow-2 border-round-2xl'
-        >
-          <div className='grid'>
-            <CustomInputText
-              name='birthInfo.placeOfBirth'
-              control={control}
-              label='Place of Birth'
-              placeholder='Enter your place of birth'
-            />
-
-            <CustomInputText
-              name='birthInfo.nationality'
-              control={control}
-              label='Nationality'
-              placeholder='Enter your nationality'
-            />
-
-            <CustomDropdown
-              name='birthInfo.timezone'
-              control={control}
-              label='Timezone'
-              options={timezoneOptions}
-              placeholder='Select your timezone'
-            />
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* Preferences */}
-        <Card
-          id='preferences'
-          title={
-            <div className='flex align-items-center justify-content-between'>
-              <span>Preferences</span>
-              <div className='flex gap-2'>
-                <Badge
-                  value='Ctrl+5'
-                  severity='secondary'
-                  className='p-badge-sm'
+        <div className='col-12'>
+          <Card className='shadow-3 border-round-2xl'>
+            <h3
+              className='text-xl font-bold mb-4'
+              style={{ color: theme.textPrimary }}
+            >
+              Preferences
+            </h3>
+            <div className='grid'>
+              <div className='col-12 md:col-4'>
+                <CustomDropdown
+                  name='preferences.theme'
+                  label='Theme'
+                  control={control}
+                  options={themeOptions}
+                  required={false}
                 />
               </div>
+              <div className='col-12 md:col-4'>
+                <CustomDropdown
+                  name='preferences.language'
+                  label='Language'
+                  control={control}
+                  options={languageOptions}
+                  required={false}
+                />
+              </div>
+              <div className='col-12 md:col-4'>
+                <div className='field pt-4'>
+                  <CustomCheckbox
+                    name='preferences.notifications'
+                    label='Enable Notifications'
+                    control={control}
+                  />
+                </div>
+              </div>
             </div>
-          }
-          className='mb-4 shadow-2 border-round-2xl'
-        >
-          <div className='grid'>
-            <CustomDropdown
-              name='preferences.theme'
-              control={control}
-              label='Theme'
-              options={themeOptions}
-              placeholder='Select your theme preference'
-            />
-
-            <CustomDropdown
-              name='preferences.language'
-              control={control}
-              label='Language'
-              options={languageOptions}
-              placeholder='Select your language'
-            />
-
-            <CustomCheckbox
-              name='preferences.notifications'
-              control={control}
-              label='Enable Notifications'
-            />
-          </div>
-        </Card>
-
-        <Divider />
-
-        {/* Form Actions */}
-        <div className='flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center mt-4 gap-3'>
-          <div className='flex flex-wrap align-items-center gap-2'>
-            <i className='pi pi-info-circle text-blue-500'></i>
-            <span className={CSS_CLASSES.COLORS.TEXT_SECONDARY}>
-              Use keyboard shortcuts for faster editing
-            </span>
-            <Badge
-              value='F2 to save'
-              severity='secondary'
-              className='p-badge-sm'
-            />
-            <Badge
-              value='F1 for help'
-              severity='info'
-              className='p-badge-sm'
-            />
-          </div>
-          <div className='flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto justify-content-end'>
-            <Button
-              label='Cancel'
-              icon='pi pi-times'
-              className={COMPONENT_STYLES.BUTTON.OUTLINE + ' p-button-sm'}
-              onClick={handleCancel}
-            />
-            <Button
-              label='Reset'
-              icon='pi pi-refresh'
-              className={
-                COMPONENT_STYLES.BUTTON.OUTLINE +
-                ' p-button-warning p-button-sm'
-              }
-              onClick={() => reset()}
-              tooltip='Reset form'
-              tooltipOptions={{
-                position: 'top',
-                event: 'both',
-                hideDelay: 300,
-              }}
-              disabled={!isDirty || isSubmitting}
-            />
-            <Button
-              type='submit'
-              label={isSubmitting ? 'Saving...' : 'Save Changes'}
-              icon='pi pi-check'
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              tooltip='F2 or Ctrl+S'
-              className='p-button-sm'
-            />
-          </div>
-        </div>
-      </form>
-
-      {/* Floating Keyboard Help Indicator */}
-      <div
-        className='fixed bottom-4 left-4 z-4 cursor-pointer'
-        onClick={() => setShowHelpModal(true)}
-        style={{ animation: 'bounce 2s infinite' }}
-      >
-        <div className='bg-purple-500 text-white p-2 sm:p-3 border-round-lg shadow-4 flex align-items-center gap-2 hover:bg-purple-600 transition-colors'>
-          <i className='pi pi-question-circle text-sm sm:text-lg'></i>
-          <div className='hidden sm:block'>
-            <div className='font-semibold text-xs sm:text-sm'>Need Help?</div>
-            <div className='text-xs opacity-90'>
-              Press{' '}
-              <kbd className='bg-white text-purple-600 px-1 py-0 border-round text-xs'>
-                F1
-              </kbd>{' '}
-              or{' '}
-              <kbd className='bg-white text-purple-600 px-1 py-0 border-round text-xs'>
-                Ctrl+H
-              </kbd>
-            </div>
-          </div>
+          </Card>
         </div>
       </div>
-
-      {/* Custom CSS for animations and styling */}
-      <style>{`
-        @keyframes bounce {
-          0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
-          40%, 43% { transform: translateY(-10px); }
-          70% { transform: translateY(-5px); }
-          90% { transform: translateY(-2px); }
-        }
-        
-        kbd {
-          font-family: 'Courier New', monospace;
-          font-size: 0.7rem;
-          font-weight: 600;
-          padding: 0.15rem 0.4rem;
-          border-radius: 0.25rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-      `}</style>
-
-      {/* Keyboard Shortcuts Help Modal */}
-      <KeyboardShortcutsModal
-        visible={showHelpModal}
-        onHide={() => setShowHelpModal(false)}
-        sections={sections}
-      />
     </DashboardPageWrapper>
   );
 };
