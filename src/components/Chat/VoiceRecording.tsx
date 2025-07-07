@@ -1,12 +1,7 @@
 import { Button } from 'primereact/button';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  FaMicrophone,
-  FaPause,
-  FaPlay,
-  FaSquare,
-  FaTimes,
-} from 'react-icons/fa';
+import { FaMicrophone, FaStop } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import {
   AudioRecordingState,
   Message,
@@ -19,24 +14,9 @@ interface SpeechRecognitionEvent {
   results: SpeechRecognitionResultList;
 }
 
-interface SpeechRecognitionErrorEvent {
+interface SpeechRecognitionErrorEvent extends Event {
   error: string;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  length: number;
-  [index: number]: SpeechRecognitionAlternative;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  [index: number]: SpeechRecognitionResult;
+  message: string;
 }
 
 interface SpeechRecognitionConstructor {
@@ -102,7 +82,6 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
         ...prev,
         browserSupportsSpeechRecognition: true,
       }));
-      console.log('Speech recognition is supported');
 
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -114,18 +93,12 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
       recognition.maxAlternatives = 1;
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        console.log('Speech recognition result event:', event);
         let finalTranscript = '';
-
         const currentTime = (Date.now() - recordingStartTime.current) / 1000;
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           const confidence = event.results[i][0].confidence;
-
-          console.log(
-            `Result ${i}: "${transcript}", Final: ${event.results[i].isFinal}, Confidence: ${confidence}`
-          );
 
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
@@ -145,7 +118,6 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
               confidence: confidence || 0.8,
             };
 
-            console.log('Adding segment with timing:', segment);
             setSpeechState((prev) => ({
               ...prev,
               finalTranscriptSegments: [
@@ -160,10 +132,6 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
 
         if (finalTranscript) {
           currentRecognitionText.current += finalTranscript;
-          console.log(
-            'Updated current recognition text:',
-            currentRecognitionText.current
-          );
         }
       };
 
@@ -172,14 +140,12 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
       };
 
       recognition.onend = () => {
-        console.log('Speech recognition ended');
         if (
           audioState.isRecording &&
           !audioState.isPaused &&
           speechState.browserSupportsSpeechRecognition
         ) {
           try {
-            console.log('Restarting speech recognition...');
             recognition.start();
           } catch (error) {
             console.log('Recognition restart failed:', error);
@@ -189,17 +155,10 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
-        if (
-          event.error === 'not-allowed' ||
-          event.error === 'service-not-allowed'
-        ) {
-          console.error('Speech recognition permission denied');
-        }
       };
 
       recognitionRef.current = recognition;
     } else {
-      console.log('Speech recognition not supported');
       setSpeechState((prev) => ({
         ...prev,
         browserSupportsSpeechRecognition: false,
@@ -211,16 +170,8 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
     speechState.browserSupportsSpeechRecognition,
   ]);
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const startRecording = async () => {
     try {
-      console.log('Starting recording...');
-
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -242,7 +193,6 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
       };
 
       recorder.onstop = () => {
-        console.log('MediaRecorder stopped, processing audio...');
         const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
         setAudioState((prev) => ({ ...prev, audioBlob: blob }));
         stream.getTracks().forEach((track) => track.stop());
@@ -288,64 +238,17 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
           recordingTime: prev.recordingTime + 1,
         }));
       }, 1000);
+
+      toast.success('Recording started!');
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Unable to access microphone. Please check your permissions.');
-    }
-  };
-
-  const pauseRecording = () => {
-    if (
-      audioState.mediaRecorder &&
-      audioState.isRecording &&
-      !audioState.isPaused
-    ) {
-      audioState.mediaRecorder.pause();
-      setAudioState((prev) => ({ ...prev, isPaused: true }));
-
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-        recordingIntervalRef.current = null;
-      }
-    }
-  };
-
-  const resumeRecording = () => {
-    if (
-      audioState.mediaRecorder &&
-      audioState.isRecording &&
-      audioState.isPaused
-    ) {
-      audioState.mediaRecorder.resume();
-      setAudioState((prev) => ({ ...prev, isPaused: false }));
-
-      if (
-        recognitionRef.current &&
-        speechState.browserSupportsSpeechRecognition
-      ) {
-        try {
-          recognitionRef.current.start();
-        } catch (error) {
-          console.log('Speech recognition resume failed:', error);
-        }
-      }
-
-      recordingIntervalRef.current = setInterval(() => {
-        setAudioState((prev) => ({
-          ...prev,
-          recordingTime: prev.recordingTime + 1,
-        }));
-      }, 1000);
+      toast.error(
+        'Unable to access microphone. Please check your permissions.'
+      );
     }
   };
 
   const stopRecording = () => {
-    console.log('Stopping recording...');
-
     if (audioState.mediaRecorder && audioState.isRecording) {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -368,44 +271,10 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
     }
   };
 
-  const cancelRecording = () => {
-    if (audioState.mediaRecorder) {
-      audioState.mediaRecorder.stop();
-    }
-
-    setAudioState({
-      isRecording: false,
-      isPaused: false,
-      recordingTime: 0,
-      audioBlob: null,
-      mediaRecorder: null,
-      audioChunks: [],
-      isProcessingAudio: false,
-    });
-
-    setSpeechState((prev) => ({
-      ...prev,
-      finalTranscriptSegments: [],
-    }));
-
-    currentRecognitionText.current = '';
-    recordingStartTime.current = 0;
-    lastSegmentEndTime.current = 0;
-
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-
-    if (recordingIntervalRef.current) {
-      clearInterval(recordingIntervalRef.current);
-      recordingIntervalRef.current = null;
-    }
-  };
-
   const processCompleteAudioTranscript = async (blob: Blob) => {
     setAudioState((prev) => ({ ...prev, isProcessingAudio: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const audioUrl = URL.createObjectURL(blob);
     let allTranscriptText = '';
@@ -492,71 +361,54 @@ const VoiceRecording: React.FC<VoiceRecordingProps> = ({
     recordingStartTime.current = 0;
     lastSegmentEndTime.current = 0;
     setAudioState((prev) => ({ ...prev, isProcessingAudio: false }));
+
+    toast.success('Voice message sent!');
+  };
+
+  const handleClick = () => {
+    if (audioState.isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <>
-      <div className='voice-controls'>
-        {!audioState.isRecording ? (
-          <Button
-            icon={<FaMicrophone />}
-            className='voice-btn'
-            onClick={startRecording}
-            disabled={disabled || audioState.isProcessingAudio}
-          />
-        ) : (
-          <div className='recording-controls'>
-            <Button
-              icon={audioState.isPaused ? <FaPlay /> : <FaPause />}
-              className={audioState.isPaused ? 'resume-btn' : 'pause-btn'}
-              onClick={audioState.isPaused ? resumeRecording : pauseRecording}
-              size='small'
-            />
-            <Button
-              icon={<FaSquare />}
-              className='stop-btn'
-              onClick={stopRecording}
-              size='small'
-            />
-            <Button
-              icon={<FaTimes />}
-              className='cancel-btn'
-              onClick={cancelRecording}
-              size='small'
-            />
-          </div>
-        )}
-      </div>
+      <Button
+        icon={audioState.isRecording ? <FaStop /> : <FaMicrophone />}
+        className={`voiceBtn ${audioState.isRecording ? 'recording' : ''}`}
+        onClick={handleClick}
+        disabled={disabled || audioState.isProcessingAudio}
+        tooltip={
+          audioState.isRecording
+            ? `Recording ${formatDuration(audioState.recordingTime)}`
+            : 'Record voice message'
+        }
+      />
 
-      {/* Recording Status */}
-      {audioState.isRecording && (
-        <div className='recording-status'>
-          <div className='recording-info'>
-            <span>
-              🔴 {audioState.isPaused ? 'Paused' : 'Recording'}...{' '}
-              {formatDuration(audioState.recordingTime)}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Processing Audio Indicator */}
+      {/* Processing indicator */}
       {audioState.isProcessingAudio && (
-        <div className='processing-audio-status'>
-          <div className='processing-info'>
-            <div className='processing-spinner'></div>
-            <span>Processing audio and generating transcript...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Browser Support Warning */}
-      {!speechState.browserSupportsSpeechRecognition && (
-        <div className='speech-support-warning'>
-          <p>
-            ⚠️ Speech recognition not supported in this browser. Audio will be
-            recorded without transcription.
-          </p>
+        <div
+          style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '0',
+            fontSize: '12px',
+            background: 'rgba(0,0,0,0.8)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Processing audio...
         </div>
       )}
     </>

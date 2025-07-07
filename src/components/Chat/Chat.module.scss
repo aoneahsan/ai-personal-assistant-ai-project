@@ -691,3 +691,43 @@
     }
   }
 }
+
+/* Message Audio Styles */
+.messageAudio {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .audioControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: inherit;
+
+    svg {
+      font-size: 16px;
+    }
+  }
+
+  .audioTranscript {
+    font-size: 13px;
+    opacity: 0.8;
+    font-style: italic;
+    margin-top: 4px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Message Video Styles */
+.messageVideo {
+  video {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    background: #000;
+  }
+}

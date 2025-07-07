@@ -32,6 +32,10 @@ export interface IPCAUser {
   bannedReason?: string;
   lastActiveAt?: Date;
 
+  // Online status tracking
+  isOnline?: boolean;
+  updatedAt?: Date;
+
   // Profile completion and verification
   profileCompletionPercentage?: number;
   isProfileComplete?: boolean;
