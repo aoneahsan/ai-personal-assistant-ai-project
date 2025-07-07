@@ -1,4 +1,4 @@
-import { FeedbackButton } from '@/modules/FeedbackModule/components/FeedbackButton';
+import { useVoiceCall } from '@/hooks/useVoiceCall';
 import { FeedbackModule } from '@/modules/FeedbackModule/components/FeedbackModule';
 import { auth, db } from '@/services/firebase';
 import { ROUTES } from '@/utils/constants/routingConstants';
@@ -6,7 +6,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { Avatar } from 'primereact/avatar';
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog';
-import { Divider } from 'primereact/divider';
 import { Menu } from 'primereact/menu';
 import { MenuItem } from 'primereact/menuitem';
 import React, { useRef, useState } from 'react';
@@ -14,9 +13,11 @@ import { BsThreeDotsVertical } from 'react-icons/bs';
 import { FaArrowLeft, FaPhone, FaVideo } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { ChatUser } from './types';
+import VoiceCallModal from './VoiceCallModal';
 
 interface ChatHeaderProps {
   chatUser: ChatUser;
+  chatId?: string;
   onBack?: () => void;
   onClearChat?: () => void;
   onDeleteChat?: () => void;
@@ -26,6 +27,7 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   chatUser,
+  chatId,
   onBack,
   onClearChat,
   onDeleteChat,
@@ -39,6 +41,28 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const menuRef = useRef<Menu>(null);
   const navigate = useNavigate();
+
+  // Voice call functionality
+  const {
+    callState,
+    isCallModalVisible,
+    initiateCall,
+    answerCall,
+    declineCall,
+    endCall,
+    toggleMute,
+    closeCallModal,
+    isInCall,
+  } = useVoiceCall({
+    onIncomingCall: (callSession) => {
+      toast.info(
+        `Incoming call from ${callSession.initiatorEmail.split('@')[0]}`
+      );
+    },
+    onCallStateChange: (state) => {
+      console.log('Call state changed:', state.connectionState);
+    },
+  });
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -97,6 +121,30 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   const handleFeedbackClick = () => {
     setShowFeedbackModal(true);
+  };
+
+  // Handle voice call initiation
+  const handleVoiceCall = async () => {
+    if (isInCall) {
+      toast.info('Already in a call');
+      return;
+    }
+
+    if (!chatId) {
+      toast.error('Chat ID not available');
+      return;
+    }
+
+    try {
+      await initiateCall(chatUser.id, `${chatUser.name}@example.com`, chatId);
+    } catch (error) {
+      console.error('Failed to initiate call:', error);
+    }
+  };
+
+  // Handle video call (placeholder for future implementation)
+  const handleVideoCall = () => {
+    toast.info('Video calling coming soon!');
   };
 
   const menuItems: MenuItem[] = [
@@ -199,51 +247,68 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           />
           <div className='chat-user-info'>
             <h3 className='chat-user-name'>{chatUser.name}</h3>
-            <span className='chat-user-status'>
-              {chatUser.isOnline
-                ? 'Online'
-                : `Last seen ${formatTime(chatUser.lastSeen || new Date())}`}
-            </span>
+            <p className='chat-user-status'>
+              {chatUser.isOnline ? (
+                <span className='online-indicator'>
+                  <span className='status-dot online'></span>
+                  Online
+                </span>
+              ) : (
+                <span className='offline-indicator'>
+                  Last seen {formatTime(chatUser.lastSeen)}
+                </span>
+              )}
+            </p>
           </div>
         </div>
+
         <div className='chat-header-right'>
-          <FeedbackButton
-            onClick={handleFeedbackClick}
-            variant='icon'
-            className='chat-action-btn'
-            tooltip='Share Feedback'
-          />
-          <Button
-            icon={<FaVideo />}
-            className='p-button-text chat-action-btn'
-            tooltip='Video call'
-            tooltipOptions={{ position: 'bottom' }}
-            onClick={() => toast.info('Video calls coming soon!')}
-          />
+          {/* Voice Call Button */}
           <Button
             icon={<FaPhone />}
-            className='p-button-text chat-action-btn'
-            tooltip='Voice call'
+            className={`p-button-text call-btn ${isInCall ? 'in-call' : ''}`}
+            onClick={handleVoiceCall}
+            disabled={isInCall}
+            tooltip={isInCall ? 'In call' : 'Voice call'}
             tooltipOptions={{ position: 'bottom' }}
-            onClick={() => toast.info('Voice calls coming soon!')}
           />
+
+          {/* Video Call Button */}
+          <Button
+            icon={<FaVideo />}
+            className='p-button-text call-btn'
+            onClick={handleVideoCall}
+            tooltip='Video call'
+            tooltipOptions={{ position: 'bottom' }}
+          />
+
+          {/* Menu Button */}
           <Button
             icon={<BsThreeDotsVertical />}
-            className='p-button-text chat-menu-btn'
+            className='p-button-text menu-btn'
+            onClick={handleMenuClick}
             tooltip='More options'
             tooltipOptions={{ position: 'bottom' }}
-            onClick={handleMenuClick}
+          />
+
+          <Menu
+            ref={menuRef}
+            model={menuItems}
+            popup
+            className='chat-menu'
           />
         </div>
       </div>
-      <Divider className='m-0' />
 
-      {/* Chat Options Menu */}
-      <Menu
-        ref={menuRef}
-        model={menuItems}
-        popup
-        className='chat-options-menu'
+      {/* Voice Call Modal */}
+      <VoiceCallModal
+        isVisible={isCallModalVisible}
+        callState={callState}
+        onAnswer={answerCall}
+        onDecline={declineCall}
+        onEndCall={endCall}
+        onToggleMute={toggleMute}
+        onClose={closeCallModal}
       />
 
       {/* Confirmation Dialog */}
@@ -252,44 +317,33 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         onHide={() => setShowConfirmDialog(false)}
         message={getConfirmMessage()}
         header={getConfirmHeader()}
-        icon={
-          confirmAction === 'block'
-            ? 'pi pi-exclamation-triangle'
-            : 'pi pi-question-circle'
-        }
         accept={executeAction}
         reject={() => setShowConfirmDialog(false)}
+        acceptClassName='p-button-danger'
+        rejectClassName='p-button-text'
         acceptLabel='Yes'
         rejectLabel='Cancel'
-        acceptClassName={
-          confirmAction === 'block' ? 'p-button-danger' : 'p-button-primary'
-        }
       />
 
-      {/* Feedback Module for Header */}
+      {/* Feedback Modal */}
       {showFeedbackModal && (
         <FeedbackModule
           firestore={db}
           user={firebaseUser}
           config={{
-            collectionName: 'user_feedback',
             theme: 'auto',
             position: 'center',
             hideAfterSubmit: true,
-            requireMessage: false,
-            showStep2: true,
             onSuccess: () => {
               setShowFeedbackModal(false);
               toast.success('Thank you for your feedback!');
             },
             onError: (error) => {
               console.error('Feedback error:', error);
-              toast.error('Failed to submit feedback. Please try again.');
+              toast.error('Failed to submit feedback');
             },
           }}
           customPosition='header'
-          autoShow={true}
-          showDismissButton={false}
         />
       )}
     </>
