@@ -15,6 +15,23 @@ import {
 } from 'firebase/firestore';
 import SimplePeer from 'simple-peer';
 
+// Firebase configuration validation
+const validateFirebaseConfig = (): boolean => {
+  if (!db) {
+    consoleError(
+      '❌ Firebase database not initialized. Please check your Firebase configuration in .env file.'
+    );
+    return false;
+  }
+
+  if (!addDoc || !collection || !doc) {
+    consoleError('❌ Firebase Firestore functions not properly imported.');
+    return false;
+  }
+
+  return true;
+};
+
 // Voice Call Interfaces
 export interface VoiceCallSession {
   id?: string;
@@ -149,6 +166,13 @@ export class VoiceCallService {
         receiverId,
         chatId,
       });
+
+      // Validate Firebase configuration
+      if (!validateFirebaseConfig()) {
+        throw new Error(
+          'Firebase is not properly configured. Please check your environment variables.'
+        );
+      }
 
       // Check if already in a call
       if (this.currentCallState.isInCall) {
