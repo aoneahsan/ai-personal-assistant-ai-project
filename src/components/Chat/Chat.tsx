@@ -14,7 +14,6 @@ import { Dialog } from 'primereact/dialog';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Skeleton } from 'primereact/skeleton';
 import React, { useEffect, useRef, useState } from 'react';
-import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
 import {
   FaArrowLeft,
   FaEllipsisV,
@@ -24,9 +23,11 @@ import {
   FaPaperclip,
   FaPhone,
   FaSmile,
+  FaStop,
   FaVideo,
   FaVideoSlash,
 } from 'react-icons/fa';
+import { useReactMediaRecorder } from 'react-media-recorder';
 import SpeechRecognition, {
   useSpeechRecognition,
 } from 'react-speech-recognition';
@@ -116,6 +117,7 @@ const Chat: React.FC<ChatProps> = ({
   const [chatId, setChatId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showVideoRecorder, setShowVideoRecorder] = useState(false);
+  const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [userOnlineStatus, setUserOnlineStatus] = useState<{
     isOnline: boolean;
     lastSeen: Date;
@@ -132,7 +134,20 @@ const Chat: React.FC<ChatProps> = ({
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
-  const recorderControls = useAudioRecorder();
+  // Audio recording with react-media-recorder
+  const {
+    status: recordingStatus,
+    startRecording: startAudioRecording,
+    stopRecording: stopAudioRecording,
+    clearBlobUrl,
+  } = useReactMediaRecorder({
+    audio: true,
+    onStop: (blobUrl, blob) => {
+      if (blob) {
+        handleAudioRecordingComplete(blob);
+      }
+    },
+  });
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -309,6 +324,13 @@ const Chat: React.FC<ChatProps> = ({
     }
   }, [transcript, listening]);
 
+  // Track recording time
+  useEffect(() => {
+    if (recordingStatus === 'recording') {
+      setRecordingStartTime(Date.now());
+    }
+  }, [recordingStatus]);
+
   // Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -362,10 +384,12 @@ const Chat: React.FC<ChatProps> = ({
     }
   };
 
-  // Handle audio message
-  const handleSendAudioMessage = (audioBlob: Blob) => {
+  // Handle audio recording complete
+  const handleAudioRecordingComplete = (audioBlob: Blob) => {
     const audioUrl = URL.createObjectURL(audioBlob);
-    const audioDuration = recorderControls.recordingTime || 0;
+    const audioDuration = recordingStartTime
+      ? Math.floor((Date.now() - recordingStartTime) / 1000)
+      : 0;
 
     const audioMessage: Message = {
       id: Date.now().toString(),
@@ -388,6 +412,7 @@ const Chat: React.FC<ChatProps> = ({
 
     setMessages((prev) => [...prev, audioMessage]);
     resetTranscript();
+    clearBlobUrl();
 
     if (chatId && currentUser) {
       try {
@@ -493,6 +518,17 @@ const Chat: React.FC<ChatProps> = ({
       } else {
         toast.error('Speech recognition not supported in this browser');
       }
+    }
+  };
+
+  // Handle audio recording toggle
+  const handleAudioRecordingToggle = () => {
+    if (recordingStatus === 'recording') {
+      stopAudioRecording();
+      toast.info('Audio recording stopped');
+    } else {
+      startAudioRecording();
+      toast.success('Audio recording started!');
     }
   };
 
@@ -739,23 +775,22 @@ const Chat: React.FC<ChatProps> = ({
                 tooltip={listening ? 'Stop listening' : 'Start voice typing'}
               />
 
-              <div className={styles.audioRecorderWrapper}>
-                <AudioRecorder
-                  onRecordingComplete={handleSendAudioMessage}
-                  audioTrackConstraints={{
-                    noiseSuppression: true,
-                    echoCancellation: true,
-                  }}
-                  showVisualizer={true}
-                  classes={{
-                    AudioRecorderClass: styles.audioRecorder,
-                    AudioRecorderStartSaveClass: styles.audioRecorderStartSave,
-                    AudioRecorderPauseResumeClass:
-                      styles.audioRecorderPauseResume,
-                    AudioRecorderDiscardClass: styles.audioRecorderDiscard,
-                  }}
-                />
-              </div>
+              <Button
+                icon={
+                  recordingStatus === 'recording' ? (
+                    <FaStop />
+                  ) : (
+                    <FaMicrophone />
+                  )
+                }
+                className={`${styles.audioRecorderBtn} ${recordingStatus === 'recording' ? styles.recording : ''}`}
+                onClick={handleAudioRecordingToggle}
+                tooltip={
+                  recordingStatus === 'recording'
+                    ? 'Stop recording'
+                    : 'Record audio message'
+                }
+              />
 
               <Button
                 icon={<FaImage />}
@@ -841,6 +876,16 @@ const Chat: React.FC<ChatProps> = ({
           <div className={styles.listeningIndicator}>
             <div className={styles.listeningDot}></div>
             <span>Listening... Speak now!</span>
+          </div>
+        </div>
+      )}
+
+      {/* Audio Recording Status */}
+      {recordingStatus === 'recording' && (
+        <div className={styles.audioRecordingStatus}>
+          <div className={styles.recordingIndicator}>
+            <div className={styles.recordingDot}></div>
+            <span>Recording audio...</span>
           </div>
         </div>
       )}

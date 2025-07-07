@@ -73,11 +73,15 @@ export class UserOnlineStatusService {
           `📊 Loaded offline timeout: ${this.offlineTimeoutMinutes} minutes`
         );
       } else {
-        // Create default admin settings if they don't exist
-        await this.createDefaultAdminSettings();
+        // Use default settings if document doesn't exist
+        this.offlineTimeoutMinutes = 5;
+        consoleLog('📊 Using default offline timeout: 5 minutes');
       }
     } catch (error) {
-      consoleError('❌ Error loading admin settings:', error);
+      consoleError('❌ Error loading admin settings (using defaults):', error);
+      // Use default values if we can't access admin settings
+      this.offlineTimeoutMinutes = 5;
+      consoleLog('📊 Using fallback offline timeout: 5 minutes');
     }
   }
 
@@ -117,7 +121,12 @@ export class UserOnlineStatusService {
         defaultSettings.timing.userOfflineTimeoutMinutes;
       consoleLog('✅ Created default admin settings');
     } catch (error) {
-      consoleError('❌ Error creating default admin settings:', error);
+      consoleError(
+        '❌ Error creating default admin settings (using defaults):',
+        error
+      );
+      // Use default values if we can't create admin settings
+      this.offlineTimeoutMinutes = 5;
     }
   }
 
@@ -173,7 +182,11 @@ export class UserOnlineStatusService {
 
       // consoleLog(`📊 Updated user status: ${userId} - ${isOnline ? 'online' : 'offline'}`);
     } catch (error) {
-      consoleError('❌ Error updating user status:', error);
+      // Only log error if it's not a permission issue to avoid spam
+      if (error instanceof Error && !error.message.includes('permission')) {
+        consoleError('❌ Error updating user status:', error);
+      }
+      // Silently fail for permission errors to avoid breaking the app
     }
   }
 
