@@ -203,6 +203,30 @@ service cloud.firestore {
       allow write: if request.auth != null && isAdminUser();
     }
 
+    // Voice Call Collections - allow authenticated users to manage their voice calls
+    match /pca_voice_calls/{callId} {
+      // Allow authenticated users to read/write voice calls they're part of
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.initiatorId || 
+         request.auth.uid == resource.data.receiverId);
+      
+      // Allow creating voice calls if user is authenticated and is the initiator
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.initiatorId;
+    }
+
+    // Voice Call Signals - allow authenticated users to manage their call signals
+    match /pca_voice_call_signals/{signalId} {
+      // Allow authenticated users to read/write signals for their calls
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId);
+      
+      // Allow creating signals if user is authenticated and is the sender
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId;
+    }
+
     // Subscription Requests - users can manage their own requests, admins can manage all
     match /pca_subscription_requests/{requestId} {
       // Allow users to read their own subscription requests

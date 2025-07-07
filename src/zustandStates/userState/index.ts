@@ -57,13 +57,13 @@ export const useIsAuthenticatedZState = () => {
     userData?.id && (userData?.email || userData?.id)
   );
 
-  // Fallback to Firebase auth state for immediate checks (only if Zustand is empty)
-  const hasFirebaseAuth = !hasUserData && Boolean(auth.currentUser);
+  // Always check Firebase auth state independently
+  const hasFirebaseAuth = Boolean(auth.currentUser);
 
   // Return true if either condition is met
   const isAuthenticated = hasUserData || hasFirebaseAuth;
 
-  // Minimal debug logging to prevent performance issues
+  // Enhanced debug logging to prevent performance issues
   if (import.meta.env.DEV && Math.random() < 0.01) {
     // Only log 1% of the time to reduce noise
     console.log(CONSOLE_MESSAGES.DEBUG.AUTH_STATE_CHECK, {
@@ -73,10 +73,46 @@ export const useIsAuthenticatedZState = () => {
       userDataId: userData?.id || 'none',
       firebaseUserId: auth.currentUser?.uid || 'none',
       isAnonymous: auth.currentUser?.isAnonymous || false,
+      authMismatch: hasUserData && !hasFirebaseAuth, // Flag potential auth issues
     });
   }
 
   return isAuthenticated;
+};
+
+// Helper function to detect and handle auth state mismatches
+export const useAuthStateMismatchDetector = () => {
+  const userData = useUserDataZState((state) => state.data);
+  const updateUserData = useUserDataZState((state) => state.updateData);
+  const { reset: resetAuthInitialization } = useAuthInitializationZState();
+
+  const hasUserData = Boolean(
+    userData?.id && (userData?.email || userData?.id)
+  );
+  const hasFirebaseAuth = Boolean(auth.currentUser);
+  const hasMismatch = hasUserData && !hasFirebaseAuth;
+
+  const handleAuthMismatch = React.useCallback(async () => {
+    if (hasMismatch) {
+      console.warn('🔄 Auth state mismatch detected, clearing local user data');
+
+      // Clear local user data since Firebase auth is invalid
+      updateUserData(null);
+      resetAuthInitialization();
+
+      // Optionally redirect to login page
+      // This should be handled by the calling component
+      return true;
+    }
+    return false;
+  }, [hasMismatch, updateUserData, resetAuthInitialization]);
+
+  return {
+    hasMismatch,
+    handleAuthMismatch,
+    hasUserData,
+    hasFirebaseAuth,
+  };
 };
 
 // Hook to check if auth system is fully ready

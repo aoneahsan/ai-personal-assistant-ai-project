@@ -167,33 +167,42 @@ export class UnifiedAuthService {
           consoleError(
             '❌ Failed to get user data from Firestore after saving'
           );
-          // Fallback to basic user data
-          const basicUserData = {
-            id: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || '',
-            photoURL: user.photoURL || '',
-            emailVerified: user.emailVerified,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          this.updateUserData(basicUserData as any);
-          consoleLog('✅ Fallback: Basic user data set in Zustand state');
+          // Clear user data since we can't access Firestore properly
+          this.updateUserData(null);
         }
       } catch (error) {
+        // Check if it's a permission error
+        const isPermissionError =
+          error instanceof Error &&
+          (error.message.includes('permission') ||
+            error.message.includes('insufficient permissions') ||
+            error.message.includes('Missing or insufficient permissions'));
+
+        if (isPermissionError) {
+          consoleError(
+            '❌ Permission error accessing Firestore, user may need to re-authenticate:',
+            error
+          );
+
+          // Clear user data to force re-authentication
+          this.updateUserData(null);
+          this.updateAuthInitialization.reset();
+
+          // Sign out the user to clear invalid auth state
+          try {
+            await firebaseAuthService.signOutUser();
+            consoleLog('🔓 Signed out user due to permission error');
+          } catch (signOutError) {
+            consoleError('❌ Error signing out user:', signOutError);
+          }
+
+          return; // Exit early
+        }
+
         consoleError('❌ Error handling auth state change:', error);
-        // Even if Firestore fails, we can still set basic user data
-        const basicUserData = {
-          id: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || '',
-          photoURL: user.photoURL || '',
-          emailVerified: user.emailVerified,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        this.updateUserData(basicUserData as any);
-        consoleLog('✅ Fallback: Basic user data set in Zustand state');
+        // For other errors, clear user data to be safe
+        this.updateUserData(null);
+        consoleLog('🔓 Cleared user data due to error accessing Firestore');
       }
     } else {
       // User is signed out
