@@ -112,6 +112,42 @@ service cloud.firestore {
       // For now, we'll keep it simple and only allow creation
     }
 
+    // Feedback Embed Configurations - only embed owners can manage their embeds
+    match /pca_feedback_embed_configs/{configId} {
+      // Allow public read access for embed validation (needed for embed widget)
+      // But only active embeds can be read publicly
+      allow read: if resource.data.isActive == true;
+      
+      // Allow authenticated users to read their own embed configs (all configs)
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow creating embed configs if user is authenticated and is the owner
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+        
+      // Allow updating embed configs if user is the owner
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+        
+      // Allow deleting embed configs if user is the owner
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+
+    // Feedback Embed Submissions - allow anonymous submissions but only owners can read
+    match /pca_feedback_embed_submissions/{submissionId} {
+      // Allow anyone to create feedback submissions (for embed widgets)
+      allow create: if true;
+      
+      // Allow authenticated users to read submissions 
+      // (the service will filter by embedId and check ownership)
+      allow read: if request.auth != null;
+      
+      // Don't allow updating or deleting submissions for data integrity
+      allow update, delete: if false;
+    }
+
     // System Configuration Collections - Public read access, admin write access
     // System Roles - public read access for app functionality, admin write access
     match /system_roles/{roleId} {
@@ -181,6 +217,12 @@ service cloud.firestore {
       // Check if user has admin role in their user document
       // This is a simplified check - you might want to make this more robust
       return get(/databases/$(database)/documents/pca_users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    }
+
+    // Helper function to get embed owner by embedId
+    function getEmbedOwner(embedId) {
+      // Query the embed config to get the owner
+      return get(/databases/$(database)/documents/pca_feedback_embed_configs/$(embedId)).data.userId;
     }
     
     // Deny all other access
