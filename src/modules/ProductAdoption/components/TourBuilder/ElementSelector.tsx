@@ -50,11 +50,11 @@ export const ElementSelector: React.FC<ElementSelectorProps> = ({
 
       // Add nth-child if needed
       const parent = currentElement.parentElement;
-      if (parent) {
+      if (parent && currentElement) {
         const siblings = Array.from(parent.children);
         const index = siblings.indexOf(currentElement) + 1;
         if (
-          siblings.filter((s) => s.tagName === currentElement.tagName).length >
+          siblings.filter((s) => s.tagName === currentElement!.tagName).length >
           1
         ) {
           selector += `:nth-child(${index})`;
@@ -72,7 +72,7 @@ export const ElementSelector: React.FC<ElementSelectorProps> = ({
     try {
       const elements = document.querySelectorAll(selector);
       return elements.length > 0;
-    } catch (e) {
+    } catch {
       return false;
     }
   };
