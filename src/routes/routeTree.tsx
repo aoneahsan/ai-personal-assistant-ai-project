@@ -37,9 +37,13 @@ const EditProfile = lazy(() => import('@/pages/EditProfile'));
 const ChatView = lazy(() => import('@/components/Chat/ChatView'));
 
 // Product Adoption components
-const ProductAdoption = lazy(() => import('@/modules/ProductAdoption/components/ProductAdoption'));
-const TourManagement = lazy(() => import('@/modules/ProductAdoption/components/Management'));
-const AnalyticsDashboard = lazy(() => import('@/modules/ProductAdoption/components/Analytics'));
+const ProductAdoption = lazy(() => import('@/modules/ProductAdoption'));
+const TourManagement = lazy(
+  () => import('@/modules/ProductAdoption/components/Management')
+);
+const AnalyticsDashboard = lazy(
+  () => import('@/modules/ProductAdoption/components/Analytics')
+);
 
 // Dashboard page components
 const DashboardOverview = lazy(

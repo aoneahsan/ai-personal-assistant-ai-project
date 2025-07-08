@@ -18,3 +18,6 @@ export * from './types';
 
 // Utility exports
 export * from './utils';
+
+// Default export for lazy loading
+export { default } from './components/ProductAdoption';

@@ -7,7 +7,7 @@ import { AdminSubscriptionManagement } from '@/components/Admin/SubscriptionMana
 import { SystemAnalytics } from '@/components/Admin/SystemAnalytics';
 import { UserManagement } from '@/components/Admin/UserManagement';
 import { AdminPanelGuard } from '@/components/common/RoleGuard';
-import { ProductAdoption } from '@/modules/ProductAdoption/components/ProductAdoption';
+import { ProductAdoption } from '@/modules/ProductAdoption';
 import { useTheme } from '@/hooks/useTheme';
 import {
   BUTTON_LABELS,
