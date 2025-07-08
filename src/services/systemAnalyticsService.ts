@@ -3,15 +3,13 @@ import { PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS } from '@/utils/constants/ge
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import {
   collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  Timestamp,
-  startAfter,
-  endBefore,
   getCountFromServer,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  Timestamp,
+  where,
 } from 'firebase/firestore';
 
 export interface AnalyticsData {
@@ -51,7 +49,13 @@ export interface UserActivity {
   id?: string;
   userId: string;
   userEmail?: string;
-  action: 'login' | 'logout' | 'message_sent' | 'file_upload' | 'voice_call' | 'feature_used';
+  action:
+    | 'login'
+    | 'logout'
+    | 'message_sent'
+    | 'file_upload'
+    | 'voice_call'
+    | 'feature_used';
   feature?: string;
   timestamp: Date | Timestamp;
   sessionId?: string;
@@ -66,6 +70,150 @@ export interface SystemMetric {
   details?: Record<string, any>;
 }
 
+interface GetAnalyticsParams {
+  metric: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  filters?: Record<string, unknown>;
+}
+
+interface GetAnalyticsResponse {
+  data: Array<{
+    timestamp: Date;
+    value: number;
+    metadata?: Record<string, unknown>;
+  }>;
+  summary: {
+    total: number;
+    average: number;
+    min: number;
+    max: number;
+  };
+}
+
+export const getUserAnalytics = async (
+  userId: string,
+  params: GetAnalyticsParams
+): Promise<GetAnalyticsResponse> => {
+  try {
+    console.log('Getting user analytics for:', userId, 'with params:', params);
+
+    // Mock data for now
+    const mockData = {
+      data: [
+        {
+          timestamp: new Date(),
+          value: 100,
+          metadata: { source: 'user_activity' },
+        },
+      ],
+      summary: {
+        total: 100,
+        average: 100,
+        min: 100,
+        max: 100,
+      },
+    };
+
+    return mockData;
+  } catch (error) {
+    console.error('Error getting user analytics:', error);
+    throw error;
+  }
+};
+
+export const getSystemAnalytics = async (
+  params: GetAnalyticsParams
+): Promise<GetAnalyticsResponse> => {
+  try {
+    console.log('Getting system analytics with params:', params);
+
+    // Mock data for now
+    const mockData = {
+      data: [
+        {
+          timestamp: new Date(),
+          value: 500,
+          metadata: { source: 'system_metrics' },
+        },
+      ],
+      summary: {
+        total: 500,
+        average: 500,
+        min: 500,
+        max: 500,
+      },
+    };
+
+    return mockData;
+  } catch (error) {
+    console.error('Error getting system analytics:', error);
+    throw error;
+  }
+};
+
+export const getSubscriptionAnalytics = async (
+  params: GetAnalyticsParams
+): Promise<GetAnalyticsResponse> => {
+  try {
+    console.log('Getting subscription analytics with params:', params);
+
+    // Mock data for now
+    const mockData = {
+      data: [
+        {
+          timestamp: new Date(),
+          value: 50,
+          metadata: { source: 'subscription_metrics' },
+        },
+      ],
+      summary: {
+        total: 50,
+        average: 50,
+        min: 50,
+        max: 50,
+      },
+    };
+
+    return mockData;
+  } catch (error) {
+    console.error('Error getting subscription analytics:', error);
+    throw error;
+  }
+};
+
+export const getFeatureUsageAnalytics = async (
+  params: GetAnalyticsParams
+): Promise<GetAnalyticsResponse> => {
+  try {
+    console.log('Getting feature usage analytics with params:', params);
+
+    // Mock data for now
+    const mockData = {
+      data: [
+        {
+          timestamp: new Date(),
+          value: 75,
+          metadata: { source: 'feature_usage' },
+        },
+      ],
+      summary: {
+        total: 75,
+        average: 75,
+        min: 75,
+        max: 75,
+      },
+    };
+
+    return mockData;
+  } catch (error) {
+    console.error('Error getting feature usage analytics:', error);
+    throw error;
+  }
+};
+
 class SystemAnalyticsService {
   private readonly USER_ACTIVITIES_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_user_activities`;
   private readonly SYSTEM_METRICS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_system_metrics`;
@@ -73,7 +221,10 @@ class SystemAnalyticsService {
   private readonly MESSAGES_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_messages`;
 
   // Get analytics data for a specific date range
-  async getAnalyticsData(startDate?: Date, endDate?: Date): Promise<AnalyticsData> {
+  async getAnalyticsData(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<AnalyticsData> {
     try {
       const [
         userGrowth,
@@ -107,7 +258,10 @@ class SystemAnalyticsService {
   }
 
   // Get user growth data
-  private async getUserGrowthData(startDate?: Date, endDate?: Date): Promise<{
+  private async getUserGrowthData(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
     labels: string[];
     data: number[];
   }> {
@@ -131,7 +285,7 @@ class SystemAnalyticsService {
             where('createdAt', '<=', Timestamp.fromDate(monthEnd))
           );
 
-          const snapshot = await aggregateCountFromServer(q, count());
+          const snapshot = await getCountFromServer(q);
           const userCount = snapshot.data().count;
 
           labels.push(months[5 - i]);
@@ -154,7 +308,10 @@ class SystemAnalyticsService {
   }
 
   // Get message volume data
-  private async getMessageVolumeData(startDate?: Date, endDate?: Date): Promise<{
+  private async getMessageVolumeData(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
     labels: string[];
     data: number[];
   }> {
@@ -165,7 +322,9 @@ class SystemAnalyticsService {
 
       // Get data for last 4 weeks
       for (let i = 3; i >= 0; i--) {
-        const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+        const weekStart = new Date(
+          now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000
+        );
         const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
 
         try {
@@ -198,7 +357,10 @@ class SystemAnalyticsService {
   }
 
   // Get user engagement data
-  private async getUserEngagementData(startDate?: Date, endDate?: Date): Promise<{
+  private async getUserEngagementData(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
     dailyActiveUsers: number;
     weeklyActiveUsers: number;
     monthlyActiveUsers: number;
@@ -237,7 +399,10 @@ class SystemAnalyticsService {
   }
 
   // Get active users count for a date range
-  private async getActiveUsers(startDate: Date, endDate: Date): Promise<number> {
+  private async getActiveUsers(
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
     try {
       const q = query(
         collection(db, this.USER_ACTIVITIES_COLLECTION),
@@ -247,7 +412,9 @@ class SystemAnalyticsService {
       );
 
       const snapshot = await getDocs(q);
-      const uniqueUsers = new Set(snapshot.docs.map(doc => doc.data().userId));
+      const uniqueUsers = new Set(
+        snapshot.docs.map((doc) => doc.data().userId)
+      );
       return uniqueUsers.size;
     } catch (error) {
       consoleError('Error getting active users:', error);
@@ -275,29 +442,43 @@ class SystemAnalyticsService {
       );
 
       const snapshot = await getDocs(q);
-      const metrics = snapshot.docs.map(doc => doc.data() as SystemMetric);
+      const metrics = snapshot.docs.map((doc) => doc.data() as SystemMetric);
 
       // Calculate averages
-      const responseTimeMetrics = metrics.filter(m => m.metricType === 'response_time');
-      const errorRateMetrics = metrics.filter(m => m.metricType === 'error_rate');
-      const throughputMetrics = metrics.filter(m => m.metricType === 'throughput');
-      const uptimeMetrics = metrics.filter(m => m.metricType === 'uptime');
+      const responseTimeMetrics = metrics.filter(
+        (m) => m.metricType === 'response_time'
+      );
+      const errorRateMetrics = metrics.filter(
+        (m) => m.metricType === 'error_rate'
+      );
+      const throughputMetrics = metrics.filter(
+        (m) => m.metricType === 'throughput'
+      );
+      const uptimeMetrics = metrics.filter((m) => m.metricType === 'uptime');
 
-      const responseTime = responseTimeMetrics.length > 0
-        ? responseTimeMetrics.reduce((sum, m) => sum + m.value, 0) / responseTimeMetrics.length
-        : 150;
+      const responseTime =
+        responseTimeMetrics.length > 0
+          ? responseTimeMetrics.reduce((sum, m) => sum + m.value, 0) /
+            responseTimeMetrics.length
+          : 150;
 
-      const errorRate = errorRateMetrics.length > 0
-        ? errorRateMetrics.reduce((sum, m) => sum + m.value, 0) / errorRateMetrics.length
-        : 0.02;
+      const errorRate =
+        errorRateMetrics.length > 0
+          ? errorRateMetrics.reduce((sum, m) => sum + m.value, 0) /
+            errorRateMetrics.length
+          : 0.02;
 
-      const throughput = throughputMetrics.length > 0
-        ? throughputMetrics.reduce((sum, m) => sum + m.value, 0) / throughputMetrics.length
-        : 1250;
+      const throughput =
+        throughputMetrics.length > 0
+          ? throughputMetrics.reduce((sum, m) => sum + m.value, 0) /
+            throughputMetrics.length
+          : 1250;
 
-      const uptime = uptimeMetrics.length > 0
-        ? uptimeMetrics.reduce((sum, m) => sum + m.value, 0) / uptimeMetrics.length
-        : 99.9;
+      const uptime =
+        uptimeMetrics.length > 0
+          ? uptimeMetrics.reduce((sum, m) => sum + m.value, 0) /
+            uptimeMetrics.length
+          : 99.9;
 
       return {
         responseTime,
@@ -317,11 +498,16 @@ class SystemAnalyticsService {
   }
 
   // Get top features usage data
-  private async getTopFeaturesData(startDate?: Date, endDate?: Date): Promise<Array<{
-    name: string;
-    usage: number;
-    growth: number;
-  }>> {
+  private async getTopFeaturesData(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<
+    Array<{
+      name: string;
+      usage: number;
+      growth: number;
+    }>
+  > {
     try {
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -334,13 +520,14 @@ class SystemAnalyticsService {
       );
 
       const snapshot = await getDocs(q);
-      const activities = snapshot.docs.map(doc => doc.data() as UserActivity);
+      const activities = snapshot.docs.map((doc) => doc.data() as UserActivity);
 
       // Count feature usage
       const featureCounts: Record<string, number> = {};
-      activities.forEach(activity => {
+      activities.forEach((activity) => {
         if (activity.feature) {
-          featureCounts[activity.feature] = (featureCounts[activity.feature] || 0) + 1;
+          featureCounts[activity.feature] =
+            (featureCounts[activity.feature] || 0) + 1;
         }
       });
 
@@ -362,11 +549,13 @@ class SystemAnalyticsService {
   }
 
   // Get geographical data (mock for now as we don't collect location data)
-  private async getGeograficalData(): Promise<Array<{
-    country: string;
-    users: number;
-    percentage: number;
-  }>> {
+  private async getGeograficalData(): Promise<
+    Array<{
+      country: string;
+      users: number;
+      percentage: number;
+    }>
+  > {
     // This would require actual geographical data collection
     return [
       { country: 'United States', users: 456, percentage: 36.6 },
@@ -379,7 +568,9 @@ class SystemAnalyticsService {
   }
 
   // Record user activity
-  async recordUserActivity(activity: Omit<UserActivity, 'id' | 'timestamp'>): Promise<void> {
+  async recordUserActivity(
+    activity: Omit<UserActivity, 'id' | 'timestamp'>
+  ): Promise<void> {
     try {
       const activityData = {
         ...activity,
@@ -394,7 +585,9 @@ class SystemAnalyticsService {
   }
 
   // Record system metric
-  async recordSystemMetric(metric: Omit<SystemMetric, 'id' | 'timestamp'>): Promise<void> {
+  async recordSystemMetric(
+    metric: Omit<SystemMetric, 'id' | 'timestamp'>
+  ): Promise<void> {
     try {
       const metricData = {
         ...metric,
@@ -409,10 +602,14 @@ class SystemAnalyticsService {
   }
 
   // Export analytics data
-  async exportAnalyticsData(format: 'json' | 'csv' = 'json', startDate?: Date, endDate?: Date): Promise<string> {
+  async exportAnalyticsData(
+    format: 'json' | 'csv' = 'json',
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<string> {
     try {
       const data = await this.getAnalyticsData(startDate, endDate);
-      
+
       if (format === 'json') {
         return JSON.stringify(data, null, 2);
       } else {
@@ -426,7 +623,7 @@ class SystemAnalyticsService {
         csv += `Uptime,${data.systemMetrics.uptime}\n`;
         csv += `Error Rate,${data.systemMetrics.errorRate}\n`;
         csv += `Throughput,${data.systemMetrics.throughput}\n`;
-        
+
         return csv;
       }
     } catch (error) {
@@ -470,7 +667,11 @@ class SystemAnalyticsService {
     };
   }
 
-  private getMockTopFeatures(): Array<{ name: string; usage: number; growth: number }> {
+  private getMockTopFeatures(): Array<{
+    name: string;
+    usage: number;
+    growth: number;
+  }> {
     return [
       { name: 'Chat System', usage: 95, growth: 12 },
       { name: 'Anonymous Rooms', usage: 78, growth: 25 },
