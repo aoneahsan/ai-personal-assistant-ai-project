@@ -319,3 +319,8 @@ export const FileUploadField: React.FC<FileUploadFieldProps> = ({
     />
   </FormField>
 );
+
+// Aliases for backward compatibility
+export const CustomInputText = TextField;
+export const CustomCheckbox = SwitchField;
+export const CustomDropdown = SelectField;
