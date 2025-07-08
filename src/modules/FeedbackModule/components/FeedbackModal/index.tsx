@@ -17,7 +17,6 @@ interface FeedbackModalProps {
   selectedRating: number | null;
   message: string;
   error: string | null;
-  isSubmitting: boolean;
   onClose: () => void;
   onRatingSelect: (rating: number) => void;
   onMessageChange: (message: string) => void;
@@ -33,7 +32,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   selectedRating,
   message,
   error,
-  isSubmitting,
   onClose,
   onRatingSelect,
   onMessageChange,

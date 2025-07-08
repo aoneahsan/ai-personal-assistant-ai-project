@@ -1,29 +1,14 @@
+import { db } from '@/services/firebase';
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
+  orderBy,
   query,
   where,
-  orderBy,
-  limit,
-  Timestamp,
-  getDoc,
-  setDoc,
-  updateDoc,
 } from 'firebase/firestore';
-import { db } from '@/services/firebase';
-import {
-  AnalyticsOverview,
-  TourPerformance,
-  FunnelAnalysis,
-  UserEngagementMetrics,
-  StepHeatmap,
-  ABTestResult,
-  AnalyticsFilter,
-  ServiceResponse,
-  TourEvent,
-  Tour,
-} from '../types';
+import { AnalyticsFilter, AnalyticsOverview } from '../types';
 
 export class AnalyticsService {
   private readonly EVENTS_COLLECTION = 'productAdoption_events';
@@ -35,7 +20,9 @@ export class AnalyticsService {
   ): Promise<ServiceResponse<AnalyticsOverview>> {
     try {
       // Get all tours
-      const toursSnapshot = await getDocs(collection(db, this.TOURS_COLLECTION));
+      const toursSnapshot = await getDocs(
+        collection(db, this.TOURS_COLLECTION)
+      );
       const tours = toursSnapshot.docs.map((doc) => doc.data() as Tour);
 
       // Calculate overview metrics
@@ -158,7 +145,7 @@ export class AnalyticsService {
       // Calculate abandonment data
       const abandonmentByStep: { [stepId: string]: number } = {};
       let totalAbandons = 0;
-      let totalStepReached = 0;
+      const totalStepReached = 0;
 
       events.forEach((event) => {
         if (event.type === 'abandon' && event.stepId) {
@@ -263,7 +250,8 @@ export class AnalyticsService {
       // Calculate funnel steps
       const funnelSteps = tour.steps.map((step, index) => {
         const metrics = stepMetrics[step.id];
-        const previousStep = index > 0 ? stepMetrics[tour.steps[index - 1].id] : null;
+        const previousStep =
+          index > 0 ? stepMetrics[tour.steps[index - 1].id] : null;
         const dropoff = previousStep
           ? previousStep.completed - metrics.entered
           : 0;
@@ -354,9 +342,7 @@ export class AnalyticsService {
         totalTimeSpent: 0, // Calculate from events
         lastEngagement:
           events.length > 0
-            ? new Date(
-                Math.max(...events.map((e) => e.timestamp.getTime()))
-              )
+            ? new Date(Math.max(...events.map((e) => e.timestamp.getTime())))
             : new Date(),
         engagementScore: 0, // Calculate based on activity
       };
@@ -485,7 +471,10 @@ export class AnalyticsService {
     });
   }
 
-  private async calculateTrend(tourId: string, period: 'day' | 'week' | 'month') {
+  private async calculateTrend(
+    tourId: string,
+    period: 'day' | 'week' | 'month'
+  ) {
     // Calculate trend based on historical data
     // This is a simplified implementation
     return {

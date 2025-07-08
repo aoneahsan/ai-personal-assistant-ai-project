@@ -305,11 +305,7 @@ export class FileStorageService {
   private readonly BACKUP_DAYS = 10; // Files expire after 10 days
 
   // Upload audio file
-  async uploadAudio(
-    file: File,
-    chatId: string,
-    senderId: string
-  ): Promise<FileUploadResult> {
+  async uploadAudio(file: File, chatId: string): Promise<FileUploadResult> {
     try {
       const fileName = `${Date.now()}_${file.name}`;
       const storagePath = `${this.STORAGE_PREFIX}/audio/${chatId}/${fileName}`;
@@ -342,11 +338,7 @@ export class FileStorageService {
   }
 
   // Upload image file
-  async uploadImage(
-    file: File,
-    chatId: string,
-    senderId: string
-  ): Promise<FileUploadResult> {
+  async uploadImage(file: File, chatId: string): Promise<FileUploadResult> {
     try {
       const fileName = `${Date.now()}_${file.name}`;
       const storagePath = `${this.STORAGE_PREFIX}/images/${chatId}/${fileName}`;
@@ -379,11 +371,7 @@ export class FileStorageService {
   }
 
   // Upload video file
-  async uploadVideo(
-    file: File,
-    chatId: string,
-    senderId: string
-  ): Promise<FileUploadResult> {
+  async uploadVideo(file: File, chatId: string): Promise<FileUploadResult> {
     try {
       const fileName = `${Date.now()}_${file.name}`;
       const storagePath = `${this.STORAGE_PREFIX}/videos/${chatId}/${fileName}`;

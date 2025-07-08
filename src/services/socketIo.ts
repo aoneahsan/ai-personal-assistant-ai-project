@@ -1,6 +1,10 @@
-import ENV_KEYS from '@/utils/envKeys';
-import { consoleError, consoleLog, consoleWarn } from '@/utils/helpers/consoleHelper';
 import { logError, logInfo } from '@/sentryErrorLogging';
+import ENV_KEYS from '@/utils/envKeys';
+import {
+  consoleError,
+  consoleLog,
+  consoleWarn,
+} from '@/utils/helpers/consoleHelper';
 import { io, Socket } from 'socket.io-client';
 
 interface SocketIoState {
@@ -11,11 +15,11 @@ interface SocketIoState {
 }
 
 let socketIoObj: Socket | null = null;
-let socketState: SocketIoState = {
+const socketState = {
+  socket: null as Socket | null,
   isConnected: false,
-  isConnecting: false,
-  reconnectAttempts: 0,
-  lastError: null,
+  connectionAttempts: 0,
+  maxReconnectAttempts: 5,
 };
 
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -57,13 +61,19 @@ export const connectToSocketIoServer = (): Socket | null => {
     return socketIoObj;
   } catch (error) {
     consoleError('Error creating SocketIO connection:', error);
-    logError(error instanceof Error ? error : new Error('SocketIO connection creation failed'), {
-      serverUrl: ENV_KEYS.socketIoServerUrl,
-      errorType: 'socketio_creation_error',
-    });
-    
+    logError(
+      error instanceof Error
+        ? error
+        : new Error('SocketIO connection creation failed'),
+      {
+        serverUrl: ENV_KEYS.socketIoServerUrl,
+        errorType: 'socketio_creation_error',
+      }
+    );
+
     socketState.isConnecting = false;
-    socketState.lastError = error instanceof Error ? error.message : 'Unknown error';
+    socketState.lastError =
+      error instanceof Error ? error.message : 'Unknown error';
     return null;
   }
 };
@@ -72,7 +82,7 @@ const setupSocketEventHandlers = (socket: Socket) => {
   socket.on('connect', () => {
     consoleLog('SocketIO connected successfully', { socketId: socket.id });
     logInfo('SocketIO connected', { socketId: socket.id });
-    
+
     socketState.isConnected = true;
     socketState.isConnecting = false;
     socketState.reconnectAttempts = 0;
@@ -82,22 +92,29 @@ const setupSocketEventHandlers = (socket: Socket) => {
   socket.on('disconnect', (reason) => {
     consoleWarn('SocketIO disconnected:', reason);
     logInfo('SocketIO disconnected', { reason });
-    
+
     socketState.isConnected = false;
     socketState.isConnecting = false;
   });
 
   socket.on('connect_error', (error) => {
     socketState.reconnectAttempts++;
-    const errorMessage = error instanceof Error ? error.message : 'Connection failed';
-    
-    consoleError(`SocketIO connection error (attempt ${socketState.reconnectAttempts}):`, error);
-    logError(error instanceof Error ? error : new Error('SocketIO connection error'), {
-      attempt: socketState.reconnectAttempts,
-      maxAttempts: MAX_RECONNECT_ATTEMPTS,
-      errorType: 'socketio_connection_error',
-    });
-    
+    const errorMessage =
+      error instanceof Error ? error.message : 'Connection failed';
+
+    consoleError(
+      `SocketIO connection error (attempt ${socketState.reconnectAttempts}):`,
+      error
+    );
+    logError(
+      error instanceof Error ? error : new Error('SocketIO connection error'),
+      {
+        attempt: socketState.reconnectAttempts,
+        maxAttempts: MAX_RECONNECT_ATTEMPTS,
+        errorType: 'socketio_connection_error',
+      }
+    );
+
     socketState.isConnecting = false;
     socketState.lastError = errorMessage;
 
@@ -113,7 +130,7 @@ const setupSocketEventHandlers = (socket: Socket) => {
   socket.on('reconnect', (attemptNumber) => {
     consoleLog(`SocketIO reconnected after ${attemptNumber} attempts`);
     logInfo('SocketIO reconnected', { attemptNumber });
-    
+
     socketState.isConnected = true;
     socketState.isConnecting = false;
     socketState.reconnectAttempts = 0;
@@ -122,10 +139,13 @@ const setupSocketEventHandlers = (socket: Socket) => {
 
   socket.on('reconnect_error', (error) => {
     consoleError('SocketIO reconnection error:', error);
-    logError(error instanceof Error ? error : new Error('SocketIO reconnection error'), {
-      attempt: socketState.reconnectAttempts,
-      errorType: 'socketio_reconnection_error',
-    });
+    logError(
+      error instanceof Error ? error : new Error('SocketIO reconnection error'),
+      {
+        attempt: socketState.reconnectAttempts,
+        errorType: 'socketio_reconnection_error',
+      }
+    );
   });
 
   socket.on('reconnect_failed', () => {
@@ -134,7 +154,7 @@ const setupSocketEventHandlers = (socket: Socket) => {
       totalAttempts: socketState.reconnectAttempts,
       errorType: 'socketio_reconnection_failed',
     });
-    
+
     socketState.isConnecting = false;
     socketState.lastError = 'Reconnection failed';
   });

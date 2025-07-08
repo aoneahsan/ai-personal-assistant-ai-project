@@ -1,23 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from './useToast';
 
-export interface AsyncDataOptions {
-  entityName?: string;
-  showSuccessOnRefresh?: boolean;
+interface UseAsyncDataOptions<T> {
   autoLoad?: boolean;
-  dependencies?: any[];
+  dependencies?: React.DependencyList;
 }
 
-export const useAsyncData = <T>(
-  fetchFunction: () => Promise<T>,
-  options: AsyncDataOptions = {}
+export const useAsyncData = <T = unknown>(
+  loadData: () => Promise<T>,
+  options: UseAsyncDataOptions<T> = {}
 ) => {
-  const {
-    entityName = 'data',
-    showSuccessOnRefresh = true,
-    autoLoad = true,
-    dependencies = [],
-  } = options;
+  const { autoLoad = true, dependencies = [] } = options;
 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(autoLoad);
@@ -25,43 +18,6 @@ export const useAsyncData = <T>(
   const [error, setError] = useState<string | null>(null);
 
   const { showRefreshSuccess, showLoadError } = useToast();
-
-  const loadData = useCallback(
-    async (isRefresh = false) => {
-      try {
-        setError(null);
-
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
-
-        const result = await fetchFunction();
-        setData(result);
-
-        if (isRefresh && showSuccessOnRefresh) {
-          showRefreshSuccess(entityName);
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Unknown error';
-        setError(errorMessage);
-        console.error(`Error loading ${entityName}:`, err);
-        showLoadError(entityName);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [
-      fetchFunction,
-      entityName,
-      showSuccessOnRefresh,
-      showRefreshSuccess,
-      showLoadError,
-    ]
-  );
 
   const refresh = useCallback(() => {
     loadData(true);

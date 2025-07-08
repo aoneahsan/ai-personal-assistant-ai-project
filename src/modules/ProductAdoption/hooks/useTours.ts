@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { tourService } from '../services';
-import { Tour, FilterOptions, ServiceResponse } from '../types';
 import { useToast } from '@/hooks/useToast';
+import { useCallback } from 'react';
+import { tourService } from '../services';
+import { Tour } from '../types';
 
-export const useTours = (filters?: FilterOptions) => {
-  const queryClient = useQueryClient();
+export const useTours = (filters?: any) => {
   const { showToast } = useToast();
 
   // Fetch tours
@@ -54,7 +52,9 @@ export const useTours = (filters?: FilterOptions) => {
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['tours'] });
-        queryClient.invalidateQueries({ queryKey: ['tour', response.data?.id] });
+        queryClient.invalidateQueries({
+          queryKey: ['tour', response.data?.id],
+        });
         showToast({
           severity: 'success',
           summary: 'Tour Updated',

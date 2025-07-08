@@ -1,3 +1,4 @@
+import { logError, setUserContext } from '@/sentryErrorLogging';
 import { IPCAUser } from '@/types/user';
 import {
   getFirebaseConfigStatus,
@@ -21,7 +22,6 @@ import {
   saveUserToFirestore,
 } from './firebase';
 import { googleAuthService } from './googleAuth';
-import { logError, logInfo, setUserContext } from '@/sentryErrorLogging';
 
 // Authentication Types
 export enum AuthProvider {
@@ -125,10 +125,15 @@ export class UnifiedAuthService {
       this.updateAuthInitialization.setInitializing(false);
       this.updateAuthInitialization.setAuthServicesReady(false);
       consoleError('❌ Error initializing auth services:', error);
-      logError(error instanceof Error ? error : new Error('Auth service initialization failed'), {
-        step: 'auth_initialization',
-        isConfigured: configStatus?.isConfigured || false,
-      });
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Auth service initialization failed'),
+        {
+          step: 'auth_initialization',
+          isConfigured: configStatus?.isConfigured || false,
+        }
+      );
       throw error;
     }
   }
@@ -178,11 +183,14 @@ export class UnifiedAuthService {
           consoleError(
             '❌ Failed to get user data from Firestore after saving'
           );
-          logError(new Error('Failed to get user data from Firestore after saving'), {
-            userId: user.uid,
-            userEmail: user.email,
-            step: 'firestore_user_retrieval',
-          });
+          logError(
+            new Error('Failed to get user data from Firestore after saving'),
+            {
+              userId: user.uid,
+              userEmail: user.email,
+              step: 'firestore_user_retrieval',
+            }
+          );
           // Clear user data since we can't access Firestore properly
           this.updateUserData(null);
         }
