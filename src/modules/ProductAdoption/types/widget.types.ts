@@ -10,7 +10,7 @@ export interface WidgetConfig {
   analytics: WidgetAnalytics;
 }
 
-export type WidgetType = 
+export type WidgetType =
   | 'tooltip'
   | 'hotspot'
   | 'banner'
@@ -36,7 +36,14 @@ export interface WidgetPosition {
 }
 
 export interface WidgetTrigger {
-  type: 'immediate' | 'delay' | 'scroll' | 'click' | 'hover' | 'exit-intent' | 'custom';
+  type:
+    | 'immediate'
+    | 'delay'
+    | 'scroll'
+    | 'click'
+    | 'hover'
+    | 'exit-intent'
+    | 'custom';
   delay?: number;
   scrollPercentage?: number;
   exitIntentSensitivity?: number;
@@ -79,7 +86,7 @@ export interface DynamicContent {
   key: string;
   source: 'user' | 'api' | 'custom';
   fallback?: string;
-  transform?: (value: any) => string;
+  transform?: (value: unknown) => string;
 }
 
 export interface WidgetStyling {
@@ -124,7 +131,7 @@ export interface WidgetTargeting {
 export interface AudienceRule {
   type: 'all' | 'segment' | 'user-property' | 'behavior';
   operator?: 'is' | 'is-not' | 'contains' | 'greater-than' | 'less-than';
-  value?: any;
+  value?: unknown;
   segmentId?: string;
 }
 
@@ -185,7 +192,7 @@ export interface WidgetEvent {
   sessionId: string;
   type: 'impression' | 'interaction' | 'dismissal' | 'conversion';
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ChecklistWidget extends WidgetConfig {

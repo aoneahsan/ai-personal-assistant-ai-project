@@ -48,7 +48,7 @@ export interface ActivityLog {
   action: string;
   tourId?: string;
   tourName?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface AnalyticsFilter {
@@ -61,7 +61,13 @@ export interface AnalyticsFilter {
 export interface DateRange {
   start: Date;
   end: Date;
-  preset?: 'today' | 'yesterday' | 'last-7-days' | 'last-30-days' | 'last-90-days' | 'custom';
+  preset?:
+    | 'today'
+    | 'yesterday'
+    | 'last-7-days'
+    | 'last-30-days'
+    | 'last-90-days'
+    | 'custom';
 }
 
 export interface UserEngagementMetrics {
@@ -130,7 +136,7 @@ export interface TestVariant {
 
 export interface AnalyticsExport {
   format: 'csv' | 'json' | 'pdf';
-  data: any;
+  data: unknown;
   generatedAt: Date;
   filters: AnalyticsFilter;
 }

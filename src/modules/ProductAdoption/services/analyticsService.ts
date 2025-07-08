@@ -237,7 +237,13 @@ export class AnalyticsService {
       const events = eventsSnapshot.docs.map((doc) => doc.data() as TourEvent);
 
       // Build funnel data
-      const stepMetrics: { [stepId: string]: any } = {};
+      const stepMetrics: {
+        [stepId: string]: {
+          entered: number;
+          completed: number;
+          timeSpent: number[];
+        };
+      } = {};
 
       tour.steps.forEach((step) => {
         stepMetrics[step.id] = {

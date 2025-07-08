@@ -33,7 +33,10 @@ export const formatDuration = (milliseconds: number): string => {
   }
 };
 
-export const formatPercentage = (value: number, decimals: number = 1): string => {
+export const formatPercentage = (
+  value: number,
+  decimals: number = 1
+): string => {
   return `${value.toFixed(decimals)}%`;
 };
 
@@ -67,11 +70,15 @@ export const isElementVisible = (selector: string): boolean => {
   }
 };
 
-export const scrollToElement = (selector: string, offset: number = 100): void => {
+export const scrollToElement = (
+  selector: string,
+  offset: number = 100
+): void => {
   try {
     const element = document.querySelector(selector);
     if (element) {
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const elementPosition =
+        element.getBoundingClientRect().top + window.pageYOffset;
       window.scrollTo({
         top: elementPosition - offset,
         behavior: 'smooth',
@@ -149,7 +156,7 @@ export const getBrowserInfo = (): { name: string; version: string } => {
   return { name, version };
 };
 
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
@@ -160,7 +167,7 @@ export const debounce = <T extends (...args: any[]) => any>(
   };
 };
 
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {

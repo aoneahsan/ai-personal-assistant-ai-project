@@ -1,13 +1,13 @@
 import {
+  DeviceRule,
+  PageRule,
+  ScheduleRule,
+  SegmentCondition,
+  ServiceResponse,
+  TourTargeting,
   UserContext,
   UserSegment,
-  SegmentCondition,
-  TourTargeting,
   WidgetTargeting,
-  PageRule,
-  DeviceRule,
-  ScheduleRule,
-  ServiceResponse,
 } from '../types';
 
 export class TargetingService {
@@ -215,13 +215,13 @@ export class TargetingService {
   /**
    * Get a property value from the user context
    */
-  private getUserProperty(property: string, userContext: UserContext): any {
+  private getUserProperty(property: string, userContext: UserContext): unknown {
     // Handle nested properties with dot notation
     const parts = property.split('.');
-    let value: any = userContext;
+    let value: unknown = userContext;
 
     for (const part of parts) {
-      value = value?.[part];
+      value = (value as Record<string, unknown>)?.[part];
       if (value === undefined) {
         break;
       }
@@ -239,7 +239,8 @@ export class TargetingService {
         return true;
       }
 
-      const urlToCheck = rule.type === 'url' ? currentUrl : new URL(currentUrl).pathname;
+      const urlToCheck =
+        rule.type === 'url' ? currentUrl : new URL(currentUrl).pathname;
 
       switch (rule.operator) {
         case 'equals':
@@ -344,24 +345,32 @@ export class TargetingService {
    * Check audience rules
    */
   private async checkAudienceRules(
-    rules: any[],
+    rules: unknown[],
     userContext: UserContext
   ): Promise<boolean> {
     for (const rule of rules) {
-      if (rule.type === 'all') {
+      const ruleObj = rule as Record<string, unknown>;
+      if (ruleObj.type === 'all') {
         return true;
       }
 
-      if (rule.type === 'segment' && rule.segmentId) {
+      if (ruleObj.type === 'segment' && ruleObj.segmentId) {
         // Check if user belongs to segment
-        if (userContext.segments?.includes(rule.segmentId)) {
+        if (userContext.segments?.includes(ruleObj.segmentId as string)) {
           return true;
         }
       }
 
-      if (rule.type === 'user-property') {
-        const userValue = this.getUserProperty(rule.property, userContext);
-        const matches = this.compareValues(userValue, rule.operator, rule.value);
+      if (ruleObj.type === 'user-property') {
+        const userValue = this.getUserProperty(
+          ruleObj.property as string,
+          userContext
+        );
+        const matches = this.compareValues(
+          userValue,
+          ruleObj.operator as string,
+          ruleObj.value
+        );
         if (matches) {
           return true;
         }
@@ -374,7 +383,11 @@ export class TargetingService {
   /**
    * Compare values based on operator
    */
-  private compareValues(value: any, operator: string, targetValue: any): boolean {
+  private compareValues(
+    value: unknown,
+    operator: string,
+    targetValue: unknown
+  ): boolean {
     switch (operator) {
       case 'is':
         return value === targetValue;

@@ -42,7 +42,7 @@ export interface StepAnalytics {
 export interface StepInteraction {
   type: 'click' | 'hover' | 'scroll' | 'input';
   timestamp: Date;
-  details?: any;
+  details?: unknown;
 }
 
 export interface Tour {
@@ -96,7 +96,7 @@ export interface UserSegment {
 export interface SegmentCondition {
   property: string;
   operator: 'equals' | 'not-equals' | 'contains' | 'greater-than' | 'less-than';
-  value: any;
+  value: unknown;
 }
 
 export interface TourSettings {
@@ -166,8 +166,14 @@ export interface TourEvent {
   id: string;
   tourId: string;
   userId: string;
-  type: 'start' | 'step-view' | 'step-complete' | 'step-skip' | 'complete' | 'abandon';
+  type:
+    | 'start'
+    | 'step-view'
+    | 'step-complete'
+    | 'step-skip'
+    | 'complete'
+    | 'abandon';
   stepId?: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

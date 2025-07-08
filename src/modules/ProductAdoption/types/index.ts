@@ -1,6 +1,6 @@
 // Export all type definitions
-export * from './tour.types';
 export * from './analytics.types';
+export * from './tour.types';
 export * from './widget.types';
 
 // Common types used across the module
@@ -9,7 +9,7 @@ export interface ProductAdoptionConfig {
   userId?: string;
   environment: 'development' | 'staging' | 'production';
   debug?: boolean;
-  customStyles?: Record<string, any>;
+  customStyles?: Record<string, unknown>;
   baseUrl?: string;
 }
 
@@ -23,7 +23,7 @@ export interface UserContext {
   id: string;
   email?: string;
   name?: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   segments?: string[];
 }
 
@@ -37,7 +37,7 @@ export interface ServiceResponse<T> {
 export interface ServiceError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface ResponseMetadata {

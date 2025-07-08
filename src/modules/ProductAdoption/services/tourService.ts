@@ -1,30 +1,27 @@
+import { db } from '@/services/firebase';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
   setDoc,
   updateDoc,
-  deleteDoc,
-  query,
   where,
-  orderBy,
-  limit,
-  Timestamp,
-  serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 import {
-  Tour,
-  TourStep,
-  TourProgress,
-  TourEvent,
-  ServiceResponse,
   FilterOptions,
-  ValidationResult,
+  ServiceResponse,
+  Tour,
+  TourEvent,
+  TourProgress,
 } from '../types';
-import { validateTour } from '../utils/validation';
 import { generateTourId } from '../utils/helpers';
+import { validateTour } from '../utils/validation';
 
 export class TourService {
   private readonly COLLECTION = 'productAdoption_tours';
@@ -186,10 +183,7 @@ export class TourService {
       }
 
       if (filters?.sortBy) {
-        q = query(
-          q,
-          orderBy(filters.sortBy, filters.sortOrder || 'desc')
-        );
+        q = query(q, orderBy(filters.sortBy, filters.sortOrder || 'desc'));
       } else {
         q = query(q, orderBy('createdAt', 'desc'));
       }
@@ -366,7 +360,9 @@ export class TourService {
   }
 
   // Event Tracking
-  async trackEvent(event: Omit<TourEvent, 'id'>): Promise<ServiceResponse<void>> {
+  async trackEvent(
+    event: Omit<TourEvent, 'id'>
+  ): Promise<ServiceResponse<void>> {
     try {
       const eventId = crypto.randomUUID();
       await setDoc(doc(db, this.EVENTS_COLLECTION, eventId), {
