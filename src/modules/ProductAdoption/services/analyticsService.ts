@@ -27,9 +27,13 @@ export class AnalyticsService {
   private readonly ANALYTICS_COLLECTION = 'productAdoption_analytics';
 
   async getAnalyticsOverview(
-    _filter?: AnalyticsFilter
+    filter?: AnalyticsFilter
   ): Promise<ServiceResponse<AnalyticsOverview>> {
     try {
+      // TODO: Implement filter logic for date ranges, tour IDs, and user segments
+      // Currently returning all data without filtering
+      console.log('Filter will be implemented in future update:', filter);
+
       // Get all tours
       const toursSnapshot = await getDocs(
         collection(db, this.TOURS_COLLECTION)

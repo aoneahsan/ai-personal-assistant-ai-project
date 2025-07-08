@@ -11,9 +11,9 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  Timestamp,
   updateDoc,
   where,
-  Timestamp,
 } from 'firebase/firestore';
 
 export interface AdvancedFeatureFlag {
@@ -73,7 +73,7 @@ export interface FeatureFlagEvaluation {
   variation: string;
   value: string | number | boolean | object | null;
   evaluatedAt: Date | Timestamp;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
 }
 
 class AdvancedFeatureFlagService {
@@ -81,7 +81,12 @@ class AdvancedFeatureFlagService {
   private readonly EVALUATIONS_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_feature_flag_evaluations`;
 
   // Create a new feature flag
-  async createFeatureFlag(flag: Omit<AdvancedFeatureFlag, 'id' | 'createdAt' | 'updatedAt' | 'metrics'>): Promise<string> {
+  async createFeatureFlag(
+    flag: Omit<
+      AdvancedFeatureFlag,
+      'id' | 'createdAt' | 'updatedAt' | 'metrics'
+    >
+  ): Promise<string> {
     try {
       const flagWithMetadata = {
         ...flag,
@@ -95,7 +100,10 @@ class AdvancedFeatureFlagService {
         },
       };
 
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), flagWithMetadata);
+      const docRef = await addDoc(
+        collection(db, this.COLLECTION_NAME),
+        flagWithMetadata
+      );
       consoleLog('Advanced feature flag created successfully:', docRef.id);
       return docRef.id;
     } catch (error) {
@@ -107,8 +115,11 @@ class AdvancedFeatureFlagService {
   // Get all feature flags
   async getFeatureFlags(environment?: string): Promise<AdvancedFeatureFlag[]> {
     try {
-      let q = query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'));
-      
+      let q = query(
+        collection(db, this.COLLECTION_NAME),
+        orderBy('createdAt', 'desc')
+      );
+
       if (environment) {
         q = query(
           collection(db, this.COLLECTION_NAME),
@@ -127,7 +138,8 @@ class AdvancedFeatureFlagService {
           ...data,
           createdAt: data.createdAt?.toDate?.() || data.createdAt,
           updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
-          scheduledStart: data.scheduledStart?.toDate?.() || data.scheduledStart,
+          scheduledStart:
+            data.scheduledStart?.toDate?.() || data.scheduledStart,
           scheduledEnd: data.scheduledEnd?.toDate?.() || data.scheduledEnd,
         } as AdvancedFeatureFlag);
       });
@@ -141,7 +153,9 @@ class AdvancedFeatureFlagService {
   }
 
   // Get active feature flags for a specific environment
-  async getActiveFeatureFlags(environment: string): Promise<AdvancedFeatureFlag[]> {
+  async getActiveFeatureFlags(
+    environment: string
+  ): Promise<AdvancedFeatureFlag[]> {
     try {
       const q = query(
         collection(db, this.COLLECTION_NAME),
@@ -160,7 +174,8 @@ class AdvancedFeatureFlagService {
           ...data,
           createdAt: data.createdAt?.toDate?.() || data.createdAt,
           updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
-          scheduledStart: data.scheduledStart?.toDate?.() || data.scheduledStart,
+          scheduledStart:
+            data.scheduledStart?.toDate?.() || data.scheduledStart,
           scheduledEnd: data.scheduledEnd?.toDate?.() || data.scheduledEnd,
         } as AdvancedFeatureFlag);
       });
@@ -173,7 +188,10 @@ class AdvancedFeatureFlagService {
   }
 
   // Update a feature flag
-  async updateFeatureFlag(flagId: string, updates: Partial<AdvancedFeatureFlag>): Promise<void> {
+  async updateFeatureFlag(
+    flagId: string,
+    updates: Partial<AdvancedFeatureFlag>
+  ): Promise<void> {
     try {
       const flagRef = doc(db, this.COLLECTION_NAME, flagId);
       const updateData = {
@@ -182,7 +200,7 @@ class AdvancedFeatureFlagService {
       };
 
       // Remove undefined fields
-      Object.keys(updateData).forEach(key => {
+      Object.keys(updateData).forEach((key) => {
         if (updateData[key as keyof typeof updateData] === undefined) {
           delete updateData[key as keyof typeof updateData];
         }
@@ -213,8 +231,11 @@ class AdvancedFeatureFlagService {
     environment?: string
   ): () => void {
     try {
-      let q = query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'));
-      
+      let q = query(
+        collection(db, this.COLLECTION_NAME),
+        orderBy('createdAt', 'desc')
+      );
+
       if (environment) {
         q = query(
           collection(db, this.COLLECTION_NAME),
@@ -232,7 +253,8 @@ class AdvancedFeatureFlagService {
             ...data,
             createdAt: data.createdAt?.toDate?.() || data.createdAt,
             updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
-            scheduledStart: data.scheduledStart?.toDate?.() || data.scheduledStart,
+            scheduledStart:
+              data.scheduledStart?.toDate?.() || data.scheduledStart,
             scheduledEnd: data.scheduledEnd?.toDate?.() || data.scheduledEnd,
           } as AdvancedFeatureFlag);
         });
@@ -250,8 +272,8 @@ class AdvancedFeatureFlagService {
   async evaluateFlag(
     flagKey: string,
     userId: string,
-    userContext: Record<string, any> = {}
-  ): Promise<{ value: any; variation: string }> {
+    userContext: Record<string, unknown> = {}
+  ): Promise<{ value: unknown; variation: string }> {
     try {
       // Get the flag by key
       const q = query(
@@ -261,9 +283,11 @@ class AdvancedFeatureFlagService {
       );
 
       const querySnapshot = await getDocs(q);
-      
+
       if (querySnapshot.empty) {
-        throw new Error(`Advanced feature flag '${flagKey}' not found or not active`);
+        throw new Error(
+          `Advanced feature flag '${flagKey}' not found or not active`
+        );
       }
 
       const flagDoc = querySnapshot.docs[0];
@@ -271,12 +295,14 @@ class AdvancedFeatureFlagService {
 
       // Simple evaluation logic
       let selectedVariation = flag.variations[0]; // Default to first variation
-      
+
       if (flag.targeting.enabled && flag.targeting.rules.length > 0) {
         // Apply targeting rules
         for (const rule of flag.targeting.rules) {
           if (this.evaluateRule(rule, userContext)) {
-            selectedVariation = flag.variations.find(v => v.name === rule.variation) || selectedVariation;
+            selectedVariation =
+              flag.variations.find((v) => v.name === rule.variation) ||
+              selectedVariation;
             break;
           }
         }
@@ -284,7 +310,7 @@ class AdvancedFeatureFlagService {
         // Simple percentage rollout
         const userHash = this.hashString(userId + flagKey);
         const percentage = userHash % 100;
-        
+
         if (percentage < flag.rolloutPercentage) {
           // Find the appropriate variation based on weights
           let totalWeight = 0;
@@ -299,7 +325,13 @@ class AdvancedFeatureFlagService {
       }
 
       // Record the evaluation
-      await this.recordEvaluation(flagKey, userId, selectedVariation.name, selectedVariation.value, userContext);
+      await this.recordEvaluation(
+        flagKey,
+        userId,
+        selectedVariation.name,
+        selectedVariation.value,
+        userContext
+      );
 
       return {
         value: selectedVariation.value,
@@ -312,10 +344,13 @@ class AdvancedFeatureFlagService {
   }
 
   // Simple rule evaluation
-  private evaluateRule(rule: AdvancedFeatureFlag['targeting']['rules'][0], context: Record<string, any>): boolean {
-    return rule.conditions.every(condition => {
+  private evaluateRule(
+    rule: AdvancedFeatureFlag['targeting']['rules'][0],
+    context: Record<string, unknown>
+  ): boolean {
+    return rule.conditions.every((condition) => {
       const contextValue = context[condition.attribute];
-      
+
       switch (condition.operator) {
         case 'equals':
           return contextValue === condition.value;
@@ -338,7 +373,7 @@ class AdvancedFeatureFlagService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
@@ -349,16 +384,16 @@ class AdvancedFeatureFlagService {
     flagKey: string,
     userId: string,
     variation: string,
-    value: any,
-    context: Record<string, any>
+    value: unknown,
+    context: Record<string, unknown>
   ): Promise<void> {
     try {
       const evaluation: Omit<FeatureFlagEvaluation, 'id'> = {
         flagKey,
         userId,
-        userEmail: context.email,
+        userEmail: context.email as string | undefined,
         variation,
-        value,
+        value: value as string | number | boolean | object | null,
         evaluatedAt: serverTimestamp(),
         context,
       };
@@ -371,7 +406,11 @@ class AdvancedFeatureFlagService {
   }
 
   // Get flag analytics
-  async getFlagAnalytics(flagKey: string, startDate?: Date, endDate?: Date): Promise<{
+  async getFlagAnalytics(
+    flagKey: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
     totalEvaluations: number;
     uniqueUsers: number;
     variationBreakdown: Record<string, number>;
@@ -405,11 +444,12 @@ class AdvancedFeatureFlagService {
         } as FeatureFlagEvaluation);
       });
 
-      const uniqueUsers = new Set(evaluations.map(e => e.userId)).size;
+      const uniqueUsers = new Set(evaluations.map((e) => e.userId)).size;
       const variationBreakdown: Record<string, number> = {};
 
-      evaluations.forEach(evaluation => {
-        variationBreakdown[evaluation.variation] = (variationBreakdown[evaluation.variation] || 0) + 1;
+      evaluations.forEach((evaluation) => {
+        variationBreakdown[evaluation.variation] =
+          (variationBreakdown[evaluation.variation] || 0) + 1;
       });
 
       return {

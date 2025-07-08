@@ -2,17 +2,17 @@ import ENV_KEYS from '@/utils/envKeys';
 import { consoleError, consoleLog } from '@/utils/helpers/consoleHelper';
 import { getLocalStorageUser } from '@/utils/helpers/localStorage';
 import { W_LOCATION } from '@/utils/helpers/windowLocation';
-import { 
-  init, 
-  replayIntegration, 
-  User, 
+import {
   addBreadcrumb,
+  browserTracingIntegration,
   captureException,
   captureMessage,
-  setUser,
-  setTag,
+  init,
+  replayIntegration,
   setContext,
-  browserTracingIntegration
+  setTag,
+  setUser,
+  User,
 } from '@sentry/react';
 
 // Define error patterns to ignore
@@ -21,23 +21,23 @@ const IGNORE_ERRORS = [
   'Script error.',
   'ResizeObserver loop limit exceeded',
   'Non-Error promise rejection captured',
-  
+
   // Network errors that are expected
   'Network Error',
   'ERR_NETWORK',
   'ERR_INTERNET_DISCONNECTED',
-  
+
   // React development warnings
   'Warning: validateDOMNesting',
   'Warning: React does not recognize',
-  
+
   // Ad blocker and extension related
   'atomicFindClose',
   'AdBlock',
-  
+
   // Capacitor specific errors (mobile)
   'Capacitor WebView',
-  
+
   // Firebase auth errors that are handled
   'auth/popup-closed-by-user',
   'auth/cancelled-popup-request',
@@ -85,7 +85,7 @@ const sentryInit = async () => {
       debug: !ENV_KEYS.isProduction, // Only debug in development
       initialScope: {
         user: user as User | undefined,
-        tags: { 
+        tags: {
           sentryEnvironment,
           nodeEnv: ENV_KEYS.NODE_ENV,
           version: import.meta.env.PACKAGE_VERSION || '1.0.0',
@@ -94,9 +94,9 @@ const sentryInit = async () => {
       environment: sentryEnvironment || ENV_KEYS.NODE_ENV,
       replaysOnErrorSampleRate: ENV_KEYS.isProduction ? 0.1 : 1.0,
       replaysSessionSampleRate: ENV_KEYS.isProduction ? 0.01 : 0.1,
-      
+
       ignoreErrors: IGNORE_ERRORS,
-      
+
       beforeSend(event, hint) {
         // Filter out development-only errors
         if (!ENV_KEYS.isProduction) {
@@ -107,20 +107,20 @@ const sentryInit = async () => {
         const error = hint.originalException;
         if (error && typeof error === 'object' && 'message' in error) {
           const message = String(error.message);
-          if (IGNORE_ERRORS.some(pattern => message.includes(pattern))) {
+          if (IGNORE_ERRORS.some((pattern) => message.includes(pattern))) {
             return null;
           }
         }
 
         return event;
       },
-      
+
       beforeBreadcrumb(breadcrumb) {
         // Filter out noisy breadcrumbs
         if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
           return null;
         }
-        
+
         return breadcrumb;
       },
     });
@@ -146,7 +146,7 @@ const sentryInit = async () => {
     });
 
     consoleLog('Sentry error tracking initialized successfully');
-    
+
     // Test Sentry in development
     if (!ENV_KEYS.isProduction) {
       addBreadcrumb({
@@ -155,18 +155,20 @@ const sentryInit = async () => {
         category: 'init',
       });
     }
-
   } catch (error) {
     consoleError('Failed to initialize Sentry:', error);
   }
 };
 
 // Helper functions for better error tracking
-export const logError = (error: Error | string, context?: Record<string, any>) => {
+export const logError = (
+  error: Error | string,
+  context?: Record<string, unknown>
+) => {
   if (context) {
     setContext('errorContext', context);
   }
-  
+
   if (typeof error === 'string') {
     captureMessage(error, 'error');
   } else {
@@ -174,14 +176,17 @@ export const logError = (error: Error | string, context?: Record<string, any>) =
   }
 };
 
-export const logWarning = (message: string, context?: Record<string, any>) => {
+export const logWarning = (
+  message: string,
+  context?: Record<string, unknown>
+) => {
   if (context) {
     setContext('warningContext', context);
   }
   captureMessage(message, 'warning');
 };
 
-export const logInfo = (message: string, context?: Record<string, any>) => {
+export const logInfo = (message: string, context?: Record<string, unknown>) => {
   if (context) {
     setContext('infoContext', context);
   }
@@ -198,17 +203,21 @@ export const updateSentryUser = (userData: {
     id: userData.id,
     email: userData.email,
   });
-  
+
   if (userData.role) {
     setTag('userRole', userData.role);
   }
-  
+
   if (userData.subscription) {
     setTag('subscriptionPlan', userData.subscription);
   }
 };
 
-export const addBreadcrumbLog = (message: string, category: string = 'custom', data?: Record<string, any>) => {
+export const addBreadcrumbLog = (
+  message: string,
+  category: string = 'custom',
+  data?: Record<string, unknown>
+) => {
   addBreadcrumb({
     message,
     level: 'info',

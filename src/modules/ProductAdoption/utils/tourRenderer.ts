@@ -1,5 +1,10 @@
-import { Tour, TourStep, TourTheme } from '../types';
-import { createOverlay, createSpotlight, scrollToElement, isElementVisible } from './helpers';
+import { Tour, TourAction, TourAction, TourStep, TourTheme } from '../types';
+import {
+  createOverlay,
+  createSpotlight,
+  isElementVisible,
+  scrollToElement,
+} from './helpers';
 
 export class TourRenderer {
   private tour: Tour;
@@ -22,7 +27,11 @@ export class TourRenderer {
     document.body.appendChild(this.container);
   }
 
-  public renderStep(step: TourStep, stepIndex: number, totalSteps: number): void {
+  public renderStep(
+    step: TourStep,
+    stepIndex: number,
+    totalSteps: number
+  ): void {
     this.currentStep = step;
     this.clearPreviousStep();
 
@@ -186,8 +195,14 @@ export class TourRenderer {
     }
 
     // Ensure tooltip stays within viewport
-    top = Math.max(10, Math.min(top, window.innerHeight - tooltipRect.height - 10));
-    left = Math.max(10, Math.min(left, window.innerWidth - tooltipRect.width - 10));
+    top = Math.max(
+      10,
+      Math.min(top, window.innerHeight - tooltipRect.height - 10)
+    );
+    left = Math.max(
+      10,
+      Math.min(left, window.innerWidth - tooltipRect.width - 10)
+    );
 
     this.tooltip.style.top = `${top}px`;
     this.tooltip.style.left = `${left}px`;
@@ -203,7 +218,10 @@ export class TourRenderer {
       if (this.tooltip) {
         this.tooltip.style.transition = 'all 0.3s ease-out';
         this.tooltip.style.opacity = '1';
-        this.tooltip.style.transform = this.tooltip.style.transform.replace('scale(0.9)', 'scale(1)');
+        this.tooltip.style.transform = this.tooltip.style.transform.replace(
+          'scale(0.9)',
+          'scale(1)'
+        );
       }
     });
   }
@@ -223,7 +241,7 @@ export class TourRenderer {
     }
   }
 
-  private handleAction(action: any): void {
+  private handleAction(action: TourAction): void {
     if (action.customHandler) {
       action.customHandler();
     }

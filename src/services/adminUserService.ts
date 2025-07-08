@@ -339,7 +339,7 @@ export class AdminUserService {
       }
 
       return adminUsers;
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error getting admin users:', error);
       return [];
     }
@@ -364,12 +364,13 @@ export class AdminUserService {
           message: `System already initialized with ${adminUsers.length} admin user(s)`,
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error initializing system:', error);
       return {
         success: false,
         message: 'Failed to initialize system',
-        error: error.message || 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
   }
