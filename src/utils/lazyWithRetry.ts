@@ -3,7 +3,9 @@ import { lazy } from 'react';
 import { STORAGE } from './helpers/localStorage';
 import { W_LOCATION } from './helpers/windowLocation';
 
-const lazyWithRetry = (componentImport: any) => {
+const lazyWithRetry = (
+  componentImport: () => Promise<{ default: React.ComponentType<unknown> }>
+) => {
   return lazy(async () => {
     const res = await STORAGE.GET(PAGE_REFRESHED_ONCE_LOCALSTORAGE_KEY);
     const pageHasAlreadyBeenForceRefreshed = res === 'true';

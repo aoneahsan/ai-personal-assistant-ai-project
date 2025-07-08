@@ -35,13 +35,13 @@ export const reportError = async ({
   printToConsole = true,
   reportToSentry = false,
 }: {
-  err: any;
-  metaData?: any;
+  err: Error | unknown;
+  metaData?: Record<string, unknown>;
   printToConsole?: boolean;
   reportToSentry?: boolean;
 }) => {
   try {
-    if (err && err.message) {
+    if (err && typeof err === 'object' && 'message' in err) {
       const user = await getLocalStorageUser();
 
       let sentryEnvironment = ENV_KEYS.sentryEnvironment;
@@ -50,7 +50,7 @@ export const reportError = async ({
       }
 
       const errorToReport = new CustomError(
-        err.message,
+        String(err.message),
         {
           error: err,
           metaData,
@@ -69,7 +69,7 @@ export const reportError = async ({
         consoleError(err);
       }
     }
-  } catch (error) {
+  } catch {
     // some custom implementation, using DB & email/sms to alert
   }
 };

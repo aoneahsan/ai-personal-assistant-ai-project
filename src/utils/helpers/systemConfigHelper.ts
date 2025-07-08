@@ -2,6 +2,7 @@ import { roleService } from '@/services/roleService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { systemConfigService } from '@/services/systemConfigurationService';
 import { IPCAUser } from '@/types/user';
+import { UserRole } from '@/types/user/roles';
 
 /**
  * System Configuration Helper
@@ -100,7 +101,10 @@ export class SystemConfigHelper {
 
       // Check role requirement
       if (requiredRole && user) {
-        const hasRole = roleService.hasRoleLevel(user, requiredRole as any);
+        const hasRole = roleService.hasRoleLevel(
+          user,
+          requiredRole as UserRole
+        );
         if (!hasRole.hasPermission) {
           return {
             hasAccess: false,

@@ -316,9 +316,9 @@ export const getFileCategory = (mimeType: string): string => {
   if (isVideoFile(mimeType)) return FILE_CATEGORIES.VIDEO;
   if (isAudioFile(mimeType)) return FILE_CATEGORIES.AUDIO;
   if (isTextFile(mimeType)) return FILE_CATEGORIES.TEXT;
-  if (Object.values(FILE_TYPES.DOCUMENT).includes(mimeType as any))
+  if ((Object.values(FILE_TYPES.DOCUMENT) as string[]).includes(mimeType))
     return FILE_CATEGORIES.DOCUMENT;
-  if (Object.values(FILE_TYPES.ARCHIVE).includes(mimeType as any))
+  if ((Object.values(FILE_TYPES.ARCHIVE) as string[]).includes(mimeType))
     return FILE_CATEGORIES.ARCHIVE;
   return FILE_CATEGORIES.OTHER;
 };

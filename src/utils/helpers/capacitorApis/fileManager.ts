@@ -247,7 +247,7 @@ export const handleWebFileInput = async (file: File): Promise<FileInfo> => {
 };
 
 // Get file info from path
-export const getFileInfo = async (path: string): Promise<any> => {
+export const getFileInfo = async (path: string): Promise<unknown> => {
   try {
     return await Filesystem.stat({
       path,

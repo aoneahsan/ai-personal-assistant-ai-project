@@ -88,7 +88,9 @@ export const subscriptionTestScenarios = {
  */
 export const setupTestingConsole = () => {
   if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
-    (window as any).subscriptionTests = {
+    (
+      window as Window & typeof globalThis & { subscriptionTests?: unknown }
+    ).subscriptionTests = {
       createUser: createTestUser,
       scenarios: subscriptionTestScenarios,
       plans: SubscriptionPlan,
