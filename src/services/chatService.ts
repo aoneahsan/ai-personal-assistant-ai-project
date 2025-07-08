@@ -6,6 +6,7 @@ import {
   arrayUnion,
   collection,
   doc,
+  FieldValue,
   getDoc,
   getDocs,
   onSnapshot,
@@ -29,7 +30,7 @@ export interface TranscriptSegment {
 
 // Message edit history entry
 export interface MessageEditHistory {
-  editedAt: any; // Firestore timestamp
+  editedAt: Timestamp | FieldValue; // Firestore timestamp
   previousText?: string;
   editReason?: string;
   editorId: string;
@@ -44,15 +45,15 @@ export interface FirestoreMessage {
   senderEmail: string;
   text?: string;
   type: 'text' | 'audio' | 'image' | 'file' | 'video';
-  timestamp: any; // Firestore timestamp
+  timestamp: Timestamp | FieldValue; // Firestore timestamp
   status: 'sent' | 'delivered' | 'read';
 
   // Message editing and deletion
   isEdited?: boolean;
-  lastEditedAt?: any; // Firestore timestamp
+  lastEditedAt?: Timestamp | FieldValue; // Firestore timestamp
   editHistory?: MessageEditHistory[];
   isDeleted?: boolean;
-  deletedAt?: any; // Firestore timestamp
+  deletedAt?: Timestamp | FieldValue; // Firestore timestamp
   deletedBy?: string; // User ID who deleted
   deleteReason?: string;
 
@@ -101,14 +102,14 @@ export interface ChatConversation {
   participantEmails: string[]; // User emails for easy searching
   participant?: ConversationParticipant; // For UI display (other participant in the conversation)
   lastMessage?: string;
-  lastMessageTime?: any; // Firestore timestamp
+  lastMessageTime?: Timestamp | FieldValue; // Firestore timestamp
   lastMessageAt?: string; // Formatted timestamp for UI
   lastMessageSender?: string;
   unreadCount?: { [userId: string]: number }; // Keep original format
   status?: 'active' | 'inactive';
   type?: 'user' | 'system' | 'support'; // Type of conversation
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp | FieldValue;
+  updatedAt: Timestamp | FieldValue;
 }
 
 // User search result
@@ -660,11 +661,16 @@ export class ChatService {
   }
 
   // Helper method to format timestamps for UI
-  private formatTimestamp(timestamp: any): string {
+  private formatTimestamp(timestamp: Timestamp | FieldValue | null): string {
     try {
       if (!timestamp) return '';
 
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      // Handle FieldValue (from serverTimestamp()) - can't format until it's resolved
+      if (timestamp instanceof FieldValue || !('toDate' in timestamp)) {
+        return 'Just now';
+      }
+
+      const date = timestamp.toDate();
       const now = new Date();
       const diffInMs = now.getTime() - date.getTime();
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
@@ -677,7 +683,7 @@ export class ChatService {
       if (diffInDays < 7) return `${diffInDays}d ago`;
 
       return date.toLocaleDateString();
-    } catch (error) {
+    } catch {
       return '';
     }
   }
@@ -814,8 +820,6 @@ export class ChatService {
         deleteReason,
         text: '[This message was deleted]',
       });
-
-      consoleLog('✅ Message deleted successfully');
     } catch (error) {
       consoleError('❌ Error deleting message:', error);
       throw error;

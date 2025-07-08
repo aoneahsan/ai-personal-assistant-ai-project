@@ -4,12 +4,14 @@ import {
   addDoc,
   collection,
   doc,
+  FieldValue,
   getDoc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -26,8 +28,8 @@ export interface EmbedConfig {
   allowedDomains: string[]; // Array of allowed domains/origins
   embedCode: string; // Generated embed code
   isActive: boolean;
-  createdAt: any; // Firestore timestamp
-  updatedAt: any; // Firestore timestamp
+  createdAt: Timestamp | FieldValue; // Firestore timestamp
+  updatedAt: Timestamp | FieldValue; // Firestore timestamp
 
   // Styling options
   style?: {
@@ -63,17 +65,17 @@ export interface EmbeddedChatConversation {
     userAgent?: string;
     ipAddress?: string;
     referrer?: string;
-    timestamp?: any;
+    timestamp?: Timestamp | FieldValue;
   };
   ownerUserId: string; // The user who owns the embed
   ownerEmail: string;
   lastMessage?: string;
-  lastMessageTime?: any; // Firestore timestamp
+  lastMessageTime?: Timestamp | FieldValue; // Firestore timestamp
   lastMessageSender?: 'visitor' | 'owner';
   unreadCount?: number;
   isActive: boolean;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp | FieldValue;
+  updatedAt: Timestamp | FieldValue;
 }
 
 // Device fingerprint interface
@@ -299,7 +301,7 @@ export class EmbedService {
           );
           return { isValid: false, error: 'Domain not authorized' };
         }
-      } catch (urlError) {
+      } catch {
         consoleError('❌ Invalid origin URL:', origin);
         return { isValid: false, error: 'Invalid origin URL' };
       }

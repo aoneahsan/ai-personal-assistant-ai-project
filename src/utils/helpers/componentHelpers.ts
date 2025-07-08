@@ -72,7 +72,10 @@ export const generateInitials = (name: string): string => {
 };
 
 // Get theme-based color for status
-export const getStatusColor = (status: string, theme: any): string => {
+export const getStatusColor = (
+  status: string,
+  theme: Record<string, string>
+): string => {
   switch (status.toLowerCase()) {
     case 'active':
     case 'enabled':
@@ -156,12 +159,12 @@ export const validateUrl = (url: string): boolean => {
   }
 };
 
-export const validateRequired = (value: any): boolean => {
+export const validateRequired = (value: unknown): boolean => {
   return value !== null && value !== undefined && value !== '';
 };
 
 // Debounce function for search inputs
-export const debounce = <T extends (...args: any[]) => void>(
+export const debounce = <T extends (...args: unknown[]) => void>(
   func: T,
   delay: number
 ): ((...args: Parameters<T>) => void) => {
@@ -203,10 +206,12 @@ export const sortBy = <T>(
 
 // Common error handling
 export const handleError = (
-  error: any,
+  error: unknown,
   defaultMessage: string = 'An error occurred'
 ): string => {
-  if (error?.message) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message);
+  }
   if (typeof error === 'string') return error;
   return defaultMessage;
 };
