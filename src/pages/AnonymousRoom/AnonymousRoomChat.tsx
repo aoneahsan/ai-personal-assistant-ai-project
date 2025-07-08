@@ -132,12 +132,12 @@ const AnonymousRoomChat: React.FC = () => {
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !isConnected) return;
 
-    const messageData = {
+    console.log('Sending message:', {
       text: currentMessage.trim(),
       senderName: senderName,
       roomId: roomId,
       timestamp: new Date(),
-    };
+    });
 
     try {
       await chatService.sendTextMessage(
@@ -203,7 +203,7 @@ const AnonymousRoomChat: React.FC = () => {
 
   const handleRightClick = (e: React.MouseEvent, message: RoomMessage) => {
     e.preventDefault();
-    const menuItems = [
+    console.log('Context menu for message:', message, 'Options:', [
       {
         label: 'Edit Message',
         icon: 'pi pi-pencil',
@@ -214,14 +214,16 @@ const AnonymousRoomChat: React.FC = () => {
         icon: 'pi pi-trash',
         command: () => handleDeleteMessage(message),
       },
-    ];
+    ]);
 
     contextMenuRef.current?.show(e);
     // Set current context menu items (would need to modify Menu component to accept dynamic items)
   };
 
-  const formatTime = (timestamp: any) => {
-    const date = timestamp?.toDate?.() || new Date(timestamp);
+  const formatTime = (timestamp: unknown) => {
+    const date =
+      (timestamp as { toDate?: () => Date })?.toDate?.() ||
+      new Date(timestamp as Date);
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -240,7 +242,7 @@ const AnonymousRoomChat: React.FC = () => {
     try {
       await navigator.clipboard.writeText(roomId || '');
       toast.success(TOAST_MESSAGES.SUCCESS.ROOM_ID_COPIED);
-    } catch (error) {
+    } catch {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = roomId || '';

@@ -82,11 +82,11 @@ export async function createDefaultAdmin() {
       password,
       userId: firebaseUser.uid,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error creating default admin user:', error);
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -180,11 +180,11 @@ export async function createAdminUser(
       userId: firebaseUser.uid,
       role,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error creating admin user:', error);
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
