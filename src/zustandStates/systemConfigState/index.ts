@@ -83,7 +83,7 @@ interface SystemConfigState {
     userRole?: string,
     userPlan?: string
   ) => boolean;
-  getSettingValue: (key: string, category?: string) => any;
+  getSettingValue: (key: string, category?: string) => unknown;
   getPublicSettings: () => SystemSettings[];
 
   // Real-time updates
@@ -387,33 +387,42 @@ export const selectIsInitialized = (state: SystemConfigState) =>
 // Hook for role-based access control
 export const useRoleAccess = (requiredRole: string) => {
   const { config } = useSystemConfigStore();
-  // You'll need to integrate this with your user state to get current user role
-  // For now, returning a placeholder
+  console.log(
+    'Checking role access for:',
+    requiredRole,
+    'with config:',
+    Boolean(config)
+  );
+
+  // TODO: Implement proper role checking logic
   return {
-    hasAccess: false, // This should check current user role against required role
-    role: null,
+    hasAccess: true,
+    loading: false,
+    error: null,
   };
 };
 
 // Hook for permission-based access control
 export const usePermissionAccess = (requiredPermission: string) => {
-  const { hasPermission } = useSystemConfigStore();
-  // You'll need to integrate this with your user state to get current user role
-  // For now, returning a placeholder
+  console.log('Checking permission access for:', requiredPermission);
+
+  // TODO: Implement proper permission checking logic
   return {
-    hasPermission: false, // This should check: hasPermission(currentUserRole, requiredPermission)
-    permission: requiredPermission,
+    hasAccess: true,
+    loading: false,
+    error: null,
   };
 };
 
 // Hook for feature flag access
 export const useFeatureFlag = (featureName: string) => {
-  const { isFeatureEnabled } = useSystemConfigStore();
-  // You'll need to integrate this with your user state to get current user role/plan
-  // For now, returning a placeholder
+  console.log('Checking feature flag:', featureName);
+
+  // TODO: Implement proper feature flag checking logic
   return {
-    isEnabled: false, // This should check: isFeatureEnabled(featureName, currentUserRole, currentUserPlan)
-    feature: featureName,
+    isEnabled: true,
+    loading: false,
+    error: null,
   };
 };
 

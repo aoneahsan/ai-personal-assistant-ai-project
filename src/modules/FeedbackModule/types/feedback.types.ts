@@ -12,7 +12,7 @@ export interface FeedbackRating {
   userAgent?: string;
   url?: string;
   sessionId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FeedbackConfig {
@@ -120,4 +120,19 @@ export interface UseFeedbackReturn {
   // Trigger actions
   incrementActionCount: () => void;
   trackScrollPercentage: (percentage: number) => void;
+}
+
+export interface FeedbackWidgetConfig {
+  title: string;
+  description?: string;
+  placeholder?: string;
+  showRating?: boolean;
+  showMessage?: boolean;
+  submitButtonText?: string;
+  cancelButtonText?: string;
+  successMessage?: string;
+  errorMessage?: string;
+  theme?: 'light' | 'dark' | 'auto';
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  customData?: Record<string, unknown>;
 }

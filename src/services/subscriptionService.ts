@@ -62,7 +62,7 @@ export interface ReviewSubscriptionRequestParams {
 export interface SubscriptionServiceResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 

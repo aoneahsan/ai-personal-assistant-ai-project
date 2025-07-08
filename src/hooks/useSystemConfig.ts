@@ -1,210 +1,201 @@
-import { SystemConfigHelper } from '@/utils/helpers/systemConfigHelper';
+import { logError } from '@/sentryErrorLogging';
+import { SystemConfiguration } from '@/types/system/configurations';
 import { useSystemConfigStore } from '@/zustandStates/systemConfigState';
-import { useUserDataZState } from '@/zustandStates/userState';
-import { useEffect, useState } from 'react';
 
-/**
- * React hook for accessing system configuration
- */
 export const useSystemConfig = () => {
-  const { config, isLoading, error, isInitialized } = useSystemConfigStore();
+  const systemConfigStore = useSystemConfigStore();
 
-  const { data: user } = useUserDataZState();
+  const getFeatureFlag = (
+    flagName: string,
+    defaultValue: boolean = false
+  ): boolean => {
+    const systemConfig = systemConfigStore.config;
+    if (!systemConfig?.featureFlags) return defaultValue;
+    const flag = systemConfig.featureFlags.find((f) => f.name === flagName);
+    return flag?.enabled || defaultValue;
+  };
+
+  const getSettings = (
+    settingName: string,
+    defaultValue: unknown = null
+  ): unknown => {
+    const systemConfig = systemConfigStore.config;
+    if (!systemConfig?.settings) return defaultValue;
+    const setting = systemConfig.settings.find((s) => s.key === settingName);
+    return setting?.value || defaultValue;
+  };
+
+  const getAdvancedSettings = (
+    settingName: string,
+    defaultValue: unknown = null
+  ): unknown => {
+    // For backward compatibility - maps to regular settings
+    return getSettings(settingName, defaultValue);
+  };
+
+  const getSystemConfig = (): SystemConfiguration | null => {
+    return systemConfigStore.config;
+  };
+
+  const getSystemConfigField = (
+    fieldName: keyof SystemConfiguration,
+    defaultValue: unknown = null
+  ): unknown => {
+    const systemConfig = systemConfigStore.config;
+    if (!systemConfig) return defaultValue;
+    return systemConfig[fieldName] || defaultValue;
+  };
+
+  const isSystemConfigLoaded = (): boolean => {
+    return systemConfigStore.isInitialized;
+  };
+
+  const refreshSystemConfig = async () => {
+    try {
+      await systemConfigStore.refreshConfig();
+    } catch (error) {
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to refresh system config')
+      );
+    }
+  };
 
   return {
-    // Configuration data
-    roles: config.roles,
-    permissions: config.permissions,
-    subscriptionPlans: config.subscriptionPlans,
-    featureFlags: config.featureFlags,
-    settings: config.settings,
-
-    // Loading states
-    loading: isLoading,
-    error,
-    isInitialized,
-
-    // Helper functions
-    isFeatureEnabled: (flagName: string) =>
-      SystemConfigHelper.isFeatureEnabled(flagName, user),
-
-    getEnabledFeatures: () => SystemConfigHelper.getEnabledFeatures(user),
-
-    hasFeatureAccess: (
-      feature: string,
-      requiredRole?: string,
-      requiredSubscription?: string
-    ) =>
-      SystemConfigHelper.hasFeatureAccess(
-        feature,
-        user,
-        requiredRole,
-        requiredSubscription
-      ),
-
-    getSettingValue: <T = any>(settingName: string, defaultValue?: T) =>
-      SystemConfigHelper.getSettingValue<T>(settingName, defaultValue),
-
-    getPublicSettings: () => SystemConfigHelper.getPublicSettings(),
-
-    getUserSubscriptionDetails: () =>
-      SystemConfigHelper.getUserSubscriptionDetails(user),
-
-    isSubscriptionActive: () => SystemConfigHelper.isSubscriptionActive(user),
-
-    getAvailableSubscriptionPlans: () =>
-      SystemConfigHelper.getAvailableSubscriptionPlans(user),
-
-    getSystemStats: () => SystemConfigHelper.getSystemStats(),
+    systemConfig: systemConfigStore.config,
+    isLoading: systemConfigStore.isLoading,
+    error: systemConfigStore.error,
+    getFeatureFlag,
+    getSettings,
+    getAdvancedSettings,
+    getSystemConfig,
+    getSystemConfigField,
+    isSystemConfigLoaded,
+    refreshSystemConfig,
   };
 };
 
-/**
- * React hook for feature flag checking
- */
 export const useFeatureFlag = (flagName: string) => {
-  const { data: user } = useUserDataZState();
-  const { isInitialized } = useSystemConfigStore();
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { getFeatureFlag } = useSystemConfig();
 
-  useEffect(() => {
-    if (!isInitialized) {
-      setLoading(true);
-      return;
-    }
-
-    const enabled = SystemConfigHelper.isFeatureEnabled(flagName, user);
-    setIsEnabled(enabled);
-    setLoading(false);
-  }, [flagName, user, isInitialized]);
+  const isEnabled = getFeatureFlag(flagName, false);
 
   return {
     isEnabled,
-    loading,
-    isInitialized,
+    flagName,
   };
 };
 
-/**
- * React hook for subscription management
- */
 export const useSubscription = () => {
-  const { data: user } = useUserDataZState();
-  const { config, isInitialized } = useSystemConfigStore();
+  const { getSettings } = useSystemConfig();
+
+  const subscriptionSettings = getSettings('subscriptions', {}) as Record<
+    string,
+    unknown
+  >;
 
   return {
-    // User subscription info
-    subscription: user?.subscription,
-    currentPlan: user?.subscription?.plan,
-    isActive: SystemConfigHelper.isSubscriptionActive(user),
-
-    // Plan details
-    currentPlanDetails: SystemConfigHelper.getUserSubscriptionDetails(user),
-    availablePlans: SystemConfigHelper.getAvailableSubscriptionPlans(user),
-
-    // System data
-    allPlans: config.subscriptionPlans,
-    isInitialized,
-
-    // Helper functions
-    canUpgradeTo: (planName: string) => {
-      const currentPlan = user?.subscription?.plan;
-      if (!currentPlan) return planName !== 'FREE';
-
-      const subscriptionService = import('@/services/subscriptionService').then(
-        (m) => m.default
-      );
-      return subscriptionService.then((service) =>
-        service.isDynamicPlanUpgrade(currentPlan, planName)
-      );
-    },
-
-    getPlanFeatures: (planName: string) => {
-      const plan = config.subscriptionPlans.find((p) => p.name === planName);
-      return plan?.features || [];
-    },
-
-    getPlanLimits: (planName: string) => {
-      const plan = config.subscriptionPlans.find((p) => p.name === planName);
-      return plan?.limits || null;
-    },
+    subscriptionSettings,
+    isSubscriptionEnabled: Boolean(subscriptionSettings?.enabled),
+    subscriptionProvider: subscriptionSettings?.provider || 'stripe',
+    subscriptionPlans: subscriptionSettings?.plans || [],
   };
 };
 
-/**
- * React hook for role and permission checking
- */
 export const usePermissions = () => {
-  const { data: user } = useUserDataZState();
-  const { config, isInitialized } = useSystemConfigStore();
+  const { getSettings } = useSystemConfig();
+
+  const permissionsSettings = getSettings('permissions', {}) as Record<
+    string,
+    unknown
+  >;
+
+  const checkPermission = (permission: string): boolean => {
+    const permissions = (permissionsSettings?.permissions as string[]) || [];
+    return permissions.includes(permission);
+  };
+
+  const hasRole = (role: string): boolean => {
+    const roles = (permissionsSettings?.roles as string[]) || [];
+    return roles.includes(role);
+  };
+
+  const hasAnyRole = (roles: string[]): boolean => {
+    const userRoles = (permissionsSettings?.roles as string[]) || [];
+    return roles.some((role) => userRoles.includes(role));
+  };
+
+  const hasAllRoles = (roles: string[]): boolean => {
+    const userRoles = (permissionsSettings?.roles as string[]) || [];
+    return roles.every((role) => userRoles.includes(role));
+  };
+
+  const checkFeatureAccess = (feature: string): boolean => {
+    const featurePermissions =
+      (permissionsSettings?.featurePermissions as Record<string, boolean>) ||
+      {};
+    return featurePermissions[feature] || false;
+  };
 
   return {
-    // User role info
-    userRole: user?.role,
-
-    // System data
-    roles: config.roles,
-    permissions: config.permissions,
-    isInitialized,
-
-    // Helper functions
-    hasPermission: (permission: string) => {
-      if (!user) return false;
-
-      const roleService = import('@/services/roleService').then(
-        (m) => m.default
-      );
-      return roleService.then((service) => {
-        const result = service.hasPermission(user, permission as any);
-        return result.hasPermission;
-      });
-    },
-
-    hasRole: (role: string) => {
-      if (!user) return false;
-
-      const roleService = import('@/services/roleService').then(
-        (m) => m.default
-      );
-      return roleService.then((service) => {
-        const result = service.hasRoleLevel(user, role as any);
-        return result.hasPermission;
-      });
-    },
-
-    getUserRoleDetails: () => {
-      if (!user?.role) return null;
-      return config.roles.find((r) => r.name === user.role);
-    },
+    permissionsSettings,
+    checkPermission,
+    hasRole,
+    hasAnyRole,
+    hasAllRoles,
+    checkFeatureAccess,
   };
 };
 
-/**
- * React hook for system settings
- */
 export const useSettings = () => {
-  const { config, isInitialized } = useSystemConfigStore();
-  const [publicSettings, setPublicSettings] = useState<Record<string, any>>({});
+  const { getSettings } = useSystemConfig();
 
-  useEffect(() => {
-    if (!isInitialized) return;
+  const getBooleanSetting = (
+    settingName: string,
+    defaultValue: boolean = false
+  ): boolean => {
+    const value = getSettings(settingName, defaultValue);
+    return Boolean(value);
+  };
 
-    const pubSettings = SystemConfigHelper.getPublicSettings();
-    setPublicSettings(pubSettings);
-  }, [config.settings, isInitialized]);
+  const getStringSetting = (
+    settingName: string,
+    defaultValue: string = ''
+  ): string => {
+    const value = getSettings(settingName, defaultValue);
+    return String(value);
+  };
+
+  const getNumberSetting = (
+    settingName: string,
+    defaultValue: number = 0
+  ): number => {
+    const value = getSettings(settingName, defaultValue);
+    return Number(value);
+  };
+
+  const getObjectSetting = (
+    settingName: string,
+    defaultValue: Record<string, unknown> = {}
+  ): Record<string, unknown> => {
+    const value = getSettings(settingName, defaultValue);
+    return value as Record<string, unknown>;
+  };
+
+  const getArraySetting = (
+    settingName: string,
+    defaultValue: unknown[] = []
+  ): unknown[] => {
+    const value = getSettings(settingName, defaultValue);
+    return value as unknown[];
+  };
 
   return {
-    settings: config.settings,
-    publicSettings,
-    isInitialized,
-
-    // Helper functions
-    getSetting: <T = any>(settingName: string, defaultValue?: T) =>
-      SystemConfigHelper.getSettingValue<T>(settingName, defaultValue),
-
-    getPublicSetting: (settingName: string) => publicSettings[settingName],
+    getBooleanSetting,
+    getStringSetting,
+    getNumberSetting,
+    getObjectSetting,
+    getArraySetting,
   };
 };
-
-export default useSystemConfig;

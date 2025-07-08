@@ -1,46 +1,44 @@
 import { useEffect, useState } from 'react';
-import { useToast } from './useToast';
 
-interface UseAsyncDataOptions<T> {
+interface UseAsyncDataOptions {
   autoLoad?: boolean;
   dependencies?: React.DependencyList;
 }
 
-export const useAsyncData = <T = unknown>(
-  loadData: () => Promise<T>,
-  options: UseAsyncDataOptions<T> = {}
-) => {
-  const { autoLoad = true, dependencies = [] } = options;
+interface UseAsyncDataReturn<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+  reload: () => Promise<void>;
+}
 
+export const useAsyncData = <T>(
+  loadData: () => Promise<T>,
+  options: UseAsyncDataOptions = {}
+): UseAsyncDataReturn<T> => {
+  const { autoLoad = true, dependencies = [] } = options;
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(autoLoad);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
-  const { showRefreshSuccess, showLoadError } = useToast();
-
-  const refresh = useCallback(() => {
-    loadData(true);
-  }, [loadData]);
-
-  const reload = useCallback(() => {
-    loadData(false);
-  }, [loadData]);
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await loadData();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (autoLoad) {
-      loadData(false);
+      load();
     }
-  }, dependencies);
+  }, [autoLoad, loadData, ...dependencies]);
 
-  return {
-    data,
-    loading,
-    refreshing,
-    error,
-    loadData,
-    refresh,
-    reload,
-    setData,
-  };
+  return { data, loading, error, reload: load };
 };

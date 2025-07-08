@@ -29,25 +29,25 @@ const NetworkStatusHOC: React.FC = () => {
           connectionType: status.connectionType,
         });
       } catch (error) {
-        console.error('Failed to fetch system config:', error);
-        // Still use the default config even if fetch fails
-        systemConfigZState.setData({ ...DEFAULT_SYSTEM_CONFIG });
+        console.error('Failed to get network status:', error);
+        // Use default network status on error
+        setNetworkStatus({ connected: true, connectionType: 'unknown' });
       }
     };
 
-    fetchSystemConfig();
-  }, [systemConfigZState]);
+    initializeNetworkStatus();
+  }, []);
 
   // Handle online status changes
   useEffect(() => {
     const handleOnline = () => {
       console.log('App is back online');
-      setIsOnline(true);
+      setNetworkStatus((prev) => ({ ...prev, connected: true }));
     };
 
     const handleOffline = () => {
       console.log('App is offline');
-      setIsOnline(false);
+      setNetworkStatus((prev) => ({ ...prev, connected: false }));
     };
 
     window.addEventListener('online', handleOnline);
@@ -105,7 +105,7 @@ const NetworkStatusHOC: React.FC = () => {
       if (countdownTimer) clearInterval(countdownTimer);
       if (overlayTimer) clearTimeout(overlayTimer);
     };
-  }, [networkStatus.connected, showOverlay]);
+  }, [networkStatus.connected, showOverlay, isTransitioning]);
 
   // Manual retry function
   const handleRetry = async () => {
@@ -116,6 +116,7 @@ const NetworkStatusHOC: React.FC = () => {
         connectionType: status.connectionType,
       });
     } catch (error) {
+      console.error('Failed to retry network status:', error);
       // Fallback check
       setNetworkStatus({
         connected: navigator.onLine,
