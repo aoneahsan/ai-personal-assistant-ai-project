@@ -1,1 +1,2 @@
-export { TourManagement } from './TourManagement';
+import TourManagement from './TourManagement';
+export default TourManagement;

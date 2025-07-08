@@ -1,1 +1,2 @@
-export { AnalyticsDashboard } from './AnalyticsDashboard';
+import AnalyticsDashboard from './AnalyticsDashboard';
+export default AnalyticsDashboard;

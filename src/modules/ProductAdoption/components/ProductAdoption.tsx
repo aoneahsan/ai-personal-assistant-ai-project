@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { TabView, TabPanel } from 'primereact/tabview';
-import { Button } from 'primereact/button';
-import { TourManagement } from './Management';
-import { TourBuilder } from './TourBuilder';
-import { AnalyticsDashboard } from './Analytics';
-import { Tour } from '../types';
-import { demoDataService } from '../services';
 import { useToast } from '@/hooks/useToast';
+import { Button } from 'primereact/button';
+import { TabPanel, TabView } from 'primereact/tabview';
+import React, { useState } from 'react';
+import { demoDataService } from '../services';
+import { Tour } from '../types';
+import AnalyticsDashboard from './Analytics';
+import TourManagement from './Management';
 import './ProductAdoption.scss';
+import { TourBuilder } from './TourBuilder';
 
-export const ProductAdoption: React.FC = () => {
+const ProductAdoption: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -51,30 +51,33 @@ export const ProductAdoption: React.FC = () => {
     try {
       const result = await demoDataService.initializeDemoData();
       if (result.success) {
-        showToast('success', 'Demo Data Initialized', result.message);
+        showToast.showSuccess('Demo Data Initialized', result.message);
         // Refresh the page to show new data
         window.location.reload();
       } else {
-        showToast('warn', 'Demo Data', result.message);
+        showToast.showWarning('Demo Data', result.message);
       }
     } catch (error) {
-      showToast('error', 'Error', 'Failed to initialize demo data');
+      showToast.showError('Error', 'Failed to initialize demo data');
     } finally {
       setIsLoadingDemo(false);
     }
   };
 
   return (
-    <div className="product-adoption">
-      <div className="product-adoption-header">
+    <div className='product-adoption'>
+      <div className='product-adoption-header'>
         <div>
           <h1>Product Adoption</h1>
-          <p>Create and manage product tours to guide users through your application</p>
+          <p>
+            Create and manage product tours to guide users through your
+            application
+          </p>
         </div>
         <Button
-          label="Initialize Demo Data"
-          icon="pi pi-database"
-          className="p-button-outlined p-button-secondary"
+          label='Initialize Demo Data'
+          icon='pi pi-database'
+          className='p-button-outlined p-button-secondary'
           onClick={handleInitializeDemoData}
           loading={isLoadingDemo}
           disabled={isLoadingDemo}
@@ -84,9 +87,12 @@ export const ProductAdoption: React.FC = () => {
       <TabView
         activeIndex={activeTab}
         onTabChange={(e) => setActiveTab(e.index)}
-        className="product-adoption-tabs"
+        className='product-adoption-tabs'
       >
-        <TabPanel header="Tours" leftIcon="pi pi-list">
+        <TabPanel
+          header='Tours'
+          leftIcon='pi pi-list'
+        >
           <TourManagement
             onCreateTour={handleCreateTour}
             onEditTour={handleEditTour}
@@ -94,13 +100,19 @@ export const ProductAdoption: React.FC = () => {
           />
         </TabPanel>
 
-        <TabPanel header="Analytics" leftIcon="pi pi-chart-line">
+        <TabPanel
+          header='Analytics'
+          leftIcon='pi pi-chart-line'
+        >
           <AnalyticsDashboard />
         </TabPanel>
 
-        <TabPanel header="Widgets" leftIcon="pi pi-th-large">
-          <div className="coming-soon">
-            <i className="pi pi-clock" />
+        <TabPanel
+          header='Widgets'
+          leftIcon='pi pi-th-large'
+        >
+          <div className='coming-soon'>
+            <i className='pi pi-clock' />
             <h3>Widgets Coming Soon</h3>
             <p>Create tooltips, banners, and other engagement widgets</p>
           </div>
@@ -109,7 +121,7 @@ export const ProductAdoption: React.FC = () => {
         {(isCreating || editingTour) && (
           <TabPanel
             header={editingTour ? 'Edit Tour' : 'Create Tour'}
-            leftIcon="pi pi-pencil"
+            leftIcon='pi pi-pencil'
           >
             <TourBuilder
               tour={editingTour || undefined}
@@ -122,3 +134,5 @@ export const ProductAdoption: React.FC = () => {
     </div>
   );
 };
+
+export default ProductAdoption;

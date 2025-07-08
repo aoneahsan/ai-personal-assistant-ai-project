@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import { Button } from 'primereact/button';
+import { Calendar } from 'primereact/calendar';
 import { Card } from 'primereact/card';
 import { Chart } from 'primereact/chart';
-import { Calendar } from 'primereact/calendar';
+import { Column } from 'primereact/column';
+import { DataTable } from 'primereact/datatable';
 import { Dropdown } from 'primereact/dropdown';
 import { ProgressBar } from 'primereact/progressbar';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
+import React, { useState } from 'react';
 import { useAnalyticsOverview } from '../../hooks';
 import { AnalyticsFilter, DateRange } from '../../types';
-import { formatNumber, formatPercentage, formatDuration } from '../../utils';
+import { formatDuration, formatNumber, formatPercentage } from '../../utils';
 import './AnalyticsDashboard.scss';
 
-export const AnalyticsDashboard: React.FC = () => {
+const AnalyticsDashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
     end: new Date(),
@@ -93,84 +93,88 @@ export const AnalyticsDashboard: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="analytics-loading">Loading analytics...</div>;
+    return <div className='analytics-loading'>Loading analytics...</div>;
   }
 
   return (
-    <div className="analytics-dashboard">
-      <div className="analytics-header">
+    <div className='analytics-dashboard'>
+      <div className='analytics-header'>
         <h2>Product Adoption Analytics</h2>
-        <div className="analytics-controls">
+        <div className='analytics-controls'>
           <Dropdown
             value={dateRange.preset}
             options={datePresets}
             onChange={(e) => handleDatePresetChange(e.value)}
-            placeholder="Select date range"
+            placeholder='Select date range'
           />
           {dateRange.preset === 'custom' && (
             <>
               <Calendar
                 value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.value as Date })}
-                placeholder="Start date"
+                onChange={(e) =>
+                  setDateRange({ ...dateRange, start: e.value as Date })
+                }
+                placeholder='Start date'
               />
               <Calendar
                 value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.value as Date })}
-                placeholder="End date"
+                onChange={(e) =>
+                  setDateRange({ ...dateRange, end: e.value as Date })
+                }
+                placeholder='End date'
               />
             </>
           )}
           <Button
-            icon="pi pi-refresh"
-            className="p-button-outlined"
+            icon='pi pi-refresh'
+            className='p-button-outlined'
             onClick={() => refetch()}
           />
         </div>
       </div>
 
-      <div className="analytics-overview">
-        <Card className="metric-card">
-          <div className="metric-content">
-            <span className="metric-label">Total Tours</span>
-            <span className="metric-value">{analytics?.totalTours || 0}</span>
-            <span className="metric-sublabel">
+      <div className='analytics-overview'>
+        <Card className='metric-card'>
+          <div className='metric-content'>
+            <span className='metric-label'>Total Tours</span>
+            <span className='metric-value'>{analytics?.totalTours || 0}</span>
+            <span className='metric-sublabel'>
               {analytics?.activeTours || 0} active
             </span>
           </div>
         </Card>
 
-        <Card className="metric-card">
-          <div className="metric-content">
-            <span className="metric-label">Impressions</span>
-            <span className="metric-value">
+        <Card className='metric-card'>
+          <div className='metric-content'>
+            <span className='metric-label'>Impressions</span>
+            <span className='metric-value'>
               {formatNumber(analytics?.totalImpressions || 0)}
             </span>
           </div>
         </Card>
 
-        <Card className="metric-card">
-          <div className="metric-content">
-            <span className="metric-label">Tour Starts</span>
-            <span className="metric-value">
+        <Card className='metric-card'>
+          <div className='metric-content'>
+            <span className='metric-label'>Tour Starts</span>
+            <span className='metric-value'>
               {formatNumber(analytics?.totalStarts || 0)}
             </span>
           </div>
         </Card>
 
-        <Card className="metric-card">
-          <div className="metric-content">
-            <span className="metric-label">Completions</span>
-            <span className="metric-value">
+        <Card className='metric-card'>
+          <div className='metric-content'>
+            <span className='metric-label'>Completions</span>
+            <span className='metric-value'>
               {formatNumber(analytics?.totalCompletions || 0)}
             </span>
           </div>
         </Card>
 
-        <Card className="metric-card">
-          <div className="metric-content">
-            <span className="metric-label">Avg. Completion Rate</span>
-            <span className="metric-value">
+        <Card className='metric-card'>
+          <div className='metric-content'>
+            <span className='metric-label'>Avg. Completion Rate</span>
+            <span className='metric-value'>
               {formatPercentage(analytics?.averageCompletionRate || 0)}
             </span>
             <ProgressBar
@@ -182,29 +186,42 @@ export const AnalyticsDashboard: React.FC = () => {
         </Card>
       </div>
 
-      <div className="analytics-charts">
-        <Card title="Tour Performance Overview" className="chart-card">
-          <Chart type="bar" data={chartData} options={chartOptions} />
+      <div className='analytics-charts'>
+        <Card
+          title='Tour Performance Overview'
+          className='chart-card'
+        >
+          <Chart
+            type='bar'
+            data={chartData}
+            options={chartOptions}
+          />
         </Card>
 
-        <Card title="Top Performing Tours" className="performance-card">
+        <Card
+          title='Top Performing Tours'
+          className='performance-card'
+        >
           <DataTable
             value={analytics?.topPerformingTours || []}
             paginator
             rows={5}
-            emptyMessage="No tours found"
+            emptyMessage='No tours found'
           >
-            <Column field="tourName" header="Tour Name" />
             <Column
-              field="impressions"
-              header="Impressions"
+              field='tourName'
+              header='Tour Name'
+            />
+            <Column
+              field='impressions'
+              header='Impressions'
               body={(rowData) => formatNumber(rowData.impressions)}
             />
             <Column
-              field="completionRate"
-              header="Completion Rate"
+              field='completionRate'
+              header='Completion Rate'
               body={(rowData) => (
-                <div className="completion-rate">
+                <div className='completion-rate'>
                   <span>{formatPercentage(rowData.completionRate)}</span>
                   <ProgressBar
                     value={rowData.completionRate}
@@ -215,16 +232,16 @@ export const AnalyticsDashboard: React.FC = () => {
               )}
             />
             <Column
-              field="averageTimeToComplete"
-              header="Avg. Time"
+              field='averageTimeToComplete'
+              header='Avg. Time'
               body={(rowData) => formatDuration(rowData.averageTimeToComplete)}
             />
             <Column
               body={(rowData) => (
                 <Button
-                  icon="pi pi-chart-line"
-                  className="p-button-text p-button-sm"
-                  tooltip="View details"
+                  icon='pi pi-chart-line'
+                  className='p-button-text p-button-sm'
+                  tooltip='View details'
                 />
               )}
             />
@@ -232,23 +249,36 @@ export const AnalyticsDashboard: React.FC = () => {
         </Card>
       </div>
 
-      <Card title="Recent Activity" className="activity-card">
+      <Card
+        title='Recent Activity'
+        className='activity-card'
+      >
         <DataTable
           value={analytics?.recentActivity || []}
           paginator
           rows={10}
-          emptyMessage="No recent activity"
+          emptyMessage='No recent activity'
         >
           <Column
-            field="timestamp"
-            header="Time"
+            field='timestamp'
+            header='Time'
             body={(rowData) => new Date(rowData.timestamp).toLocaleString()}
           />
-          <Column field="action" header="Action" />
-          <Column field="tourName" header="Tour" />
-          <Column field="userEmail" header="User" />
+          <Column
+            field='action'
+            header='Action'
+          />
+          <Column
+            field='tourName'
+            header='Tour'
+          />
+          <Column
+            field='userEmail'
+            header='User'
+          />
         </DataTable>
       </Card>
     </div>
   );
 };
+export default AnalyticsDashboard;
