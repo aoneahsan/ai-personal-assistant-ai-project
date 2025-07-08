@@ -59,7 +59,7 @@ export interface UserActivity {
   feature?: string;
   timestamp: Date | Timestamp;
   sessionId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SystemMetric {
@@ -67,7 +67,7 @@ export interface SystemMetric {
   metricType: 'response_time' | 'error_rate' | 'throughput' | 'uptime';
   value: number;
   timestamp: Date | Timestamp;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 interface GetAnalyticsParams {
@@ -222,8 +222,8 @@ class SystemAnalyticsService {
 
   // Get analytics data for a specific date range
   async getAnalyticsData(
-    startDate?: Date,
-    endDate?: Date
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<AnalyticsData> {
     try {
       const [
@@ -234,11 +234,11 @@ class SystemAnalyticsService {
         topFeatures,
         geograficalData,
       ] = await Promise.all([
-        this.getUserGrowthData(startDate, endDate),
-        this.getMessageVolumeData(startDate, endDate),
-        this.getUserEngagementData(startDate, endDate),
+        this.getUserGrowthData(),
+        this.getMessageVolumeData(),
+        this.getUserEngagementData(),
         this.getSystemMetricsData(),
-        this.getTopFeaturesData(startDate, endDate),
+        this.getTopFeaturesData(),
         this.getGeograficalData(),
       ]);
 
@@ -259,8 +259,8 @@ class SystemAnalyticsService {
 
   // Get user growth data
   private async getUserGrowthData(
-    startDate?: Date,
-    endDate?: Date
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<{
     labels: string[];
     data: number[];
@@ -290,7 +290,7 @@ class SystemAnalyticsService {
 
           labels.push(months[5 - i]);
           data.push(userCount);
-        } catch (error) {
+        } catch (_error) {
           // Fallback to mock data for this month
           labels.push(months[5 - i]);
           data.push(Math.floor(Math.random() * 200) + 100);
@@ -309,8 +309,8 @@ class SystemAnalyticsService {
 
   // Get message volume data
   private async getMessageVolumeData(
-    startDate?: Date,
-    endDate?: Date
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<{
     labels: string[];
     data: number[];
@@ -339,7 +339,7 @@ class SystemAnalyticsService {
 
           labels.push(`Week ${4 - i}`);
           data.push(messageCount);
-        } catch (error) {
+        } catch (_error) {
           // Fallback to mock data
           labels.push(`Week ${4 - i}`);
           data.push(Math.floor(Math.random() * 2000) + 2000);
@@ -358,8 +358,8 @@ class SystemAnalyticsService {
 
   // Get user engagement data
   private async getUserEngagementData(
-    startDate?: Date,
-    endDate?: Date
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<{
     dailyActiveUsers: number;
     weeklyActiveUsers: number;
@@ -499,8 +499,8 @@ class SystemAnalyticsService {
 
   // Get top features usage data
   private async getTopFeaturesData(
-    startDate?: Date,
-    endDate?: Date
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<
     Array<{
       name: string;
@@ -604,11 +604,11 @@ class SystemAnalyticsService {
   // Export analytics data
   async exportAnalyticsData(
     format: 'json' | 'csv' = 'json',
-    startDate?: Date,
-    endDate?: Date
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<string> {
     try {
-      const data = await this.getAnalyticsData(startDate, endDate);
+      const data = await this.getAnalyticsData(_startDate, _endDate);
 
       if (format === 'json') {
         return JSON.stringify(data, null, 2);

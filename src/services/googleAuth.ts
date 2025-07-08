@@ -106,21 +106,28 @@ export const googleAuthService: GoogleAuthService = {
         consoleLog('Firebase popup sign-in successful');
         return userCredential;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('Error signing in with Google:', error);
 
       // Handle specific error cases
-      if (error.code === 'auth/popup-closed-by-user') {
+      const errorCode =
+        error && typeof error === 'object' && 'code' in error ? error.code : '';
+      const errorMessage =
+        error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : '';
+
+      if (errorCode === 'auth/popup-closed-by-user') {
         throw new Error('Sign in was cancelled. Please try again.');
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (errorCode === 'auth/popup-blocked') {
         throw new Error(
           'Pop-up was blocked. Please allow pop-ups and try again.'
         );
-      } else if (error.code === 'auth/cancelled-popup-request') {
+      } else if (errorCode === 'auth/cancelled-popup-request') {
         throw new Error('Another sign-in attempt is in progress.');
       } else if (
-        error.message?.includes('user cancelled') ||
-        error.message?.includes('canceled')
+        errorMessage?.includes('user cancelled') ||
+        errorMessage?.includes('canceled')
       ) {
         throw new Error('Sign in was cancelled. Please try again.');
       }

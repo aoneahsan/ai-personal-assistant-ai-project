@@ -1,5 +1,9 @@
-import { consoleError, consoleLog, consoleWarn } from '@/utils/helpers/consoleHelper';
 import { logError, logInfo } from '@/sentryErrorLogging';
+import {
+  consoleError,
+  consoleLog,
+  consoleWarn,
+} from '@/utils/helpers/consoleHelper';
 
 interface ServiceWorkerState {
   isSupported: boolean;
@@ -44,7 +48,9 @@ class ServiceWorkerService {
   }
 
   // Register the service worker
-  async register(scriptUrl: string = '/sw.js'): Promise<ServiceWorkerRegistration | null> {
+  async register(
+    scriptUrl: string = '/sw.js'
+  ): Promise<ServiceWorkerRegistration | null> {
     if (!this.state.isSupported) {
       consoleWarn('Service Workers are not supported in this browser');
       return null;
@@ -60,8 +66,8 @@ class ServiceWorkerService {
       });
 
       this.state.registration = registration;
-      this.updateState({ 
-        isRegistered: true, 
+      this.updateState({
+        isRegistered: true,
         isInstalling: false,
         isControlling: !!navigator.serviceWorker.controller,
       });
@@ -75,18 +81,23 @@ class ServiceWorkerService {
 
       consoleLog('Service worker registered successfully:', registration);
       return registration;
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       consoleError('Service worker registration failed:', error);
-      
-      logError(error instanceof Error ? error : new Error('Service worker registration failed'), {
-        scriptUrl,
-        errorType: 'service_worker_registration_error',
-      });
 
-      this.updateState({ 
-        isInstalling: false, 
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Service worker registration failed'),
+        {
+          scriptUrl,
+          errorType: 'service_worker_registration_error',
+        }
+      );
+
+      this.updateState({
+        isInstalling: false,
         isRegistered: false,
         error: errorMessage,
       });
@@ -104,7 +115,7 @@ class ServiceWorkerService {
 
     try {
       const success = await this.state.registration.unregister();
-      
+
       if (success) {
         this.updateState({
           isRegistered: false,
@@ -112,7 +123,7 @@ class ServiceWorkerService {
           registration: null,
           error: null,
         });
-        
+
         consoleLog('Service worker unregistered successfully');
         logInfo('Service worker unregistered');
       }
@@ -120,7 +131,11 @@ class ServiceWorkerService {
       return success;
     } catch (error) {
       consoleError('Error unregistering service worker:', error);
-      logError(error instanceof Error ? error : new Error('Service worker unregistration failed'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Service worker unregistration failed')
+      );
       return false;
     }
   }
@@ -138,7 +153,11 @@ class ServiceWorkerService {
       consoleLog('Service worker update check completed');
     } catch (error) {
       consoleError('Error updating service worker:', error);
-      logError(error instanceof Error ? error : new Error('Service worker update failed'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Service worker update failed')
+      );
     }
   }
 
@@ -165,7 +184,9 @@ class ServiceWorkerService {
     }
 
     try {
-      const response = await this.sendMessageWithResponse({ type: 'GET_CACHE_STATS' });
+      const response = await this.sendMessageWithResponse({
+        type: 'GET_CACHE_STATS',
+      });
       return response?.stats || null;
     } catch (error) {
       consoleError('Error getting cache stats:', error);
@@ -181,11 +202,11 @@ class ServiceWorkerService {
     }
 
     try {
-      await this.sendMessageWithResponse({ 
-        type: 'CLEAR_CACHE', 
-        cacheName 
+      await this.sendMessageWithResponse({
+        type: 'CLEAR_CACHE',
+        cacheName,
       });
-      
+
       consoleLog('Cache cleared:', cacheName);
       return true;
     } catch (error) {
@@ -195,7 +216,10 @@ class ServiceWorkerService {
   }
 
   // Schedule background sync
-  async scheduleBackgroundSync(tag: string, data?: Record<string, unknown>): Promise<boolean> {
+  async scheduleBackgroundSync(
+    tag: string,
+    data?: Record<string, unknown>
+  ): Promise<boolean> {
     if (!this.state.registration) {
       consoleWarn('No service worker registration for background sync');
       return false;
@@ -209,23 +233,31 @@ class ServiceWorkerService {
 
       // Register background sync
       await this.state.registration.sync.register(tag);
-      
+
       consoleLog('Background sync scheduled:', tag);
       logInfo('Background sync scheduled', { tag, hasData: !!data });
       return true;
     } catch (error) {
       consoleError('Error scheduling background sync:', error);
-      logError(error instanceof Error ? error : new Error('Background sync scheduling failed'), {
-        tag,
-        errorType: 'background_sync_error',
-      });
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Background sync scheduling failed'),
+        {
+          tag,
+          errorType: 'background_sync_error',
+        }
+      );
       return false;
     }
   }
 
   // Check if background sync is supported
   isBackgroundSyncSupported(): boolean {
-    return 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype;
+    return (
+      'serviceWorker' in navigator &&
+      'sync' in window.ServiceWorkerRegistration.prototype
+    );
   }
 
   // Get current state
@@ -236,13 +268,15 @@ class ServiceWorkerService {
   // Subscribe to state changes
   onStateChange(callback: (state: ServiceWorkerState) => void): () => void {
     this.stateChangeCallbacks.push(callback);
-    
+
     // Call immediately with current state
     callback(this.getState());
 
     // Return unsubscribe function
     return () => {
-      this.stateChangeCallbacks = this.stateChangeCallbacks.filter(cb => cb !== callback);
+      this.stateChangeCallbacks = this.stateChangeCallbacks.filter(
+        (cb) => cb !== callback
+      );
     };
   }
 
@@ -251,7 +285,9 @@ class ServiceWorkerService {
     this.updateAvailableCallbacks.push(callback);
 
     return () => {
-      this.updateAvailableCallbacks = this.updateAvailableCallbacks.filter(cb => cb !== callback);
+      this.updateAvailableCallbacks = this.updateAvailableCallbacks.filter(
+        (cb) => cb !== callback
+      );
     };
   }
 
@@ -271,7 +307,9 @@ class ServiceWorkerService {
   }
 
   // Send message and wait for response
-  private sendMessageWithResponse(message: Record<string, unknown>): Promise<any> {
+  private sendMessageWithResponse(
+    message: Record<string, unknown>
+  ): Promise<unknown> {
     return new Promise((resolve, reject) => {
       if (!navigator.serviceWorker.controller) {
         reject(new Error('No service worker controller'));
@@ -279,7 +317,7 @@ class ServiceWorkerService {
       }
 
       const messageChannel = new MessageChannel();
-      
+
       messageChannel.port1.onmessage = (event) => {
         resolve(event.data);
       };
@@ -288,7 +326,9 @@ class ServiceWorkerService {
         reject(error);
       };
 
-      navigator.serviceWorker.controller.postMessage(message, [messageChannel.port2]);
+      navigator.serviceWorker.controller.postMessage(message, [
+        messageChannel.port2,
+      ]);
 
       // Timeout after 10 seconds
       setTimeout(() => {
@@ -298,7 +338,10 @@ class ServiceWorkerService {
   }
 
   // Store data for offline sync
-  private async storeOfflineData(tag: string, data: Record<string, unknown>): Promise<void> {
+  private async storeOfflineData(
+    tag: string,
+    data: Record<string, unknown>
+  ): Promise<void> {
     try {
       // This would typically use IndexedDB or localStorage
       // For now, we'll use localStorage as a simple implementation
@@ -333,7 +376,9 @@ class ServiceWorkerService {
   }
 
   // Setup registration-specific event listeners
-  private setupRegistrationEventListeners(registration: ServiceWorkerRegistration): void {
+  private setupRegistrationEventListeners(
+    registration: ServiceWorkerRegistration
+  ): void {
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
       if (!newWorker) return;
@@ -347,34 +392,34 @@ class ServiceWorkerService {
             if (navigator.serviceWorker.controller) {
               // New update available
               consoleLog('New service worker installed, update available');
-              this.updateState({ 
-                isInstalling: false, 
-                isWaiting: true 
+              this.updateState({
+                isInstalling: false,
+                isWaiting: true,
               });
               this.notifyUpdateAvailable();
             } else {
               // First install
               consoleLog('Service worker installed for the first time');
-              this.updateState({ 
-                isInstalling: false, 
-                isControlling: true 
+              this.updateState({
+                isInstalling: false,
+                isControlling: true,
               });
             }
             break;
 
           case 'activated':
             consoleLog('Service worker activated');
-            this.updateState({ 
-              isWaiting: false, 
-              isControlling: true 
+            this.updateState({
+              isWaiting: false,
+              isControlling: true,
             });
             break;
 
           case 'redundant':
             consoleLog('Service worker became redundant');
-            this.updateState({ 
-              isInstalling: false, 
-              isWaiting: false 
+            this.updateState({
+              isInstalling: false,
+              isWaiting: false,
             });
             break;
         }
@@ -383,17 +428,27 @@ class ServiceWorkerService {
   }
 
   // Handle messages from service worker
-  private handleServiceWorkerMessage(message: any): void {
-    if (!message || !message.type) return;
+  private handleServiceWorkerMessage(message: unknown): void {
+    if (!message || typeof message !== 'object' || !('type' in message)) return;
 
-    switch (message.type) {
+    const messageObj = message as {
+      type: string;
+      action?: unknown;
+      data?: unknown;
+    };
+
+    switch (messageObj.type) {
       case 'FORCE_RELOAD':
         consoleLog('Service worker requested force reload');
         this.forceReload();
         break;
 
       case 'NOTIFICATION_ACTION':
-        consoleLog('Notification action received:', message.action, message.data);
+        consoleLog(
+          'Notification action received:',
+          messageObj.action,
+          messageObj.data
+        );
         // Handle notification actions here
         break;
 
@@ -405,12 +460,12 @@ class ServiceWorkerService {
   // Update internal state and notify callbacks
   private updateState(updates: Partial<ServiceWorkerState>): void {
     this.state = { ...this.state, ...updates };
-    this.stateChangeCallbacks.forEach(callback => callback(this.getState()));
+    this.stateChangeCallbacks.forEach((callback) => callback(this.getState()));
   }
 
   // Notify update available callbacks
   private notifyUpdateAvailable(): void {
-    this.updateAvailableCallbacks.forEach(callback => callback());
+    this.updateAvailableCallbacks.forEach((callback) => callback());
   }
 }
 

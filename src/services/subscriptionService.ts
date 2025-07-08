@@ -199,7 +199,6 @@ export class SubscriptionService {
       }
 
       // Validate plans exist in dynamic configuration
-      const currentPlanDetails = this.getPlanByName(params.currentPlan);
       const requestedPlanDetails = this.getPlanByName(params.requestedPlan);
 
       if (!requestedPlanDetails) {
@@ -265,12 +264,12 @@ export class SubscriptionService {
           planDetails: requestedPlanDetails,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error creating subscription request:', error);
       return {
         success: false,
         message: 'Failed to create subscription request',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -297,7 +296,7 @@ export class SubscriptionService {
       }
 
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error getting pending request:', error);
       return null;
     }
@@ -324,7 +323,7 @@ export class SubscriptionService {
           doc.data().requestedAt?.toDate?.() || doc.data().requestedAt,
         reviewedAt: doc.data().reviewedAt?.toDate?.() || doc.data().reviewedAt,
       })) as SubscriptionRequest[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error getting request history:', error);
       return [];
     }
@@ -387,12 +386,12 @@ export class SubscriptionService {
         message: 'Subscription request cancelled successfully',
         data: { requestId },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error cancelling subscription request:', error);
       return {
         success: false,
         message: 'Failed to cancel subscription request',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -429,7 +428,7 @@ export class SubscriptionService {
           doc.data().requestedAt?.toDate?.() || doc.data().requestedAt,
         reviewedAt: doc.data().reviewedAt?.toDate?.() || doc.data().reviewedAt,
       })) as SubscriptionRequest[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error getting subscription requests:', error);
       return [];
     }
@@ -471,7 +470,7 @@ export class SubscriptionService {
       }
 
       // Update request status
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         status: params.status,
         reviewedBy: params.reviewedBy,
         reviewedAt: serverTimestamp(),
@@ -513,12 +512,12 @@ export class SubscriptionService {
         message: `Subscription request ${params.status.toLowerCase()} successfully`,
         data: { requestId: params.requestId, status: params.status },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error reviewing subscription request:', error);
       return {
         success: false,
         message: 'Failed to review subscription request',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -553,8 +552,6 @@ export class SubscriptionService {
         };
       }
 
-      const userData = userDoc.data() as IPCAUser;
-
       // Calculate expiry date
       const now = new Date();
       const expiryDate = new Date(now);
@@ -571,7 +568,7 @@ export class SubscriptionService {
         startDate: now,
         endDate: expiryDate,
         downgradePlan: params.downgradePlan || SubscriptionPlan.FREE,
-        features: this.getPlanFeatures(params.newPlan) as any[], // Type conversion needed
+        features: this.getPlanFeatures(params.newPlan) as string[], // Type conversion needed
         paymentMethod: params.paymentMethod,
         transactionId: params.transactionId,
         setAt: now,
@@ -597,12 +594,12 @@ export class SubscriptionService {
           planDetails,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error updating user subscription:', error);
       return {
         success: false,
         message: 'Failed to update user subscription',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -643,7 +640,7 @@ export class SubscriptionService {
       });
 
       return stats;
-    } catch (error) {
+    } catch (error: unknown) {
       consoleError('❌ Error getting subscription stats:', error);
       return {
         totalRequests: 0,
@@ -698,12 +695,12 @@ export class SubscriptionService {
         message: `Processed ${processedCount} expired subscriptions`,
         data: { processedCount },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       consoleError('❌ Error processing expired subscriptions:', error);
       return {
         success: false,
         message: 'Failed to process expired subscriptions',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
