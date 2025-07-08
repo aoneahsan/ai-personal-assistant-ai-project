@@ -1,244 +1,321 @@
 import { Calendar } from 'primereact/calendar';
-import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
+import { FileUpload } from 'primereact/fileupload';
+import { InputSwitch } from 'primereact/inputswitch';
 import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { MultiSelect } from 'primereact/multiselect';
+import { Rating } from 'primereact/rating';
+import { Slider } from 'primereact/slider';
 import { classNames } from 'primereact/utils';
 import React from 'react';
-import { Control, Controller, FieldError } from 'react-hook-form';
 
-// Base form field wrapper
-interface FormFieldWrapperProps {
-  label: string;
-  error?: FieldError;
+interface FormFieldProps {
+  label?: string;
+  error?: string;
   required?: boolean;
-  children: React.ReactNode;
   className?: string;
+  children: React.ReactNode;
 }
 
-export const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
+interface SelectOption {
+  label: string;
+  value: string | number;
+  disabled?: boolean;
+}
+
+interface TextFieldProps extends FormFieldProps {
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  type?: 'text' | 'email' | 'password' | 'tel' | 'url';
+}
+
+interface TextAreaFieldProps extends FormFieldProps {
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  rows?: number;
+}
+
+interface SelectFieldProps extends FormFieldProps {
+  value?: string | number | string[] | number[];
+  onChange?: (value: string | number | string[] | number[]) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  disabled?: boolean;
+  multiple?: boolean;
+  filter?: boolean;
+}
+
+interface DateFieldProps extends FormFieldProps {
+  value?: Date | Date[];
+  onChange?: (value: Date | Date[]) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  selectionMode?: 'single' | 'multiple' | 'range';
+  showTime?: boolean;
+  timeOnly?: boolean;
+}
+
+interface SwitchFieldProps extends FormFieldProps {
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+  disabled?: boolean;
+}
+
+interface SliderFieldProps extends FormFieldProps {
+  value?: number | number[];
+  onChange?: (value: number | number[]) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  disabled?: boolean;
+  range?: boolean;
+}
+
+interface RatingFieldProps extends FormFieldProps {
+  value?: number;
+  onChange?: (value: number) => void;
+  stars?: number;
+  disabled?: boolean;
+  cancel?: boolean;
+}
+
+interface FileUploadFieldProps extends FormFieldProps {
+  onSelect?: (files: File[]) => void;
+  accept?: string;
+  multiple?: boolean;
+  maxFileSize?: number;
+  disabled?: boolean;
+}
+
+const FormField: React.FC<FormFieldProps> = ({
   label,
   error,
-  required = false,
+  required,
+  className,
   children,
-  className = 'col-12 md:col-6',
 }) => {
+  const fieldClassName = React.useMemo(() => {
+    return classNames(
+      'field',
+      {
+        'field-error': !!error,
+      },
+      className
+    );
+  }, [error, className]);
+
   return (
-    <div className={className}>
-      <div className='field'>
-        <label className='font-medium text-color'>
+    <div className={fieldClassName}>
+      {label && (
+        <label className='field-label'>
           {label}
           {required && <span className='text-red-500 ml-1'>*</span>}
         </label>
-        {children}
-        {error && <small className='p-error block mt-1'>{error.message}</small>}
-      </div>
+      )}
+      <div className='field-input'>{children}</div>
+      {error && (
+        <small className='field-error-message text-red-500'>{error}</small>
+      )}
     </div>
   );
 };
 
-// Custom Input Text Field
-interface CustomInputTextProps {
-  name: string;
-  control: Control<any>;
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  className?: string;
-  type?: string;
-}
-
-export const CustomInputText: React.FC<CustomInputTextProps> = ({
-  name,
-  control,
-  label,
-  placeholder,
-  required = true,
-  className = 'col-12 md:col-6',
+export const TextField: React.FC<TextFieldProps> = ({
+  value,
+  onChange,
   type = 'text',
-}) => {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <FormFieldWrapper
-          label={label}
-          error={fieldState.error}
-          required={required}
-          className={className}
-        >
-          <InputText
-            {...field}
-            type={type}
-            placeholder={placeholder}
-            className={classNames('w-full', { 'p-invalid': fieldState.error })}
-          />
-        </FormFieldWrapper>
-      )}
-    />
-  );
-};
-
-// Custom Calendar Field
-interface CustomCalendarProps {
-  name: string;
-  control: Control<any>;
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  className?: string;
-}
-
-export const CustomCalendar: React.FC<CustomCalendarProps> = ({
-  name,
-  control,
-  label,
   placeholder,
-  required = true,
-  className = 'col-12 md:col-6',
-}) => {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => {
-        // Convert string to Date for display, handle edge cases
-        const dateValue = React.useMemo(() => {
-          if (!field.value) return null;
-          if (field.value instanceof Date) return field.value;
-          if (typeof field.value === 'string') {
-            try {
-              const date = new Date(field.value);
-              return isNaN(date.getTime()) ? null : date;
-            } catch {
-              return null;
-            }
-          }
-          return null;
-        }, [field.value]);
-
-        return (
-          <FormFieldWrapper
-            label={label}
-            error={fieldState.error}
-            required={required}
-            className={className}
-          >
-            <Calendar
-              id={name}
-              value={dateValue}
-              onChange={(e) => {
-                const selectedDate = e.value;
-                if (selectedDate instanceof Date) {
-                  // Format as MM/DD/YYYY string to match expected format
-                  const formattedDate =
-                    selectedDate.toLocaleDateString('en-US');
-                  field.onChange(formattedDate);
-                } else {
-                  field.onChange(null);
-                }
-              }}
-              placeholder={placeholder}
-              dateFormat='mm/dd/yy'
-              className={classNames('w-full', {
-                'p-invalid': fieldState.error,
-              })}
-              showIcon
-              showButtonBar
-            />
-          </FormFieldWrapper>
-        );
-      }}
+  disabled,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <InputText
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      type={type}
+      placeholder={placeholder}
+      disabled={disabled}
+      className={classNames('w-full', {
+        'p-invalid': !!fieldProps.error,
+      })}
     />
-  );
-};
+  </FormField>
+);
 
-// Custom Dropdown Field
-interface CustomDropdownProps {
-  name: string;
-  control: Control<any>;
-  label: string;
-  options: { label: string; value: string }[];
-  placeholder?: string;
-  required?: boolean;
-  className?: string;
-}
+export const TextAreaField: React.FC<TextAreaFieldProps> = ({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  rows = 3,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <InputTextarea
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      rows={rows}
+      className={classNames('w-full', {
+        'p-invalid': !!fieldProps.error,
+      })}
+    />
+  </FormField>
+);
 
-export const CustomDropdown: React.FC<CustomDropdownProps> = ({
-  name,
-  control,
-  label,
+export const SelectField: React.FC<SelectFieldProps> = ({
+  value,
+  onChange,
   options,
   placeholder,
-  required = true,
-  className = 'col-12 md:col-6',
+  disabled,
+  multiple = false,
+  filter = false,
+  ...fieldProps
 }) => {
-  // Memoize options to prevent re-renders
-  const memoizedOptions = React.useMemo(() => options, [options]);
+  if (multiple) {
+    return (
+      <FormField {...fieldProps}>
+        <MultiSelect
+          value={value as string[] | number[]}
+          onChange={(e) => onChange?.(e.value)}
+          options={options}
+          placeholder={placeholder}
+          disabled={disabled}
+          filter={filter}
+          className={classNames('w-full', {
+            'p-invalid': !!fieldProps.error,
+          })}
+        />
+      </FormField>
+    );
+  }
 
   return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <FormFieldWrapper
-          label={label}
-          error={fieldState.error}
-          required={required}
-          className={className}
-        >
-          <Dropdown
-            id={name}
-            value={field.value}
-            options={memoizedOptions}
-            onChange={(e) => field.onChange(e.value)}
-            placeholder={placeholder}
-            className={classNames('w-full', { 'p-invalid': fieldState.error })}
-            filter
-            showClear
-          />
-        </FormFieldWrapper>
-      )}
-    />
+    <FormField {...fieldProps}>
+      <Dropdown
+        value={value as string | number}
+        onChange={(e) => onChange?.(e.value)}
+        options={options}
+        placeholder={placeholder}
+        disabled={disabled}
+        filter={filter}
+        className={classNames('w-full', {
+          'p-invalid': !!fieldProps.error,
+        })}
+      />
+    </FormField>
   );
 };
 
-// Custom Checkbox Field
-interface CustomCheckboxProps {
-  name: string;
-  control: Control<any>;
-  label: string;
-  className?: string;
-}
-
-export const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
-  name,
-  control,
-  label,
-  className = 'col-12',
-}) => {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <FormFieldWrapper
-          label=''
-          error={fieldState.error}
-          className={className}
-        >
-          <div className='flex align-items-center gap-2'>
-            <Checkbox
-              {...field}
-              checked={field.value}
-              className={classNames({ 'p-invalid': fieldState.error })}
-            />
-            <label className='font-medium text-color cursor-pointer'>
-              {label}
-            </label>
-          </div>
-        </FormFieldWrapper>
-      )}
+export const DateField: React.FC<DateFieldProps> = ({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  selectionMode = 'single',
+  showTime = false,
+  timeOnly = false,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <Calendar
+      value={value}
+      onChange={(e) => onChange?.(e.value as Date | Date[])}
+      placeholder={placeholder}
+      disabled={disabled}
+      selectionMode={selectionMode}
+      showTime={showTime}
+      timeOnly={timeOnly}
+      className={classNames('w-full', {
+        'p-invalid': !!fieldProps.error,
+      })}
     />
-  );
-};
+  </FormField>
+);
+
+export const SwitchField: React.FC<SwitchFieldProps> = ({
+  checked = false,
+  onChange,
+  disabled,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <InputSwitch
+      checked={checked}
+      onChange={(e) => onChange?.(e.value)}
+      disabled={disabled}
+    />
+  </FormField>
+);
+
+export const SliderField: React.FC<SliderFieldProps> = ({
+  value,
+  onChange,
+  min = 0,
+  max = 100,
+  step = 1,
+  disabled,
+  range = false,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <Slider
+      value={range ? (value as [number, number]) : (value as number)}
+      onChange={(e) => onChange?.(e.value)}
+      min={min}
+      max={max}
+      step={step}
+      disabled={disabled}
+      range={range}
+      className='w-full'
+    />
+  </FormField>
+);
+
+export const RatingField: React.FC<RatingFieldProps> = ({
+  value,
+  onChange,
+  stars = 5,
+  disabled,
+  cancel = true,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <Rating
+      value={value}
+      onChange={(e) => onChange?.(e.value ?? 0)}
+      stars={stars}
+      disabled={disabled}
+      cancel={cancel}
+    />
+  </FormField>
+);
+
+export const FileUploadField: React.FC<FileUploadFieldProps> = ({
+  onSelect,
+  accept,
+  multiple = false,
+  maxFileSize = 1000000, // 1MB
+  disabled,
+  ...fieldProps
+}) => (
+  <FormField {...fieldProps}>
+    <FileUpload
+      mode='basic'
+      accept={accept}
+      multiple={multiple}
+      maxFileSize={maxFileSize}
+      disabled={disabled}
+      customUpload
+      onSelect={(e) => onSelect?.(e.files)}
+      className='w-full'
+    />
+  </FormField>
+);

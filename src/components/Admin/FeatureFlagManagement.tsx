@@ -1,5 +1,11 @@
 import { PermissionGuard } from '@/components/common/RoleGuard';
+import { logError } from '@/sentryErrorLogging';
+import {
+  AdvancedFeatureFlag,
+  advancedFeatureFlagService,
+} from '@/services/advancedFeatureFlagService';
 import { Permission } from '@/types/user/roles';
+import { useUserDataZState } from '@/zustandStates/userState';
 import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -19,12 +25,6 @@ import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { 
-  advancedFeatureFlagService, 
-  AdvancedFeatureFlag 
-} from '@/services/advancedFeatureFlagService';
-import { useUserDataZState } from '@/zustandStates/userState';
-import { logError } from '@/sentryErrorLogging';
 
 // Use the AdvancedFeatureFlag interface from the service
 type FeatureFlag = AdvancedFeatureFlag;
@@ -38,9 +38,8 @@ export const FeatureFlagManagement: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
   const [editingFlag, setEditingFlag] = useState<Partial<FeatureFlag>>({});
-  const [selectedEnvironment, setSelectedEnvironment] =
-    useState<string>('all');
-  
+  const [selectedEnvironment, setSelectedEnvironment] = useState<string>('all');
+
   // Get current user for creating flags
   const userData = useUserDataZState((state) => state.data);
 
@@ -68,7 +67,11 @@ export const FeatureFlagManagement: React.FC = () => {
       setFeatureFlags(flags);
     } catch (error) {
       console.error('Error loading feature flags:', error);
-      logError(error instanceof Error ? error : new Error('Failed to load feature flags'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to load feature flags')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -201,11 +204,11 @@ export const FeatureFlagManagement: React.FC = () => {
 
   const toggleFlag = async (flag: FeatureFlag) => {
     if (!flag.id) return;
-    
+
     try {
       const newStatus: FeatureFlag['status'] =
         flag.status === 'active' ? 'inactive' : 'active';
-      
+
       await advancedFeatureFlagService.updateFeatureFlag(flag.id, {
         status: newStatus,
       });
@@ -225,7 +228,11 @@ export const FeatureFlagManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error toggling feature flag:', error);
-      logError(error instanceof Error ? error : new Error('Failed to toggle feature flag'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to toggle feature flag')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -236,9 +243,12 @@ export const FeatureFlagManagement: React.FC = () => {
 
   const saveFlag = async () => {
     if (!selectedFlag?.id) return;
-    
+
     try {
-      await advancedFeatureFlagService.updateFeatureFlag(selectedFlag.id, editingFlag);
+      await advancedFeatureFlagService.updateFeatureFlag(
+        selectedFlag.id,
+        editingFlag
+      );
 
       // Update local state
       const updatedFlags = featureFlags.map((f) =>
@@ -257,7 +267,11 @@ export const FeatureFlagManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error saving feature flag:', error);
-      logError(error instanceof Error ? error : new Error('Failed to save feature flag'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to save feature flag')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -309,8 +323,8 @@ export const FeatureFlagManagement: React.FC = () => {
         createdBy: userData?.email || 'admin@example.com',
       };
 
-      const flagId = await advancedFeatureFlagService.createFeatureFlag(flagData);
-      
+      await advancedFeatureFlagService.createFeatureFlag(flagData);
+
       // Reload flags to get the updated list
       await loadFeatureFlags();
 
@@ -324,7 +338,11 @@ export const FeatureFlagManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error creating feature flag:', error);
-      logError(error instanceof Error ? error : new Error('Failed to create feature flag'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to create feature flag')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',

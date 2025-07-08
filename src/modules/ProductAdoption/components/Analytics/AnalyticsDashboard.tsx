@@ -237,7 +237,7 @@ const AnalyticsDashboard: React.FC = () => {
               body={(rowData) => formatDuration(rowData.averageTimeToComplete)}
             />
             <Column
-              body={(rowData) => (
+              body={() => (
                 <Button
                   icon='pi pi-chart-line'
                   className='p-button-text p-button-sm'

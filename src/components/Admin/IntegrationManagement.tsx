@@ -1,5 +1,13 @@
 import { PermissionGuard } from '@/components/common/RoleGuard';
+import { logError } from '@/sentryErrorLogging';
+import {
+  Integration,
+  integrationManagementService,
+  IntegrationTemplate,
+  IntegrationTestResults,
+} from '@/services/integrationManagementService';
 import { Permission } from '@/types/user/roles';
+import { useUserDataZState } from '@/zustandStates/userState';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Chip } from 'primereact/chip';
@@ -14,14 +22,6 @@ import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import React, { useEffect, useRef, useState } from 'react';
-import { 
-  integrationManagementService, 
-  Integration, 
-  IntegrationTemplate, 
-  IntegrationTestResults 
-} from '@/services/integrationManagementService';
-import { useUserDataZState } from '@/zustandStates/userState';
-import { logError } from '@/sentryErrorLogging';
 
 // Use interfaces from the service
 
@@ -43,7 +43,7 @@ export const IntegrationManagement: React.FC = () => {
   const [testResults, setTestResults] = useState<IntegrationTestResults | null>(
     null
   );
-  
+
   // Get current user for creating integrations
   const userData = useUserDataZState((state) => state.data);
 
@@ -59,7 +59,11 @@ export const IntegrationManagement: React.FC = () => {
       setIntegrations(integrations);
     } catch (error) {
       console.error('Error loading integrations:', error);
-      logError(error instanceof Error ? error : new Error('Failed to load integrations'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to load integrations')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -72,11 +76,16 @@ export const IntegrationManagement: React.FC = () => {
 
   const loadTemplates = async () => {
     try {
-      const templates = await integrationManagementService.getIntegrationTemplates();
+      const templates =
+        await integrationManagementService.getIntegrationTemplates();
       setTemplates(templates);
     } catch (error) {
       console.error('Error loading templates:', error);
-      logError(error instanceof Error ? error : new Error('Failed to load integration templates'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to load integration templates')
+      );
     }
   };
 
@@ -206,11 +215,11 @@ export const IntegrationManagement: React.FC = () => {
 
   const toggleIntegration = async (integration: Integration) => {
     if (!integration.id) return;
-    
+
     try {
       const newStatus: Integration['status'] =
         integration.status === 'active' ? 'inactive' : 'active';
-      
+
       await integrationManagementService.updateIntegration(integration.id, {
         status: newStatus,
       });
@@ -229,7 +238,11 @@ export const IntegrationManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error toggling integration:', error);
-      logError(error instanceof Error ? error : new Error('Failed to toggle integration'));
+      logError(
+        error instanceof Error
+          ? error
+          : new Error('Failed to toggle integration')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -240,9 +253,10 @@ export const IntegrationManagement: React.FC = () => {
 
   const testIntegration = async (integration: Integration) => {
     try {
-      const results = await integrationManagementService.testIntegration(integration);
+      const results =
+        await integrationManagementService.testIntegration(integration);
       setTestResults(results);
-      
+
       // Update integration status based on test results
       if (integration.id) {
         const newStatus = results.success ? 'active' : 'error';
@@ -251,11 +265,11 @@ export const IntegrationManagement: React.FC = () => {
             status: newStatus,
             ...(results.error && { lastError: results.error }),
           });
-          
+
           // Update local state
           setIntegrations(
             integrations.map((i) =>
-              i.id === integration.id 
+              i.id === integration.id
                 ? { ...i, status: newStatus, lastError: results.error }
                 : i
             )
@@ -270,7 +284,9 @@ export const IntegrationManagement: React.FC = () => {
         timestamp: new Date(),
       };
       setTestResults(errorResult);
-      logError(error instanceof Error ? error : new Error('Failed to test integration'));
+      logError(
+        error instanceof Error ? error : new Error('Failed to test integration')
+      );
     }
   };
 
@@ -286,7 +302,7 @@ export const IntegrationManagement: React.FC = () => {
       // Update local state
       setIntegrations(
         integrations.map((i) =>
-          i.id === selectedIntegration.id 
+          i.id === selectedIntegration.id
             ? { ...i, ...editingIntegration, updatedAt: new Date() }
             : i
         )
@@ -303,7 +319,9 @@ export const IntegrationManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error saving integration:', error);
-      logError(error instanceof Error ? error : new Error('Failed to save integration'));
+      logError(
+        error instanceof Error ? error : new Error('Failed to save integration')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
@@ -337,8 +355,8 @@ export const IntegrationManagement: React.FC = () => {
         createdBy: userData?.email || 'admin@example.com',
       };
 
-      const integrationId = await integrationManagementService.createIntegration(integrationData);
-      
+      await integrationManagementService.createIntegration(integrationData);
+
       // Reload integrations to get the updated list
       await loadIntegrations();
 
@@ -352,7 +370,9 @@ export const IntegrationManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error adding integration:', error);
-      logError(error instanceof Error ? error : new Error('Failed to add integration'));
+      logError(
+        error instanceof Error ? error : new Error('Failed to add integration')
+      );
       toast.current?.show({
         severity: 'error',
         summary: 'Error',

@@ -29,61 +29,34 @@ const NetworkStatusHOC: React.FC = () => {
           connectionType: status.connectionType,
         });
       } catch (error) {
-        // Fallback to navigator.onLine if Capacitor Network fails
-        setNetworkStatus({
-          connected: navigator.onLine,
-          connectionType: 'unknown',
-        });
+        console.error('Failed to fetch system config:', error);
+        // Still use the default config even if fetch fails
+        systemConfigZState.setData({ ...DEFAULT_SYSTEM_CONFIG });
       }
     };
 
-    initializeNetworkStatus();
-  }, []);
+    fetchSystemConfig();
+  }, [systemConfigZState]);
 
-  // Listen for network status changes
+  // Handle online status changes
   useEffect(() => {
-    let networkListener: any;
-    let windowCleanup: (() => void) | undefined;
-
-    const setupNetworkListener = async () => {
-      try {
-        networkListener = await Network.addListener(
-          'networkStatusChange',
-          (status) => {
-            setNetworkStatus({
-              connected: status.connected,
-              connectionType: status.connectionType,
-            });
-          }
-        );
-      } catch (error) {
-        // Fallback to window event listeners if Capacitor listener fails
-        const handleOnline = () =>
-          setNetworkStatus((prev) => ({ ...prev, connected: true }));
-        const handleOffline = () =>
-          setNetworkStatus((prev) => ({ ...prev, connected: false }));
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        // Set cleanup function
-        windowCleanup = () => {
-          window.removeEventListener('online', handleOnline);
-          window.removeEventListener('offline', handleOffline);
-        };
-      }
+    const handleOnline = () => {
+      console.log('App is back online');
+      setIsOnline(true);
     };
 
-    setupNetworkListener();
+    const handleOffline = () => {
+      console.log('App is offline');
+      setIsOnline(false);
+    };
 
-    // Cleanup listener on unmount
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Cleanup function
     return () => {
-      if (networkListener) {
-        networkListener.remove();
-      }
-      if (windowCleanup) {
-        windowCleanup();
-      }
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 

@@ -1,13 +1,17 @@
 import {
   adminTableDefaults,
-  AdminTableFilters,
   getAdminSearchHeaderConfig,
 } from '@/utils/helpers/adminDataUtils';
-import { DataTable } from 'primereact/datatable';
+import { DataTable, DataTableProps } from 'primereact/datatable';
 import { Toolbar } from 'primereact/toolbar';
 import React, { useState } from 'react';
 
-export interface AdminDataTableProps {
+export interface AdminTableFilters {
+  global: { value: string };
+  [key: string]: { value: string | number | boolean };
+}
+
+export interface AdminDataTableProps extends Omit<DataTableProps, 'filters'> {
   title: string;
   searchPlaceholder?: string;
   filters?: AdminTableFilters;
@@ -17,7 +21,6 @@ export interface AdminDataTableProps {
   showToolbar?: boolean;
   showSearch?: boolean;
   children?: React.ReactNode;
-  [key: string]: any; // Allow other DataTable props
 }
 
 const AdminDataTable: React.FC<AdminDataTableProps> = ({

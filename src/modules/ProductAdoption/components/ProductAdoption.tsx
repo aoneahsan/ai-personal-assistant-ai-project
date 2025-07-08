@@ -29,6 +29,7 @@ const ProductAdoption: React.FC = () => {
   };
 
   const handleSaveTour = (tour: Partial<Tour>) => {
+    console.log('Saving tour:', tour.name);
     // Save logic is handled by the hooks
     setEditingTour(null);
     setIsCreating(false);
@@ -42,6 +43,7 @@ const ProductAdoption: React.FC = () => {
   };
 
   const handleViewAnalytics = (tourId: string) => {
+    console.log('Viewing analytics for tour:', tourId);
     // TODO: Navigate to tour-specific analytics
     setActiveTab(1); // Switch to analytics tab
   };
@@ -58,6 +60,7 @@ const ProductAdoption: React.FC = () => {
         showToast.showWarning('Demo Data', result.message);
       }
     } catch (error) {
+      console.error('Failed to initialize demo data:', error);
       showToast.showError('Error', 'Failed to initialize demo data');
     } finally {
       setIsLoadingDemo(false);

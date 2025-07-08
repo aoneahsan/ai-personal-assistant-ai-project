@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 const PWAInstallButton: React.FC = () => {
@@ -22,7 +22,10 @@ const PWAInstallButton: React.FC = () => {
       }
 
       // Check for iOS Safari standalone mode
-      if ((window.navigator as any).standalone === true) {
+      const navigator = window.navigator as typeof window.navigator & {
+        standalone?: boolean;
+      };
+      if (navigator.standalone === true) {
         setIsInstalled(true);
         return;
       }
@@ -30,12 +33,9 @@ const PWAInstallButton: React.FC = () => {
 
     checkIfInstalled();
 
-    // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('PWA Install: beforeinstallprompt event fired');
       e.preventDefault();
-      const event = e as BeforeInstallPromptEvent;
-      setDeferredPrompt(event);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
