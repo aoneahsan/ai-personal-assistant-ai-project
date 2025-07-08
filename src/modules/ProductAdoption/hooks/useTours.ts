@@ -2,8 +2,19 @@ import { useToast } from '@/hooks/useToast';
 import { useCallback } from 'react';
 import { tourService } from '../services';
 import { Tour } from '../types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-export const useTours = (filters?: any) => {
+interface TourFilters {
+  search?: string;
+  status?: string;
+  category?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+}
+
+export const useTours = (filters?: TourFilters) => {
   const { showToast } = useToast();
 
   // Fetch tours
@@ -36,7 +47,7 @@ export const useTours = (filters?: any) => {
         });
       }
     },
-    onError: (error) => {
+    onError: () => {
       showToast({
         severity: 'error',
         summary: 'Error',
@@ -133,7 +144,6 @@ export const useTours = (filters?: any) => {
 
 export const useTour = (tourId: string) => {
   const queryClient = useQueryClient();
-  const { showToast } = useToast();
 
   const {
     data: tourResponse,

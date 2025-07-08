@@ -6,9 +6,20 @@ import {
   getDocs,
   orderBy,
   query,
+  Timestamp,
   where,
 } from 'firebase/firestore';
-import { AnalyticsFilter, AnalyticsOverview } from '../types';
+import {
+  AnalyticsFilter,
+  AnalyticsOverview,
+  FunnelAnalysis,
+  ServiceResponse,
+  StepHeatmap,
+  Tour,
+  TourEvent,
+  TourPerformance,
+  UserEngagementMetrics,
+} from '../types';
 
 export class AnalyticsService {
   private readonly EVENTS_COLLECTION = 'productAdoption_events';
@@ -16,7 +27,7 @@ export class AnalyticsService {
   private readonly ANALYTICS_COLLECTION = 'productAdoption_analytics';
 
   async getAnalyticsOverview(
-    filter?: AnalyticsFilter
+    _filter?: AnalyticsFilter
   ): Promise<ServiceResponse<AnalyticsOverview>> {
     try {
       // Get all tours

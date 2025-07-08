@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { widgetService } from '../services';
-import { WidgetConfig, FilterOptions, UserContext } from '../types';
 import { useToast } from '@/hooks/useToast';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
+import { widgetService } from '../services';
+import { FilterOptions, UserContext, WidgetConfig } from '../types';
 
 export const useWidgets = (filters?: FilterOptions) => {
   const queryClient = useQueryClient();
@@ -40,12 +40,19 @@ export const useWidgets = (filters?: FilterOptions) => {
   });
 
   const updateWidgetMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<WidgetConfig> }) =>
-      widgetService.updateWidget(id, updates),
+    mutationFn: ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: Partial<WidgetConfig>;
+    }) => widgetService.updateWidget(id, updates),
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['widgets'] });
-        queryClient.invalidateQueries({ queryKey: ['widget', response.data?.id] });
+        queryClient.invalidateQueries({
+          queryKey: ['widget', response.data?.id],
+        });
         showToast({
           severity: 'success',
           summary: 'Widget Updated',
@@ -110,7 +117,10 @@ export const useActiveWidgets = (userContext: UserContext) => {
     const fetchActiveWidgets = async () => {
       setIsLoading(true);
       try {
-        const response = await widgetService.getActiveWidgets(userContext, currentUrl);
+        const response = await widgetService.getActiveWidgets(
+          userContext,
+          currentUrl
+        );
         if (response.success && response.data) {
           // Check frequency rules for each widget
           const eligibleWidgets = [];
@@ -137,12 +147,16 @@ export const useActiveWidgets = (userContext: UserContext) => {
   }, [userContext, currentUrl]);
 
   const trackWidgetEvent = useCallback(
-    async (widgetId: string, eventType: string, metadata?: any) => {
+    async (
+      widgetId: string,
+      eventType: 'impression' | 'interaction' | 'dismissal' | 'conversion',
+      metadata?: Record<string, unknown>
+    ) => {
       await widgetService.trackWidgetEvent({
         widgetId,
         userId: userContext.id,
         sessionId: sessionStorage.getItem('sessionId') || '',
-        type: eventType as any,
+        type: eventType,
         timestamp: new Date(),
         metadata,
       });

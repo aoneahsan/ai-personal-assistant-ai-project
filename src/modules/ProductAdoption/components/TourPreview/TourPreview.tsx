@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button';
 import { ProgressBar } from 'primereact/progressbar';
-import { Tour, TourStep } from '../../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { Tour } from '../../types';
 import './TourPreview.scss';
 
 interface TourPreviewProps {
@@ -22,15 +22,16 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
 
   const currentStep = tour.steps?.[currentStepIndex];
   const totalSteps = tour.steps?.length || 0;
-  const progress = totalSteps > 0 ? ((currentStepIndex + 1) / totalSteps) * 100 : 0;
+  const progress =
+    totalSteps > 0 ? ((currentStepIndex + 1) / totalSteps) * 100 : 0;
 
   useEffect(() => {
     setIsVisible(true);
     positionTooltip();
-    
+
     return () => {
       // Cleanup any highlighted elements
-      document.querySelectorAll('.tour-preview-highlight').forEach(el => {
+      document.querySelectorAll('.tour-preview-highlight').forEach((el) => {
         el.classList.remove('tour-preview-highlight');
       });
     };
@@ -44,23 +45,25 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
     if (!currentStep || !tooltipRef.current) return;
 
     // Remove previous highlights
-    document.querySelectorAll('.tour-preview-highlight').forEach(el => {
+    document.querySelectorAll('.tour-preview-highlight').forEach((el) => {
       el.classList.remove('tour-preview-highlight');
     });
 
     if (currentStep.target) {
       try {
-        const targetElement = document.querySelector(currentStep.target) as HTMLElement;
+        const targetElement = document.querySelector(
+          currentStep.target
+        ) as HTMLElement;
         if (targetElement) {
           targetElement.classList.add('tour-preview-highlight');
-          
+
           const rect = targetElement.getBoundingClientRect();
           const tooltip = tooltipRef.current;
           const tooltipRect = tooltip.getBoundingClientRect();
-          
+
           let top = 0;
           let left = 0;
-          
+
           switch (currentStep.placement) {
             case 'top':
               top = rect.top - tooltipRect.height - 10;
@@ -83,17 +86,23 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
               top = (window.innerHeight - tooltipRect.height) / 2;
               left = (window.innerWidth - tooltipRect.width) / 2;
           }
-          
+
           // Ensure tooltip stays within viewport
-          top = Math.max(10, Math.min(top, window.innerHeight - tooltipRect.height - 10));
-          left = Math.max(10, Math.min(left, window.innerWidth - tooltipRect.width - 10));
-          
+          top = Math.max(
+            10,
+            Math.min(top, window.innerHeight - tooltipRect.height - 10)
+          );
+          left = Math.max(
+            10,
+            Math.min(left, window.innerWidth - tooltipRect.width - 10)
+          );
+
           tooltip.style.top = `${top}px`;
           tooltip.style.left = `${left}px`;
-          
+
           // Scroll target into view if needed
           targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          
+
           // Create spotlight effect
           if (overlayRef.current) {
             const padding = currentStep.spotlightPadding || 10;
@@ -109,7 +118,7 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
               L ${rect.left - padding} ${rect.bottom + padding} 
               Z
             `;
-            
+
             overlayRef.current.innerHTML = `
               <svg width="${window.innerWidth}" height="${window.innerHeight}" style="position: fixed; top: 0; left: 0; pointer-events: none;">
                 <path d="${spotlightPath}" fill="rgba(0, 0, 0, ${tour.settings?.theme?.overlayOpacity || 0.5})" fill-rule="evenodd" />
@@ -132,13 +141,13 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
 
   const centerTooltip = () => {
     if (!tooltipRef.current) return;
-    
+
     const tooltip = tooltipRef.current;
     const tooltipRect = tooltip.getBoundingClientRect();
-    
+
     tooltip.style.top = `${(window.innerHeight - tooltipRect.height) / 2}px`;
     tooltip.style.left = `${(window.innerWidth - tooltipRect.width) / 2}px`;
-    
+
     // Clear spotlight for centered tooltips
     if (overlayRef.current) {
       overlayRef.current.innerHTML = '';
@@ -203,18 +212,20 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
 
   return (
     <div className={`tour-preview ${isVisible ? 'visible' : ''}`}>
-      <div 
+      <div
         ref={overlayRef}
-        className="tour-overlay"
+        className='tour-overlay'
         style={{
-          backgroundColor: currentStep.target ? 'transparent' : `rgba(0, 0, 0, ${theme.overlayOpacity || 0.5})`,
+          backgroundColor: currentStep.target
+            ? 'transparent'
+            : `rgba(0, 0, 0, ${theme.overlayOpacity || 0.5})`,
         }}
         onClick={() => onClose()}
       />
-      
+
       <div
         ref={tooltipRef}
-        className="tour-tooltip"
+        className='tour-tooltip'
         style={{
           backgroundColor: theme.backgroundColor || '#ffffff',
           color: theme.textColor || '#333333',
@@ -226,34 +237,39 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
       >
         {navigation.showCloseButton && (
           <Button
-            icon="pi pi-times"
-            className="p-button-text p-button-sm tour-close-btn"
+            icon='pi pi-times'
+            className='p-button-text p-button-sm tour-close-btn'
             onClick={onClose}
           />
         )}
-        
+
         {navigation.showProgressBar && (
-          <div className="tour-progress">
-            <ProgressBar value={progress} showValue={false} />
+          <div className='tour-progress'>
+            <ProgressBar
+              value={progress}
+              showValue={false}
+            />
             {navigation.showStepNumbers && (
-              <span className="step-counter">
+              <span className='step-counter'>
                 {currentStepIndex + 1} / {totalSteps}
               </span>
             )}
           </div>
         )}
-        
-        <div className="tour-content">
+
+        <div className='tour-content'>
           <h3 style={{ color: theme.primaryColor || '#1976d2' }}>
             {currentStep.title}
           </h3>
-          <div 
-            className="tour-description"
-            dangerouslySetInnerHTML={{ __html: renderContent(currentStep.content) }}
+          <div
+            className='tour-description'
+            dangerouslySetInnerHTML={{
+              __html: renderContent(currentStep.content),
+            }}
           />
         </div>
-        
-        <div className="tour-actions">
+
+        <div className='tour-actions'>
           {currentStep.actions?.map((action, index) => (
             <Button
               key={index}
@@ -262,15 +278,17 @@ export const TourPreview: React.FC<TourPreviewProps> = ({
               onClick={() => handleAction(action.action)}
               disabled={
                 (action.action === 'previous' && currentStepIndex === 0) ||
-                (action.action === 'next' && currentStepIndex === totalSteps - 1 && !tour.settings?.completion?.showCompletionMessage)
+                (action.action === 'next' &&
+                  currentStepIndex === totalSteps - 1 &&
+                  !tour.settings?.completion?.showCompletionMessage)
               }
             />
           ))}
-          
+
           {navigation.showSkipButton && currentStep.skipable && (
             <Button
-              label="Skip Tour"
-              className="p-button-link"
+              label='Skip Tour'
+              className='p-button-link'
               onClick={onClose}
             />
           )}

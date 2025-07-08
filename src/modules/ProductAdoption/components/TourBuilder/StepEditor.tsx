@@ -80,7 +80,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({ step, onChange }) => {
                   <Checkbox
                     inputId='use-rich-text'
                     checked={useRichText}
-                    onChange={(e) => setUseRichText(e.checked)}
+                    onChange={(e) => setUseRichText(e.checked || false)}
                   />
                   <label
                     htmlFor='use-rich-text'
@@ -298,7 +298,7 @@ export const StepEditor: React.FC<StepEditorProps> = ({ step, onChange }) => {
                         ? JSON.parse(e.target.value)
                         : undefined;
                       onChange({ customStyles: styles });
-                    } catch (error) {
+                    } catch {
                       // Invalid JSON, don't update
                     }
                   }}
