@@ -221,10 +221,7 @@ class SystemAnalyticsService {
   private readonly MESSAGES_COLLECTION = `${PROJECT_PREFIX_FOR_COLLECTIONS_AND_FOLDERS}_messages`;
 
   // Get analytics data for a specific date range
-  async getAnalyticsData(
-    _startDate?: Date,
-    _endDate?: Date
-  ): Promise<AnalyticsData> {
+  async getAnalyticsData(): Promise<AnalyticsData> {
     try {
       const [
         userGrowth,
@@ -258,10 +255,7 @@ class SystemAnalyticsService {
   }
 
   // Get user growth data
-  private async getUserGrowthData(
-    _startDate?: Date,
-    _endDate?: Date
-  ): Promise<{
+  private async getUserGrowthData(): Promise<{
     labels: string[];
     data: number[];
   }> {
@@ -290,7 +284,7 @@ class SystemAnalyticsService {
 
           labels.push(months[5 - i]);
           data.push(userCount);
-        } catch (_error) {
+        } catch {
           // Fallback to mock data for this month
           labels.push(months[5 - i]);
           data.push(Math.floor(Math.random() * 200) + 100);
@@ -308,10 +302,7 @@ class SystemAnalyticsService {
   }
 
   // Get message volume data
-  private async getMessageVolumeData(
-    _startDate?: Date,
-    _endDate?: Date
-  ): Promise<{
+  private async getMessageVolumeData(): Promise<{
     labels: string[];
     data: number[];
   }> {
@@ -339,7 +330,7 @@ class SystemAnalyticsService {
 
           labels.push(`Week ${4 - i}`);
           data.push(messageCount);
-        } catch (_error) {
+        } catch {
           // Fallback to mock data
           labels.push(`Week ${4 - i}`);
           data.push(Math.floor(Math.random() * 2000) + 2000);
@@ -357,10 +348,7 @@ class SystemAnalyticsService {
   }
 
   // Get user engagement data
-  private async getUserEngagementData(
-    _startDate?: Date,
-    _endDate?: Date
-  ): Promise<{
+  private async getUserEngagementData(): Promise<{
     dailyActiveUsers: number;
     weeklyActiveUsers: number;
     monthlyActiveUsers: number;
@@ -498,10 +486,7 @@ class SystemAnalyticsService {
   }
 
   // Get top features usage data
-  private async getTopFeaturesData(
-    _startDate?: Date,
-    _endDate?: Date
-  ): Promise<
+  private async getTopFeaturesData(): Promise<
     Array<{
       name: string;
       usage: number;
@@ -602,13 +587,9 @@ class SystemAnalyticsService {
   }
 
   // Export analytics data
-  async exportAnalyticsData(
-    format: 'json' | 'csv' = 'json',
-    _startDate?: Date,
-    _endDate?: Date
-  ): Promise<string> {
+  async exportAnalyticsData(format: 'json' | 'csv' = 'json'): Promise<string> {
     try {
-      const data = await this.getAnalyticsData(_startDate, _endDate);
+      const data = await this.getAnalyticsData();
 
       if (format === 'json') {
         return JSON.stringify(data, null, 2);
